@@ -482,8 +482,8 @@ function makeGunModel(key){
     B(0.115,0.17,0.13, 0,-0.02,0.21,'body');           // 托底
     B(0.095,0.085,0.5, 0,0.095,-0.36,'accent');        // 上機匣/滑軌
     C(0.028,0.032,0.5, 0,0.06,-0.86,'accent');         // 槍管
-    B(0.05,0.05,0.05, 0,0.16,-0.55,'accent');          // 前準星
-    B(0.05,0.05,0.05, 0,0.16,-0.16,'accent');          // 後照門
+    B(0.022,0.05,0.03, 0,0.155,-0.55,'accent');        // 前準星（細柱）
+    B(0.03,0.045,0.03, 0,0.152,-0.16,'accent');        // 後照門（細柱）
     B(0.055,0.16,0.06, 0,-0.1,-0.5,'body',0.3);        // 前握把
     B(0.07,0.15,0.09, 0,-0.11,-0.27,'body',0.2);       // 手槍握把
     B(0.02,0.03,0.16, 0,-0.17,-0.37,'accent');         // 護弓
@@ -701,7 +701,12 @@ function applySkin(model,key,skinId,env){
 
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
-const GUN_ADS = new TH.Vector3(0,-0.105,-0.26);
+const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
+  rifle:  new TH.Vector3(0,-0.15,-0.40),
+  aug:    new TH.Vector3(0,-0.24,-0.44),
+  shotgun:new TH.Vector3(0,-0.115,-0.38),
+  pistol: new TH.Vector3(0,-0.13,-0.36)
+};
 function showGun(){ for(const k in gunMeshes) gunMeshes[k].visible=(k===curKey); }
 showGun();
 
@@ -1227,10 +1232,13 @@ function step(dt){
   camera.rotation.y = player.yaw + recoilYaw;
   camera.rotation.x = player.pitch + recoilKick*0.5;
 
-  // 槍位置（ADS 內插）
-  let gx = GUN_HIP.x+(GUN_ADS.x-GUN_HIP.x)*adsAmt + bobX;
-  let gy = GUN_HIP.y+(GUN_ADS.y-GUN_HIP.y)*adsAmt + bob*0.6;
-  let gz = GUN_HIP.z+(GUN_ADS.z-GUN_HIP.z)*adsAmt;
+  // 槍位置（ADS 內插）+ 開鏡視野縮放
+  const ADS=GUN_ADS[curKey];
+  let gx = GUN_HIP.x+(ADS.x-GUN_HIP.x)*adsAmt + bobX;
+  let gy = GUN_HIP.y+(ADS.y-GUN_HIP.y)*adsAmt + bob*0.6;
+  let gz = GUN_HIP.z+(ADS.z-GUN_HIP.z)*adsAmt;
+  const fovT = 78 - adsAmt*16;
+  if(Math.abs(camera.fov-fovT)>0.05){ camera.fov=fovT; camera.updateProjectionMatrix(); }
   let insX=0, insY=0, insZ=0;
   if(adsAmt>0.5) inspectT=0;               // 開鏡取消檢視
   if(inspectT>0){                           // F 檢視：舉到眼前轉一整圈
