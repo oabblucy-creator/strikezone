@@ -148,7 +148,8 @@
   .armTab.sel{border-color:#ffcf6b;background:rgba(255,207,107,.12);color:#ffe0a0;}
   #armPrev{flex:1;min-width:280px;display:flex;flex-direction:column;
     align-items:center;gap:10px;}
-  #pvCanvas{width:min(100%,560px);aspect-ratio:14/9;border-radius:14px;cursor:grab;
+  #pvCanvas{position:static;inset:auto;width:min(100%,560px);aspect-ratio:14/9;
+    height:auto;border-radius:14px;cursor:grab;
     touch-action:none;border:1px solid rgba(255,255,255,.12);
     background:radial-gradient(circle at 50% 42%,rgba(90,120,180,.28),rgba(8,12,22,.65) 72%);}
   #pvCanvas:active{cursor:grabbing;}
@@ -1748,7 +1749,7 @@ function pvInit(){
   pvCam=new TH.PerspectiveCamera(38,560/360,0.01,20);
   pvScene.add(new TH.HemisphereLight(0xdfe8ff,0x2a2d24,0.5));
   const d1=new TH.DirectionalLight(0xfff2da,0.9); d1.position.set(2,3,2); pvScene.add(d1);
-  const d2=new TH.DirectionalLight(0x8fb8ff,0.45); d2.position.set(-3,-1,-2); pvScene.add(d2);
+  const d2=new TH.DirectionalLight(0x8fb8ff,0.55); d2.position.set(-3,-1,-2); pvScene.add(d2);
   // 展示間：暗紫牆、地板、吊燈、木箱與彈藥箱
   const prop=(geo,color,x,y,z,ry,rough,basic)=>{
     const m=new TH.Mesh(geo, basic? new TH.MeshBasicMaterial({color})
@@ -1757,7 +1758,7 @@ function pvInit(){
     m.position.set(x,y,z); if(ry)m.rotation.y=ry; pvScene.add(m); return m; };
   prop(new TH.BoxGeometry(5,3.4,0.1),0x453c52, 0,0.6,-1.75);        // 後牆
   prop(new TH.BoxGeometry(0.1,3.4,5),0x3a3344, -2.1,0.6,0);         // 左牆
-  prop(new TH.BoxGeometry(5,0.1,5),0x2b2b31, 0,-0.66,0);            // 地板
+  prop(new TH.BoxGeometry(5,0.1,5),0x202024, 0,-0.66,0);            // 地板
   prop(new TH.BoxGeometry(0.6,0.6,0.6),0xa8845c, 1.2,-0.31,-1.25,0.5,0.9);  // 木箱
   prop(new TH.BoxGeometry(0.64,0.1,0.64),0x8a6a48, 1.2,-0.06,-1.25,0.5,0.9);// 木箱蓋
   prop(new TH.BoxGeometry(0.55,0.22,0.36),0x4a6238, -1.05,-0.54,-1.3,0.18,0.9); // 彈藥箱
