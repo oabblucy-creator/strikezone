@@ -291,7 +291,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換槍</b> 1~4 或滾輪／Q　<b>記分板</b> Tab　<b>檢視皮膚</b> F<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~5 或滾輪／Q　<b>信條近戰刀</b> 5　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -439,9 +439,12 @@ const WEAPONS = {
          range:42, pellets:9, color:0x5a4030},
   pistol:{name:"手槍", mag:15, max:15, reserve:90, dmg:22, rpm:430, auto:false,
          spread:0.02, adsSpread:0.006, recoil:0.022, reload:1.4, range:90,
-         pellets:1, color:0x33373f}
+         pellets:1, color:0x33373f},
+  knife:{name:"信條", melee:true, mag:1, max:1, reserve:0, dmg:55, rpm:120, auto:false,
+         spread:0, adsSpread:0, recoil:0, reload:0, range:3.2,
+         pellets:1, color:0xd9dde3}
 };
-const order=["rifle","aug","shotgun","pistol"];
+const order=["rifle","aug","shotgun","pistol","knife"];
 let curKey="rifle";
 const ammo = {}; for(const k in WEAPONS){ ammo[k]={mag:WEAPONS[k].mag, res:WEAPONS[k].reserve}; }
 function W(){ return WEAPONS[curKey]; }
@@ -451,7 +454,49 @@ const gunGroup = new TH.Group();
 camera.add(gunGroup);
 scene.add(camera);
 const gunMeshes = {};
+/* ===== 信條 近戰刀模型（依設計圖：clip-point 鋸齒刀身 + 白骨指虎 + 紅寶石徽章）===== */
+function makeKnifeModel(){
+  const g=new TH.Group();
+  const env=getMainEnv();
+  const steel =new TH.MeshStandardMaterial({color:0xdadfe6,roughness:.26,metalness:.85,envMap:env,envMapIntensity:1.0});
+  const steel2=new TH.MeshStandardMaterial({color:0xbcc3cb,roughness:.34,metalness:.8, envMap:env,envMapIntensity:.9});
+  const bone  =new TH.MeshStandardMaterial({color:0xe9e3d3,roughness:.6, metalness:.08});
+  const gem   =new TH.MeshStandardMaterial({color:0xd21a1a,roughness:.22,metalness:.35,emissive:0x4a0505,emissiveIntensity:.55});
+  const thick=0.05;
+  const ex={depth:thick,bevelEnabled:true,bevelThickness:0.008,bevelSize:0.008,bevelSegments:1};
+  // 刀刃（+x 為刀尖方向）
+  const bs=new TH.Shape();
+  bs.moveTo(0.10,-0.05); bs.lineTo(0.34,-0.085); bs.lineTo(0.54,-0.082); bs.lineTo(0.66,-0.05);
+  bs.lineTo(0.74,0.004); bs.lineTo(0.58,0.055); bs.lineTo(0.44,0.07); bs.lineTo(0.20,0.082);
+  bs.lineTo(0.10,0.075); bs.closePath();
+  const hole=new TH.Path(); hole.moveTo(0.26,0.0); hole.lineTo(0.42,0.008); hole.lineTo(0.42,0.03); hole.lineTo(0.26,0.022); hole.closePath();
+  bs.holes.push(hole);
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,ex),steel); blade.position.z=-thick/2; g.add(blade);
+  for(let i=0;i<5;i++){ const x=0.16+i*0.075; const t=new TH.Mesh(new TH.ConeGeometry(0.016,0.05,4),steel2);
+    t.position.set(x,0.10,0); t.rotation.z=-0.3; g.add(t); }                               // 刀背鋸齒
+  // 護手 + 指虎 + 握把（-x 為尾端方向）
+  const ks=new TH.Shape();
+  ks.moveTo(0.10,0.14); ks.lineTo(-0.56,0.15); ks.lineTo(-0.60,0.06); ks.lineTo(-0.60,-0.10);
+  ks.lineTo(-0.50,-0.18); ks.lineTo(-0.08,-0.20); ks.lineTo(0.06,-0.12); ks.lineTo(0.10,0.02); ks.closePath();
+  const h1=new TH.Path(); h1.absarc(-0.20,-0.02,0.085,0,Math.PI*2,true); ks.holes.push(h1);
+  const h2=new TH.Path(); h2.absarc(-0.42,-0.02,0.085,0,Math.PI*2,true); ks.holes.push(h2);
+  const knuck=new TH.Mesh(new TH.ExtrudeGeometry(ks,ex),bone); knuck.position.z=-thick/2; g.add(knuck);
+  for(let i=0;i<6;i++){ const x=-0.03-i*0.098; const sp=new TH.Mesh(new TH.ConeGeometry(0.03,0.12,6),steel2);
+    sp.position.set(x,-0.215,0); sp.rotation.z=Math.PI; g.add(sp); }                        // 指虎尖刺
+  const dia=new TH.Mesh(new TH.BoxGeometry(0.11,0.11,thick+0.03),bone); dia.rotation.z=Math.PI/4; g.add(dia);
+  const gmsh=new TH.Mesh(new TH.OctahedronGeometry(0.05),gem); gmsh.position.set(0,0,thick/2+0.01); gmsh.scale.set(1,1,0.55); g.add(gmsh);
+  const gmsh2=gmsh.clone(); gmsh2.position.z=-thick/2-0.01; g.add(gmsh2);                    // 紅寶石徽章（雙面）
+  for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.06,0.045,thick+0.02),gem); rb.position.set(-0.15-i*0.10,0.125,0); rb.rotation.z=0.02; g.add(rb); }
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.03,0.01,6,14),steel2); ring.position.set(0.06,0.15,0); g.add(ring);   // 吊環
+  g.rotation.set(0.05,0.5,1.85); g.scale.set(0.44,0.44,0.44); g.position.set(0.02,-0.10,-0.10);  // 握在右下、刀刃朝上（已驗證）
+  // 相容槍枝介面（step() 會存取 flash / flashLight）
+  const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+  fl.visible=false; g.add(fl); g.userData.flash=fl;
+  g.userData.flashLight=new TH.PointLight(0xffffff,0,1); g.add(g.userData.flashLight);
+  return g;
+}
 function makeGunModel(key){
+  if(key==='knife') return makeKnifeModel();
   const g = new TH.Group();
   const matB = new TH.MeshStandardMaterial({color:0x3a3f4a,roughness:.55,metalness:.55});
   const matD = new TH.MeshStandardMaterial({color:0x202329,roughness:.5,metalness:.6});
@@ -736,6 +781,40 @@ function sakuraTex(){
   });
 }
 
+// 維多利亞捲草雕花 + 紅寶石十字徽記（信條招牌白銀鍍鉻）
+function filigreeTex(){
+  return makeTex((g,S)=>{
+    const bg=g.createLinearGradient(0,0,S,S);           // 白銀鍍鉻底
+    bg.addColorStop(0,'#eef1f5'); bg.addColorStop(.5,'#d5dae2'); bg.addColorStop(1,'#bcc2cc');
+    g.fillStyle=bg; g.fillRect(0,0,S,S);
+    const scroll=(cx,cy,sc,rot)=>{                       // 一組渦捲雕花
+      g.save(); g.translate(cx,cy); g.rotate(rot); g.scale(sc,sc);
+      for(const p of [['rgba(58,64,76,0.55)',2.4,0,0],['rgba(255,255,255,0.55)',1.1,-1.1,-1.1]]){
+        g.strokeStyle=p[0]; g.lineWidth=p[1]; g.save(); g.translate(p[2],p[3]);
+        g.beginPath();                                   // 主渦捲（凹刻暗線 + 白高光=立體）
+        for(let a=0;a<7.2;a+=0.12){ const r=1.6+a*3.1,x=Math.cos(a)*r,y=Math.sin(a)*r;
+          a===0?g.moveTo(x,y):g.lineTo(x,y); } g.stroke();
+        for(const s of [1,-1]){ g.beginPath();           // 對稱葉飾
+          g.moveTo(0,0); g.bezierCurveTo(13*s,-5,25*s,-1,29*s,-15);
+          g.bezierCurveTo(23*s,-7,15*s,-9,5*s,-1); g.stroke(); }
+        g.restore();
+      }
+      g.restore();
+    };
+    for(let iy=0;iy<S;iy+=128) for(let ix=0;ix<S;ix+=128)
+      scroll(ix+64,iy+64,0.92,(ix/128+iy/128)*1.1);
+    const cx=S*0.5,cy=S*0.5,R=32;                        // 紅寶石十字徽記
+    g.fillStyle='#f4f6f9'; g.beginPath(); g.arc(cx,cy,R+4,0,7); g.fill();
+    g.strokeStyle='rgba(58,64,76,0.7)'; g.lineWidth=2.4; g.stroke();
+    const rg=g.createRadialGradient(cx-R*0.3,cy-R*0.3,2,cx,cy,R);
+    rg.addColorStop(0,'#ff5f64'); rg.addColorStop(.55,'#cc2027'); rg.addColorStop(1,'#7a0d12');
+    g.fillStyle=rg; g.beginPath(); g.arc(cx,cy,R,0,7); g.fill();
+    g.fillStyle='#f6f8fb'; const t=R*0.17,a=R*0.62;      // 白色聖殿十字
+    g.fillRect(cx-t,cy-a,2*t,2*a); g.fillRect(cx-a,cy-t,2*a,2*t);
+    grain(g,S,7); wear(g,S,0.3);
+  });
+}
+
 const RARITY=[
   {n:'消費級',c:'#b0c3d9'},{n:'工業級',c:'#5e98d9'},{n:'軍規級',c:'#4b69ff'},
   {n:'受限級',c:'#8847ff'},{n:'保密級',c:'#d32ce6'},{n:'隱秘級',c:'#eb4b4b'},
@@ -781,6 +860,9 @@ const SKINS=[
     return {body:new TH.MeshStandardMaterial({map:t,color:0x9aa2c8,roughness:.35,metalness:.55,
       emissive:0x8090ff,emissiveMap:t,emissiveIntensity:.4}),
       accent:metalAccent(0x181a2e)}; }},
+ {id:'creed',name:'信條',rar:5,css:'linear-gradient(135deg,#eef1f5 42%,#c81f26 52%,#6a4327)',
+  make:()=>({body:texMat(filigreeTex(),.32,.72),
+             accent:texMat(woodTex('#6a4327','54,32,18','32,18,8'),.72,.12)})},
  {id:'gold',name:'黃金榮耀',rar:6,css:'linear-gradient(135deg,#ffe14d,#d4a712)',
   make:()=>({body:texMat(goldTex(),.16,.85),accent:texMat(goldTex(),.22,.85)})},
 ];
@@ -837,7 +919,8 @@ const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼�
   rifle:  new TH.Vector3(0,-0.15,-0.40),
   aug:    new TH.Vector3(0,-0.24,-0.44),
   shotgun:new TH.Vector3(0,-0.115,-0.38),
-  pistol: new TH.Vector3(0,-0.13,-0.36)
+  pistol: new TH.Vector3(0,-0.13,-0.36),
+  knife:  new TH.Vector3(0.16,-0.16,-0.34)
 };
 function showGun(){ for(const k in gunMeshes) gunMeshes[k].visible=(k===curKey); }
 showGun();
@@ -851,37 +934,90 @@ const enemyHeadMat = new TH.MeshStandardMaterial({color:0xc98a6a,roughness:.7});
 const blobGeo = new TH.CircleGeometry(0.6,16);
 const blobMat = new TH.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32});
 
+/* 漢堡人「Burger Brawler」共用材質 */
+const BURG = {
+  bun:    new TH.MeshStandardMaterial({color:0xd99a52,roughness:.85}),
+  bun2:   new TH.MeshStandardMaterial({color:0xcf9350,roughness:.85}),
+  limb:   new TH.MeshStandardMaterial({color:0xdca863,roughness:.8}),
+  seed:   new TH.MeshStandardMaterial({color:0xf3e6c8,roughness:.7}),
+  patty:  new TH.MeshStandardMaterial({color:0x5a3016,roughness:.95}),
+  cheese: new TH.MeshStandardMaterial({color:0xffc12e,roughness:.5}),
+  lettuce:new TH.MeshStandardMaterial({color:0x74bd45,roughness:.75}),
+  tomato: new TH.MeshStandardMaterial({color:0xd83a30,roughness:.6}),
+  eyeW:   new TH.MeshStandardMaterial({color:0xffffff,roughness:.35}),
+  eyeB:   new TH.MeshStandardMaterial({color:0x241a12,roughness:.35}),
+  brow:   new TH.MeshStandardMaterial({color:0x5a3a20,roughness:.7}),
+  mouth:  new TH.MeshStandardMaterial({color:0x7a2320,roughness:.55}),
+  teeth:  new TH.MeshStandardMaterial({color:0xfdfdf5,roughness:.5}),
+  olive:  new TH.MeshStandardMaterial({color:0x708f38,roughness:.55}),
+  pim:    new TH.MeshStandardMaterial({color:0xd23b32,roughness:.5}),
+  glove:  new TH.MeshStandardMaterial({color:0xe0ad42,roughness:.6}),
+  sole:   new TH.MeshStandardMaterial({color:0xf1efe6,roughness:.7}),
+  shoe:   new TH.MeshStandardMaterial({color:0xd8433a,roughness:.6}),
+  stick:  new TH.MeshStandardMaterial({color:0x8a6a48,roughness:.7}),
+};
+
 function makeEnemy(x,z,tier,eid){
   const g = new TH.Group();
-  const bodyM = enemyMat.clone();
-  bodyM.color.setHex(tier===2?0x6a3b9c:(tier===1?0x9c4040:0x3f7a52));
-  const torso = new TH.Mesh(new TH.BoxGeometry(0.62,0.95,0.36), bodyM);
-  torso.position.y=1.05; torso.castShadow=true; g.add(torso);
-  const head = new TH.Mesh(new TH.BoxGeometry(0.34,0.36,0.34), enemyHeadMat.clone());
-  head.position.y=1.74; head.castShadow=true; g.add(head); head.userData.head=true;
-  const legL=new TH.Mesh(new TH.BoxGeometry(0.22,0.85,0.26),bodyM);
-  legL.position.set(-0.16,0.42,0); g.add(legL);
-  const legR=legL.clone(); legR.position.x=0.16; g.add(legR);
-  const armL=new TH.Mesh(new TH.BoxGeometry(0.16,0.7,0.18),bodyM);
-  armL.position.set(-0.4,1.1,0); g.add(armL);
-  const armR=armL.clone(); armR.position.x=0.4; g.add(armR);
-  const gun=new TH.Mesh(new TH.BoxGeometry(0.1,0.1,0.5),
-     new TH.MeshStandardMaterial({color:0x222,roughness:.5,metalness:.5}));
-  gun.position.set(0.4,1.1,-0.35); gun.visible=false; g.add(gun);
-  // 敵人槍口火光（讓玩家看得到誰在開槍）
+  const tierCol = tier===2?0x9a5cff:(tier===1?0xe8483d:0x66c04a);   // 階級色（旗子+腰環）
+  const tierMat = new TH.MeshStandardMaterial({color:tierCol,roughness:.6});
+  const M=(geo,mat,px,py,pz,head)=>{ const m=new TH.Mesh(geo,mat);
+    m.position.set(px,py,pz); if(head)m.userData.head=true; m.castShadow=true; return m; };
+
+  /* ── 身體：肉排＋底包＋起司＋生菜＋番茄（child 0 = torso，命中軀幹）── */
+  const torso = M(new TH.CylinderGeometry(0.4,0.42,0.34,16), BURG.patty, 0,0.92,0);
+  const botBun=M(new TH.SphereGeometry(0.46,16,12), BURG.bun2, 0,-0.3,0); botBun.scale.set(1,0.66,1); torso.add(botBun);
+  const cheese=M(new TH.BoxGeometry(0.9,0.05,0.9), BURG.cheese, 0,0.16,0); cheese.rotation.y=Math.PI/4; torso.add(cheese);
+  for(const sx of [-0.34,0,0.34]){ const dp=M(new TH.ConeGeometry(0.08,0.2,4), BURG.cheese, sx,0.05,(sx===0?0.42:0.3)); dp.rotation.x=Math.PI; torso.add(dp); }
+  const lettuce=M(new TH.TorusGeometry(0.44,0.1,6,18), BURG.lettuce, 0,0.24,0); lettuce.rotation.x=Math.PI/2; torso.add(lettuce);
+  torso.add(M(new TH.CylinderGeometry(0.4,0.4,0.05,16), BURG.tomato, 0,0.32,0));
+  const band=M(new TH.TorusGeometry(0.43,0.035,6,18), tierMat, 0,-0.05,0); band.rotation.x=Math.PI/2; torso.add(band);
+  g.add(torso);
+
+  /* ── 頭：上層芝麻包＋表情臉＋橄欖旗（child 1 = head，命中爆頭）── */
+  const head = M(new TH.SphereGeometry(0.46,18,14), BURG.bun, 0,1.5,0, true); head.scale.set(1,0.84,1);
+  for(let i=0;i<11;i++){ const a=i*1.9;                            // 芝麻粒
+    const sd=M(new TH.SphereGeometry(0.035,6,6), BURG.seed, Math.cos(a)*0.34, 0.28-((i%3)*0.06), Math.sin(a)*0.34, true);
+    sd.scale.set(1,0.5,1.7); sd.lookAt(0,3,0); head.add(sd); }
+  for(const ex of [-0.17,0.17]){ const eye=new TH.Group(); eye.position.set(ex,0.03,0.34);  // 眼睛（正面 +z）
+    const w=M(new TH.SphereGeometry(0.13,12,10), BURG.eyeW, 0,0,0, true); w.scale.set(1,1.18,0.62); eye.add(w);
+    eye.add(M(new TH.SphereGeometry(0.07,8,8), BURG.eyeB, 0.02,0,0.08, true)); head.add(eye); }
+  const bl=M(new TH.BoxGeometry(0.17,0.05,0.06), BURG.brow, -0.17,0.22,0.35, true); bl.rotation.z=0.18; head.add(bl);   // 眉
+  const br=M(new TH.BoxGeometry(0.17,0.05,0.06), BURG.brow,  0.17,0.22,0.35, true); br.rotation.z=-0.18; head.add(br);
+  const mouth=M(new TH.SphereGeometry(0.16,12,10), BURG.mouth, 0,-0.2,0.34, true); mouth.scale.set(1.4,0.95,0.5); head.add(mouth);
+  head.add(M(new TH.BoxGeometry(0.08,0.1,0.04), BURG.teeth, -0.06,-0.12,0.5, true));   // 兩顆門牙
+  head.add(M(new TH.BoxGeometry(0.08,0.1,0.04), BURG.teeth,  0.06,-0.12,0.5, true));
+  const olive=M(new TH.CylinderGeometry(0.11,0.11,0.16,12), BURG.olive, 0,0.52,0, true); head.add(olive);   // 橄欖＋旗
+  olive.add(M(new TH.SphereGeometry(0.05,8,8), BURG.pim, 0,0.09,0, true));
+  olive.add(M(new TH.CylinderGeometry(0.012,0.012,0.36,6), BURG.stick, 0,0.28,0, true));
+  olive.add(M(new TH.BoxGeometry(0.18,0.12,0.02), tierMat, 0.1,0.4,0, true));
+  g.add(head);
+
+  /* ── 腿＋球鞋（child 2,3，從髖部擺動）── */
+  const mkLeg=(sx)=>{ const L=new TH.Group(); L.position.set(sx,0.5,0);
+    L.add(M(new TH.CylinderGeometry(0.09,0.09,0.42,8), BURG.limb, 0,-0.2,0));
+    const cuff=M(new TH.TorusGeometry(0.1,0.03,6,10), BURG.lettuce, 0,-0.38,0); cuff.rotation.x=Math.PI/2; L.add(cuff);
+    L.add(M(new TH.BoxGeometry(0.2,0.08,0.34), BURG.sole, 0,-0.46,0.06));
+    L.add(M(new TH.BoxGeometry(0.18,0.12,0.24), BURG.shoe, 0,-0.38,0.02)); return L; };
+  g.add(mkLeg(-0.16)); g.add(mkLeg(0.16));
+
+  /* ── 手臂＋手套（child 4,5，從肩部擺動；child5=右手揮拳）── */
+  const mkArm=(sx)=>{ const A=new TH.Group(); A.position.set(sx,1.02,0);
+    A.add(M(new TH.CylinderGeometry(0.07,0.07,0.4,8), BURG.limb, 0,-0.2,0));
+    const cuff=M(new TH.TorusGeometry(0.1,0.03,6,10), BURG.lettuce, 0,-0.36,0); cuff.rotation.x=Math.PI/2; A.add(cuff);
+    A.add(M(new TH.SphereGeometry(0.13,10,8), BURG.glove, 0,-0.46,0)); return A; };
+  g.add(mkArm(-0.42)); g.add(mkArm(0.42));
+
+  /* ── 保留原索引：gun(6,隱藏) / eFlash(7) / hpBg(8) / hpFg(9) / blob(10) ── */
+  const gun=new TH.Mesh(new TH.BoxGeometry(0.01,0.01,0.01), BURG.limb); gun.visible=false; g.add(gun);
   const eFlash=new TH.Mesh(new TH.SphereGeometry(0.16,7,7),
-     new TH.MeshBasicMaterial({color:0xff9a3a,transparent:true,opacity:0}));
-  eFlash.position.set(0.4,1.1,-0.62); g.add(eFlash);
-  // 血條
-  const hpBg=new TH.Mesh(new TH.PlaneGeometry(0.9,0.12),
-     new TH.MeshBasicMaterial({color:0x000000}));
-  const hpFg=new TH.Mesh(new TH.PlaneGeometry(0.86,0.08),
-     new TH.MeshBasicMaterial({color:0x55e08a}));
-  hpBg.position.y=2.12; hpFg.position.set(0,2.12,0.001);
+     new TH.MeshBasicMaterial({color:0xffc23a,transparent:true,opacity:0}));
+  eFlash.position.set(0.42,1.0,0.4); g.add(eFlash);
+  const hpBg=new TH.Mesh(new TH.PlaneGeometry(0.9,0.12), new TH.MeshBasicMaterial({color:0x000000}));
+  const hpFg=new TH.Mesh(new TH.PlaneGeometry(0.86,0.08), new TH.MeshBasicMaterial({color:0x55e08a}));
+  hpBg.position.y=2.15; hpFg.position.set(0,2.15,0.001);
   g.add(hpBg); g.add(hpFg); g.userData.hpBg=hpBg;
-  // 影子
-  const blob=new TH.Mesh(blobGeo,blobMat); blob.rotation.x=-Math.PI/2; blob.position.y=0.02;
-  g.add(blob);
+  const blob=new TH.Mesh(blobGeo,blobMat); blob.rotation.x=-Math.PI/2; blob.position.y=0.02; g.add(blob);
   g.position.set(x,0,z);
   scene.add(g);
   const maxhp = tier===2?180:(tier===1?100:60);
@@ -950,6 +1086,7 @@ function blip(f,d,vol,type){
 const sReload=()=>{ blip(320,0.05,0.18,'square'); setTimeout(()=>blip(220,0.07,0.18,'square'),130); };
 const sHurt=()=>{ blip(150,0.18,0.3,'sawtooth'); };
 const sHitEnemy=()=>{ blip(900,0.04,0.12,'square'); };
+const sSwing=()=>{ blip(330,0.10,0.13,'triangle'); setTimeout(()=>blip(190,0.07,0.09,'sine'),45); };
 const sKill=()=>{ blip(620,0.05,0.18); setTimeout(()=>blip(880,0.08,0.18),60); };
 
 /* ========= 輸入 ========= */
@@ -961,6 +1098,7 @@ addEventListener('keydown',e=>{
   if(e.code==='Digit2') swap('aug');
   if(e.code==='Digit3') swap('shotgun');
   if(e.code==='Digit4') swap('pistol');
+  if(e.code==='Digit5') swap('knife');
   if(e.code==='KeyQ') cycle();
   if(e.code==='KeyF') inspect();
   if(e.code==='Escape'&&armoryOpen) closeArmory();
@@ -1034,7 +1172,8 @@ let mv={x:0,y:0};
 /* ========= 射擊邏輯 ========= */
 let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
-let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視皮膚動畫
+let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
+let swingT=0; const SWING_DUR=0.28;      // 揮刀動畫
 const ray = new TH.Raycaster();
 
 function inspect(){
@@ -1071,16 +1210,20 @@ function fire(){
   const w=W(), a=ammo[curKey];
   if(reloading) return;
   inspectT=0;
-  if(a.mag<=0){ blip(120,0.05,0.15,'square'); if(a.res>0) reload(); return;}
-  a.mag--;
-  shot(curKey);
-  // 槍口火光
-  const gm=gunMeshes[curKey];
-  gm.userData.flash.material.opacity=0.9;
-  gm.userData.flash.scale.set(1,0.7+Math.random()*0.6,1);
-  gm.userData.flashLight.intensity=2.2;
-  recoilKick = Math.min(recoilKick + w.recoil*1.3, 0.16);
-  recoilYaw  += (Math.random()-0.5)*w.recoil*1.1;
+  if(w.melee){                              // 近戰刀：揮砍，不耗彈、不噴火光
+    swingT=SWING_DUR; sSwing();
+  } else {
+    if(a.mag<=0){ blip(120,0.05,0.15,'square'); if(a.res>0) reload(); return;}
+    a.mag--;
+    shot(curKey);
+    // 槍口火光
+    const gm=gunMeshes[curKey];
+    gm.userData.flash.material.opacity=0.9;
+    gm.userData.flash.scale.set(1,0.7+Math.random()*0.6,1);
+    gm.userData.flashLight.intensity=2.2;
+    recoilKick = Math.min(recoilKick + w.recoil*1.3, 0.16);
+    recoilYaw  += (Math.random()-0.5)*w.recoil*1.1;
+  }
 
   const spread = (adsAmt>0.5? w.adsSpread : w.spread);
   for(let p=0;p<w.pellets;p++){
@@ -1215,7 +1358,8 @@ function spawnOne(){
 /* ========= HUD ========= */
 function updHUD(){
   const a=ammo[curKey], w=W();
-  $('ammoBig').innerHTML = a.mag+'<small> / '+a.res+'</small>';
+  if(w.melee) $('ammoBig').innerHTML = '<small style="letter-spacing:2px">近戰</small>';
+  else $('ammoBig').innerHTML = a.mag+'<small> / '+a.res+'</small>';
   const sk=skinById(equipped[curKey]);
   $('gunName').textContent = w.name + (sk.id!=='default'?' · '+sk.name:'');
   $('hpfill').style.width = Math.max(0,player.hp)+'%';
@@ -1319,7 +1463,7 @@ function step(dt){
   recoilKick=Math.max(0,recoilKick-dt*0.6);
   recoilYaw *= (1-Math.min(1,dt*6));
   // ADS
-  const adsTarget = (adsHold||keys.KeyE||adsToggle)?1:0;
+  const adsTarget = ((adsHold||keys.KeyE||adsToggle) && !W().melee)?1:0;
   adsAmt += (adsTarget-adsAmt)*Math.min(1,dt*14);
 
   /* --- 玩家移動 --- */
@@ -1373,15 +1517,25 @@ function step(dt){
   if(Math.abs(camera.fov-fovT)>0.05){ camera.fov=fovT; camera.updateProjectionMatrix(); }
   let insX=0, insY=0, insZ=0;
   if(adsAmt>0.5) inspectT=0;               // 開鏡取消檢視
-  if(inspectT>0){                           // F 檢視：舉到眼前轉一整圈
+  if(inspectT>0){
     inspectT-=dt;
     const p=Math.min(1,1-Math.max(0,inspectT)/INSPECT_DUR);
     const lift=Math.sin(p*Math.PI);
-    const ease=p<.5? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
-    gx+=(0.03-gx)*lift; gy+=(-0.11-gy)*lift; gz+=(-0.30-gz)*lift;
-    insY=ease*Math.PI*2;
-    insX=Math.sin(p*Math.PI*2)*0.10*lift;
-    insZ=Math.sin(p*Math.PI)*0.14;
+    if(W().melee){                          // 刀：舉到眼前整把「旋轉」展示
+      gx+=(0.02-gx)*lift; gy+=(-0.05-gy)*lift; gz+=(-0.42-gz)*lift;
+      insY=p*Math.PI*4;                     // 轉兩整圈
+      insX=0.35*lift;                        // 微傾看到立體
+    } else {                                 // 槍：舉到眼前轉一圈
+      const ease=p<.5? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+      gx+=(0.03-gx)*lift; gy+=(-0.11-gy)*lift; gz+=(-0.30-gz)*lift;
+      insY=ease*Math.PI*2;
+      insX=Math.sin(p*Math.PI*2)*0.10*lift;
+      insZ=Math.sin(p*Math.PI)*0.14;
+    }
+  }
+  if(swingT>0){                             // 揮刀動作
+    swingT-=dt; const s=Math.sin((1-Math.max(0,swingT)/SWING_DUR)*Math.PI);
+    insX+=-s*1.0; insZ+=s*0.5; gz+=-s*0.10;
   }
   gunGroup.position.set(gx,gy,gz - recoilKick*0.25);
   gunGroup.rotation.x = -recoilKick*1.2 + insX;
@@ -1947,7 +2101,7 @@ function pvShow(key,skinId){
 }
 function renderArmTabs(){
   let h='';
-  for(const k of order){ const sk=skinById(equipped[k]);
+  for(const k of order){ if(WEAPONS[k].melee) continue; const sk=skinById(equipped[k]);
     h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+WEAPONS[k].name+
       '<small style="color:'+RARITY[sk.rar].c+'">'+sk.name+'</small></div>'; }
   $('armTabs').innerHTML=h;
