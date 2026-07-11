@@ -463,20 +463,21 @@ function makeKnifeModel(){
       c.beginPath(); const x=Math.random()*S; for(let y=0;y<=S;y+=12) c.lineTo(x+Math.sin(y/38+x)*4,y); c.stroke(); }
     for(let i=0;i<8;i++){ c.fillStyle='rgba(128,110,82,'+(0.05+Math.random()*0.07)+')'; c.beginPath(); c.ellipse(Math.random()*S,Math.random()*S,14+Math.random()*30,8+Math.random()*16,Math.random()*6,0,7); c.fill(); }
     wear(c,S,0.35); grain(c,S,8); });
-  const bladeMat=new TH.MeshStandardMaterial({map:brushed(0xe4e8ee),color:0xffffff,roughness:.26,metalness:.9, envMap:env,envMapIntensity:1.1});
-  const bevelMat=new TH.MeshStandardMaterial({color:0xfbfdff,roughness:.07,metalness:.98,envMap:env,envMapIntensity:1.55});   // 鏡面開刃斜面
-  const steel2  =new TH.MeshStandardMaterial({color:0xa9b1ba,roughness:.3, metalness:.9, envMap:env,envMapIntensity:1.0});
-  const trim    =new TH.MeshStandardMaterial({color:0xccd1d9,roughness:.26,metalness:.93,envMap:env,envMapIntensity:1.1});
-  const engrave =new TH.MeshStandardMaterial({color:0x66707c,roughness:.55,metalness:.7, envMap:env});
+  const bladeMat=new TH.MeshStandardMaterial({map:brushed(0xdde3ea),color:0xffffff,roughness:.3, metalness:.9, envMap:env,envMapIntensity:1.05});
+  const bevelMat=new TH.MeshStandardMaterial({color:0xe9eef3,roughness:.11,metalness:.96,envMap:env,envMapIntensity:1.45});   // 拋光鋼開刃斜面（真實鋼色）
+  const steel2  =new TH.MeshStandardMaterial({color:0xa6aeb8,roughness:.32,metalness:.9, envMap:env,envMapIntensity:.95});
+  const trim    =new TH.MeshStandardMaterial({color:0xc7ccd5,roughness:.28,metalness:.93,envMap:env,envMapIntensity:1.05});
+  const engrave =new TH.MeshStandardMaterial({color:0x606a76,roughness:.55,metalness:.7, envMap:env});
   const bone    =new TH.MeshStandardMaterial({map:bTex,color:0xffffff,roughness:.55,metalness:.05});
   const gem     =new TH.MeshStandardMaterial({color:0xe81414,roughness:.1, metalness:.35,envMap:env,envMapIntensity:.95,emissive:0x6a0707,emissiveIntensity:.8});
   const rivetM  =new TH.MeshStandardMaterial({color:0x9198a1,roughness:.32,metalness:.93,envMap:env});
-  const thick=0.028;                                     // 瘦身厚度
-  const ex={depth:thick,bevelEnabled:true,bevelThickness:0.004,bevelSize:0.004,bevelSegments:1};
+  const thick=0.019;                                     // 再瘦（0.028→0.019）
+  const ex={depth:thick,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
   // 刀刃：刀腹 + 刀尖 + 火焰倒刺刀背（barb 越靠護手越大、後掃）
   const bs=new TH.Shape();
-  bs.moveTo(0.10,-0.045); bs.lineTo(0.34,-0.072); bs.lineTo(0.55,-0.07); bs.lineTo(0.66,-0.045);
-  bs.lineTo(0.75,0.006); bs.lineTo(0.60,0.045); bs.lineTo(0.575,0.052);
+  bs.moveTo(0.10,-0.045); bs.lineTo(0.34,-0.068); bs.lineTo(0.56,-0.066); bs.lineTo(0.70,-0.036);
+  bs.lineTo(0.83,0.004);                    // 更長更尖的刀尖
+  bs.lineTo(0.66,0.048); bs.lineTo(0.60,0.05); bs.lineTo(0.575,0.052);
   bs.lineTo(0.555,0.115); bs.lineTo(0.515,0.058);
   bs.lineTo(0.495,0.135); bs.lineTo(0.45,0.064);
   bs.lineTo(0.43,0.152);  bs.lineTo(0.385,0.07);
@@ -484,15 +485,15 @@ function makeKnifeModel(){
   bs.lineTo(0.295,0.166); bs.lineTo(0.24,0.08);
   bs.lineTo(0.22,0.155);  bs.lineTo(0.165,0.082);
   bs.lineTo(0.10,0.072); bs.closePath();
-  const hole=new TH.Path(); hole.moveTo(0.30,0.004); hole.lineTo(0.47,0.012); hole.lineTo(0.47,0.03); hole.lineTo(0.30,0.022); hole.closePath();
+  const hole=new TH.Path(); hole.moveTo(0.30,0.004); hole.lineTo(0.50,0.012); hole.lineTo(0.50,0.03); hole.lineTo(0.30,0.022); hole.closePath();
   bs.holes.push(hole);
   const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,ex),bladeMat); blade.position.z=-thick/2; g.add(blade);
   // 開刃鏡面斜面（形狀跟著刀腹、雙面凸出 → 刀身兩色磨紋）
   const bev=new TH.Shape();
-  bev.moveTo(0.10,-0.045); bev.lineTo(0.34,-0.072); bev.lineTo(0.55,-0.07); bev.lineTo(0.66,-0.045); bev.lineTo(0.75,0.006);
-  bev.lineTo(0.70,-0.018); bev.lineTo(0.60,-0.04); bev.lineTo(0.40,-0.042); bev.lineTo(0.16,-0.028); bev.lineTo(0.10,-0.03);
+  bev.moveTo(0.10,-0.045); bev.lineTo(0.34,-0.068); bev.lineTo(0.56,-0.066); bev.lineTo(0.70,-0.036); bev.lineTo(0.83,0.004);
+  bev.lineTo(0.75,-0.014); bev.lineTo(0.58,-0.036); bev.lineTo(0.40,-0.038); bev.lineTo(0.16,-0.026); bev.lineTo(0.10,-0.03);
   bev.closePath();
-  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:thick+0.01,bevelEnabled:false}),bevelMat); bevM.position.z=-(thick+0.01)/2; g.add(bevM);
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:thick+0.009,bevelEnabled:false}),bevelMat); bevM.position.z=-(thick+0.009)/2; g.add(bevM);
   // 刀根符文蝕刻（長短交錯 + 小菱形，雙面）
   for(const zf of [thick/2+0.003,-thick/2-0.003]){
     for(let i=0;i<3;i++){ const w=[0.12,0.08,0.11][i]; const ln=new TH.Mesh(new TH.BoxGeometry(w,0.005,0.004),engrave); ln.position.set(0.19,(i-1)*0.019,zf); g.add(ln); }
@@ -510,13 +511,13 @@ function makeKnifeModel(){
   const fsp=new TH.Mesh(new TH.ConeGeometry(0.026,0.14,6),steel2); fsp.position.set(0.135,-0.055,0); fsp.rotation.z=-Math.PI/2-0.35; g.add(fsp);   // 護手前尖刺
   for(let i=0;i<6;i++){ const x=-0.03-i*0.095; const len=(i%2?0.09:0.14); const sp=new TH.Mesh(new TH.ConeGeometry(0.018,len,6),steel2);
     sp.position.set(x,-0.18-len*0.5+0.02,0); sp.rotation.z=Math.PI; g.add(sp); }             // 指虎下緣尖刺（長短交錯）
-  const dia=new TH.Mesh(new TH.BoxGeometry(0.11,0.11,thick+0.05),trim); dia.rotation.z=Math.PI/4; g.add(dia);   // 凸起菱形寶石座
-  for(const zf of [thick/2+0.02,-thick/2-0.02]){ const set=new TH.Mesh(new TH.TorusGeometry(0.05,0.009,4,4),trim); set.position.set(0,0,zf); set.rotation.z=Math.PI/4; g.add(set); }  // 金屬鑲框
-  const gA=new TH.Mesh(new TH.OctahedronGeometry(0.05),gem); gA.position.set(0,0,thick/2+0.03); gA.scale.set(1,1,0.65); g.add(gA);
-  const gB=gA.clone(); gB.position.z=-thick/2-0.03; g.add(gB);                               // 紅寶石徽章（雙面凸起）
-  for(const rp of [[-0.058,0.078],[0.058,0.078],[-0.058,-0.078],[0.058,-0.078]]){            // 四顆鉚釘
-    const rv=new TH.Mesh(new TH.CylinderGeometry(0.012,0.012,thick+0.05,8),rivetM); rv.rotation.x=Math.PI/2; rv.position.set(rp[0],rp[1],0); g.add(rv); }
-  for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.055,0.04,thick+0.014),gem); rb.position.set(-0.15-i*0.095,0.115,0); rb.rotation.z=0.015; g.add(rb); }
+  const dia=new TH.Mesh(new TH.BoxGeometry(0.1,0.1,thick+0.028),trim); dia.rotation.z=Math.PI/4; g.add(dia);   // 凸起菱形寶石座
+  for(const zf of [thick/2+0.014,-thick/2-0.014]){ const set=new TH.Mesh(new TH.TorusGeometry(0.048,0.008,4,4),trim); set.position.set(0,0,zf); set.rotation.z=Math.PI/4; g.add(set); }  // 金屬鑲框
+  const gA=new TH.Mesh(new TH.OctahedronGeometry(0.044),gem); gA.position.set(0,0,thick/2+0.018); gA.scale.set(1,1,0.6); g.add(gA);
+  const gB=gA.clone(); gB.position.z=-thick/2-0.018; g.add(gB);                               // 紅寶石徽章（雙面凸起）
+  for(const rp of [[-0.056,0.076],[0.056,0.076],[-0.056,-0.076],[0.056,-0.076]]){            // 四顆鉚釘
+    const rv=new TH.Mesh(new TH.CylinderGeometry(0.011,0.011,thick+0.028,8),rivetM); rv.rotation.x=Math.PI/2; rv.position.set(rp[0],rp[1],0); g.add(rv); }
+  for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.055,0.04,thick+0.012),gem); rb.position.set(-0.15-i*0.095,0.115,0); rb.rotation.z=0.015; g.add(rb); }
   const ring=new TH.Mesh(new TH.TorusGeometry(0.028,0.009,6,16),trim); ring.position.set(0.055,0.145,0); g.add(ring);   // 吊環
   // 模型保持中性方向（方便武器庫 360° 預覽）；手持 pose 於建構後單獨套用到 gunMeshes.knife
   // 相容槍枝介面（step() 會存取 flash / flashLight）
