@@ -488,7 +488,7 @@ function makeKnifeModel(){
   const gmsh2=gmsh.clone(); gmsh2.position.z=-thick/2-0.01; g.add(gmsh2);                    // 紅寶石徽章（雙面）
   for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.06,0.045,thick+0.02),gem); rb.position.set(-0.15-i*0.10,0.125,0); rb.rotation.z=0.02; g.add(rb); }
   const ring=new TH.Mesh(new TH.TorusGeometry(0.03,0.01,6,14),steel2); ring.position.set(0.06,0.15,0); g.add(ring);   // 吊環
-  g.rotation.set(0.05,0.5,1.85); g.scale.set(0.44,0.44,0.44); g.position.set(0.02,-0.10,-0.10);  // 握在右下、刀刃朝上（已驗證）
+  // 模型保持中性方向（方便武器庫 360° 預覽）；手持 pose 於建構後單獨套用到 gunMeshes.knife
   // 相容槍枝介面（step() 會存取 flash / flashLight）
   const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
   fl.visible=false; g.add(fl); g.userData.flash=fl;
@@ -781,40 +781,6 @@ function sakuraTex(){
   });
 }
 
-// 維多利亞捲草雕花 + 紅寶石十字徽記（信條招牌白銀鍍鉻）
-function filigreeTex(){
-  return makeTex((g,S)=>{
-    const bg=g.createLinearGradient(0,0,S,S);           // 白銀鍍鉻底
-    bg.addColorStop(0,'#eef1f5'); bg.addColorStop(.5,'#d5dae2'); bg.addColorStop(1,'#bcc2cc');
-    g.fillStyle=bg; g.fillRect(0,0,S,S);
-    const scroll=(cx,cy,sc,rot)=>{                       // 一組渦捲雕花
-      g.save(); g.translate(cx,cy); g.rotate(rot); g.scale(sc,sc);
-      for(const p of [['rgba(58,64,76,0.55)',2.4,0,0],['rgba(255,255,255,0.55)',1.1,-1.1,-1.1]]){
-        g.strokeStyle=p[0]; g.lineWidth=p[1]; g.save(); g.translate(p[2],p[3]);
-        g.beginPath();                                   // 主渦捲（凹刻暗線 + 白高光=立體）
-        for(let a=0;a<7.2;a+=0.12){ const r=1.6+a*3.1,x=Math.cos(a)*r,y=Math.sin(a)*r;
-          a===0?g.moveTo(x,y):g.lineTo(x,y); } g.stroke();
-        for(const s of [1,-1]){ g.beginPath();           // 對稱葉飾
-          g.moveTo(0,0); g.bezierCurveTo(13*s,-5,25*s,-1,29*s,-15);
-          g.bezierCurveTo(23*s,-7,15*s,-9,5*s,-1); g.stroke(); }
-        g.restore();
-      }
-      g.restore();
-    };
-    for(let iy=0;iy<S;iy+=128) for(let ix=0;ix<S;ix+=128)
-      scroll(ix+64,iy+64,0.92,(ix/128+iy/128)*1.1);
-    const cx=S*0.5,cy=S*0.5,R=32;                        // 紅寶石十字徽記
-    g.fillStyle='#f4f6f9'; g.beginPath(); g.arc(cx,cy,R+4,0,7); g.fill();
-    g.strokeStyle='rgba(58,64,76,0.7)'; g.lineWidth=2.4; g.stroke();
-    const rg=g.createRadialGradient(cx-R*0.3,cy-R*0.3,2,cx,cy,R);
-    rg.addColorStop(0,'#ff5f64'); rg.addColorStop(.55,'#cc2027'); rg.addColorStop(1,'#7a0d12');
-    g.fillStyle=rg; g.beginPath(); g.arc(cx,cy,R,0,7); g.fill();
-    g.fillStyle='#f6f8fb'; const t=R*0.17,a=R*0.62;      // 白色聖殿十字
-    g.fillRect(cx-t,cy-a,2*t,2*a); g.fillRect(cx-a,cy-t,2*a,2*t);
-    grain(g,S,7); wear(g,S,0.3);
-  });
-}
-
 const RARITY=[
   {n:'消費級',c:'#b0c3d9'},{n:'工業級',c:'#5e98d9'},{n:'軍規級',c:'#4b69ff'},
   {n:'受限級',c:'#8847ff'},{n:'保密級',c:'#d32ce6'},{n:'隱秘級',c:'#eb4b4b'},
@@ -860,9 +826,6 @@ const SKINS=[
     return {body:new TH.MeshStandardMaterial({map:t,color:0x9aa2c8,roughness:.35,metalness:.55,
       emissive:0x8090ff,emissiveMap:t,emissiveIntensity:.4}),
       accent:metalAccent(0x181a2e)}; }},
- {id:'creed',name:'信條',rar:5,css:'linear-gradient(135deg,#eef1f5 42%,#c81f26 52%,#6a4327)',
-  make:()=>({body:texMat(filigreeTex(),.32,.72),
-             accent:texMat(woodTex('#6a4327','54,32,18','32,18,8'),.72,.12)})},
  {id:'gold',name:'黃金榮耀',rar:6,css:'linear-gradient(135deg,#ffe14d,#d4a712)',
   make:()=>({body:texMat(goldTex(),.16,.85),accent:texMat(goldTex(),.22,.85)})},
 ];
@@ -914,6 +877,8 @@ function applySkin(model,key,skinId,env){
 }
 
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
+// 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
+gunMeshes.knife.rotation.set(0.05,0.5,1.85); gunMeshes.knife.scale.set(0.44,0.44,0.44); gunMeshes.knife.position.set(0.02,-0.10,-0.10);
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
@@ -2087,6 +2052,10 @@ function pvShow(key,skinId){
   pvInit(); pvDestroyModel();
   pvModel=makeGunModel(key);
   applySkin(pvModel,key,skinId);
+  if(WEAPONS[key].melee){          // 近戰刀金屬反射改用預覽場景環境（主 renderer 的 envMap 無法跨 renderer）
+    pvModel.traverse(o=>{ if(o.isMesh&&o.material&&o.material.metalness>0.4){
+      o.material.envMap=pvScene.environment; o.material.needsUpdate=true; } });
+  }
   const bb=new TH.Box3().setFromObject(pvModel);
   const ctr=bb.getCenter(new TH.Vector3()), sz=bb.getSize(new TH.Vector3());
   pvModel.position.sub(ctr);
@@ -2095,20 +2064,30 @@ function pvShow(key,skinId){
   const dim=Math.max(sz.x,sz.y,sz.z);
   pvCam.position.set(0,dim*0.1,dim*0.95+0.32);
   pvCam.lookAt(0,0,0);
-  const sk=skinById(skinId);
-  $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:'+RARITY[sk.rar].c+'">'+
-    sk.name+'</b><small>'+RARITY[sk.rar].n+'</small>';
+  if(WEAPONS[key].melee){
+    $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:#eb4b4b">近戰武器</b><small>拖曳旋轉檢視</small>';
+  } else {
+    const sk=skinById(skinId);
+    $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:'+RARITY[sk.rar].c+'">'+
+      sk.name+'</b><small>'+RARITY[sk.rar].n+'</small>';
+  }
 }
 function renderArmTabs(){
   let h='';
-  for(const k of order){ if(WEAPONS[k].melee) continue; const sk=skinById(equipped[k]);
+  for(const k of order){ const melee=WEAPONS[k].melee; const sk=skinById(equipped[k]);
     h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+WEAPONS[k].name+
-      '<small style="color:'+RARITY[sk.rar].c+'">'+sk.name+'</small></div>'; }
+      '<small style="color:'+(melee?'#cfd3d8':RARITY[sk.rar].c)+'">'+(melee?'近戰武器':sk.name)+'</small></div>'; }
   $('armTabs').innerHTML=h;
   const tabs=document.querySelectorAll('.armTab');
   for(const el of tabs) el.onclick=()=>{ armWeap=el.dataset.k; refreshArmory(); };
 }
 function renderSkinGrid(){
+  if(WEAPONS[armWeap].melee){
+    $('armSkins').innerHTML='<div style="grid-column:1/-1;padding:22px 16px;text-align:center;color:#9aa7bd;line-height:1.8">'
+      +'🗡️ <b style="color:#e9e3d3">信條</b> 是<b>近戰武器</b><br>無塗裝可換，這裡供你 360° 檢視<br>'
+      +'<small style="color:#7f8da6">遊戲中按 <b style="color:#cfd3d8">5</b> 拿出　<b style="color:#cfd3d8">左鍵</b> 揮砍　<b style="color:#cfd3d8">F</b> 旋轉檢視</small></div>';
+    return;
+  }
   let h='';
   for(const s of SKINS){
     const eq=equipped[armWeap]===s.id;
