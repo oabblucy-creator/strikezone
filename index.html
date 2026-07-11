@@ -463,13 +463,13 @@ function makeKnifeModel(){
       c.beginPath(); const x=Math.random()*S; for(let y=0;y<=S;y+=12) c.lineTo(x+Math.sin(y/38+x)*4,y); c.stroke(); }
     for(let i=0;i<8;i++){ c.fillStyle='rgba(128,110,82,'+(0.05+Math.random()*0.07)+')'; c.beginPath(); c.ellipse(Math.random()*S,Math.random()*S,14+Math.random()*30,8+Math.random()*16,Math.random()*6,0,7); c.fill(); }
     wear(c,S,0.35); grain(c,S,8); });
-  const bladeMat=new TH.MeshStandardMaterial({map:brushed(0xe4e8ee),color:0xffffff,roughness:.22,metalness:.92,envMap:env,envMapIntensity:1.2});
-  const edgeMat =new TH.MeshStandardMaterial({color:0xf6f8fb,roughness:.12,metalness:.96,envMap:env,envMapIntensity:1.4});
+  const bladeMat=new TH.MeshStandardMaterial({map:brushed(0xe4e8ee),color:0xffffff,roughness:.26,metalness:.9, envMap:env,envMapIntensity:1.1});
+  const bevelMat=new TH.MeshStandardMaterial({color:0xfbfdff,roughness:.07,metalness:.98,envMap:env,envMapIntensity:1.55});   // 鏡面開刃斜面
   const steel2  =new TH.MeshStandardMaterial({color:0xa9b1ba,roughness:.3, metalness:.9, envMap:env,envMapIntensity:1.0});
   const trim    =new TH.MeshStandardMaterial({color:0xccd1d9,roughness:.26,metalness:.93,envMap:env,envMapIntensity:1.1});
-  const engrave =new TH.MeshStandardMaterial({color:0x6d7580,roughness:.5, metalness:.7, envMap:env});
+  const engrave =new TH.MeshStandardMaterial({color:0x66707c,roughness:.55,metalness:.7, envMap:env});
   const bone    =new TH.MeshStandardMaterial({map:bTex,color:0xffffff,roughness:.55,metalness:.05});
-  const gem     =new TH.MeshStandardMaterial({color:0xe01414,roughness:.12,metalness:.35,envMap:env,envMapIntensity:.9,emissive:0x5a0606,emissiveIntensity:.7});
+  const gem     =new TH.MeshStandardMaterial({color:0xe81414,roughness:.1, metalness:.35,envMap:env,envMapIntensity:.95,emissive:0x6a0707,emissiveIntensity:.8});
   const rivetM  =new TH.MeshStandardMaterial({color:0x9198a1,roughness:.32,metalness:.93,envMap:env});
   const thick=0.028;                                     // 瘦身厚度
   const ex={depth:thick,bevelEnabled:true,bevelThickness:0.004,bevelSize:0.004,bevelSegments:1};
@@ -487,8 +487,17 @@ function makeKnifeModel(){
   const hole=new TH.Path(); hole.moveTo(0.30,0.004); hole.lineTo(0.47,0.012); hole.lineTo(0.47,0.03); hole.lineTo(0.30,0.022); hole.closePath();
   bs.holes.push(hole);
   const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,ex),bladeMat); blade.position.z=-thick/2; g.add(blade);
-  const egeo=new TH.Mesh(new TH.BoxGeometry(0.56,0.018,thick+0.006), edgeMat); egeo.position.set(0.40,-0.052,0); egeo.rotation.z=0.02; g.add(egeo);   // 開刃亮邊
-  for(const zf of [thick/2+0.002,-thick/2-0.002]) for(let i=0;i<3;i++){ const ln=new TH.Mesh(new TH.BoxGeometry(0.11,0.005,0.004),engrave); ln.position.set(0.185,(i-1)*0.02,zf); g.add(ln); }  // 刀根蝕刻線
+  // 開刃鏡面斜面（形狀跟著刀腹、雙面凸出 → 刀身兩色磨紋）
+  const bev=new TH.Shape();
+  bev.moveTo(0.10,-0.045); bev.lineTo(0.34,-0.072); bev.lineTo(0.55,-0.07); bev.lineTo(0.66,-0.045); bev.lineTo(0.75,0.006);
+  bev.lineTo(0.70,-0.018); bev.lineTo(0.60,-0.04); bev.lineTo(0.40,-0.042); bev.lineTo(0.16,-0.028); bev.lineTo(0.10,-0.03);
+  bev.closePath();
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:thick+0.01,bevelEnabled:false}),bevelMat); bevM.position.z=-(thick+0.01)/2; g.add(bevM);
+  // 刀根符文蝕刻（長短交錯 + 小菱形，雙面）
+  for(const zf of [thick/2+0.003,-thick/2-0.003]){
+    for(let i=0;i<3;i++){ const w=[0.12,0.08,0.11][i]; const ln=new TH.Mesh(new TH.BoxGeometry(w,0.005,0.004),engrave); ln.position.set(0.19,(i-1)*0.019,zf); g.add(ln); }
+    const dm=new TH.Mesh(new TH.BoxGeometry(0.02,0.02,0.004),engrave); dm.position.set(0.115,0,zf); dm.rotation.z=Math.PI/4; g.add(dm);
+  }
   // 護手 + 指虎 + 握把（-x=尾端）
   const ks=new TH.Shape();
   ks.moveTo(0.10,0.125); ks.lineTo(-0.55,0.135); ks.lineTo(-0.59,0.055); ks.lineTo(-0.59,-0.09);
@@ -496,7 +505,8 @@ function makeKnifeModel(){
   const h1=new TH.Path(); h1.absarc(-0.195,-0.02,0.088,0,Math.PI*2,true); ks.holes.push(h1);
   const h2=new TH.Path(); h2.absarc(-0.415,-0.02,0.088,0,Math.PI*2,true); ks.holes.push(h2);
   const knuck=new TH.Mesh(new TH.ExtrudeGeometry(ks,ex),bone); knuck.position.z=-thick/2; g.add(knuck);
-  const topTrim=new TH.Mesh(new TH.BoxGeometry(0.66,0.028,thick+0.01), trim); topTrim.position.set(-0.23,0.14,0); g.add(topTrim);   // 頂部金屬飾條
+  const topTrim=new TH.Mesh(new TH.BoxGeometry(0.66,0.028,thick+0.012), trim); topTrim.position.set(-0.23,0.14,0); g.add(topTrim);   // 頂部金屬飾條
+  const frontTrim=new TH.Mesh(new TH.BoxGeometry(0.022,0.17,thick+0.012), trim); frontTrim.position.set(0.088,-0.03,0); g.add(frontTrim);   // 護手前緣金屬框
   const fsp=new TH.Mesh(new TH.ConeGeometry(0.026,0.14,6),steel2); fsp.position.set(0.135,-0.055,0); fsp.rotation.z=-Math.PI/2-0.35; g.add(fsp);   // 護手前尖刺
   for(let i=0;i<6;i++){ const x=-0.03-i*0.095; const len=(i%2?0.09:0.14); const sp=new TH.Mesh(new TH.ConeGeometry(0.018,len,6),steel2);
     sp.position.set(x,-0.18-len*0.5+0.02,0); sp.rotation.z=Math.PI; g.add(sp); }             // 指虎下緣尖刺（長短交錯）
