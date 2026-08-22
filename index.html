@@ -1189,7 +1189,7 @@ let mv={x:0,y:0};
 let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
-let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.32;   // 近戰橫斬/重戳連段
+let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.30;   // 近戰橫斬/重戳連段
 const ray = new TH.Raycaster();
 
 function inspect(){
@@ -1563,10 +1563,10 @@ function step(dt){
       gz += -s*0.30; gy += -s*0.05; insX += -s*0.10;
     } else {
       const p=1-Math.max(0,atkT)/SLASH_DUR;
-      const wind=p<0.22?Math.sin(p/0.22*Math.PI*0.5):Math.max(0,Math.cos((p-0.22)/0.78*Math.PI*0.5));
-      const sw=p<0.22?0:Math.sin((p-0.22)/0.78*Math.PI);
-      insY += (wind*0.28 - sw*0.85)*slashDir;   // 橫斬：揚一側 → 往前伸+橫掃另一側（左右交替）
-      insZ += -sw*0.30*slashDir; insX += sw*0.10; gz += wind*0.05 - sw*0.22;   // 微收→往前伸
+      const wind=p<0.2?Math.sin(p/0.2*Math.PI*0.5):Math.max(0,Math.cos((p-0.2)/0.8*Math.PI*0.5));
+      const sw=p<0.2?0:Math.sin((p-0.2)/0.8*Math.PI);
+      insY += (wind*0.45 - sw*1.15)*slashDir;   // 大幅斜橫斬：手臂掃過畫面、左右交替（照三角洲影片）
+      insZ += -sw*0.5*slashDir; insX += sw*0.32; gz += wind*0.05 - sw*0.20;
     }
   }
   if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視旋轉時收起手（手是刀子物件、自動跟持刀顯示）
