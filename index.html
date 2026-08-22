@@ -1565,8 +1565,10 @@ function step(dt){
       const p=1-Math.max(0,atkT)/SLASH_DUR;
       const wind=p<0.2?Math.sin(p/0.2*Math.PI*0.5):Math.max(0,Math.cos((p-0.2)/0.8*Math.PI*0.5));
       const sw=p<0.2?0:Math.sin((p-0.2)/0.8*Math.PI);
-      insY += (wind*0.45 - sw*1.15)*slashDir;   // 大幅斜橫斬：手臂掃過畫面、左右交替（照三角洲影片）
-      insZ += -sw*0.5*slashDir; insX += sw*0.32; gz += wind*0.05 - sw*0.20;
+      insZ += (wind*0.5 - sw*1.7)*slashDir;   // 主：刀身大幅翻轉「劃過」＝真的砍（不前推）
+      insY += (wind*0.2 - sw*0.55)*slashDir;  // 帶橫向掃
+      insX += sw*0.30;                         // 下壓斜劈
+      gx  += -sw*0.12*slashDir;                // 少量橫移（不用 gz 前推）
     }
   }
   if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視旋轉時收起手（手是刀子物件、自動跟持刀顯示）
