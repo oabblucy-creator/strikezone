@@ -51,6 +51,18 @@
   #scoreBox{text-align:right;}
   #scoreBig{font:800 22px "Segoe UI";color:#cfe3ff;}
   #scoreSub{color:#8493ad;font-size:11px;letter-spacing:2px;margin-top:2px;}
+  #credBox{text-align:center;}
+  #credBig{font:800 22px "Segoe UI";letter-spacing:1px;color:#5fd0ff;
+    text-shadow:0 0 10px rgba(95,208,255,.45);transition:transform .12s ease;}
+  #credBig.pop{transform:scale(1.35);}
+  #credSub{color:#8493ad;font-size:11px;letter-spacing:2px;margin-top:2px;}
+  .buyBtn{margin-top:14px;padding:11px 26px;border:0;border-radius:7px;cursor:pointer;
+    font:700 15px "Segoe UI";letter-spacing:1px;color:#04202e;
+    background:linear-gradient(135deg,#7fe0ff,#3aa8e0);box-shadow:0 3px 12px rgba(58,168,224,.4);}
+  .buyBtn:hover{filter:brightness(1.12);}
+  .buyBtn.no{background:#3a4049;color:#8894a5;cursor:not-allowed;box-shadow:none;}
+  .ownTag{margin-top:14px;color:#7fe0a0;font:700 15px "Segoe UI";letter-spacing:2px;}
+  .lockTag{color:#ff9a5a;}
 
   /* 擊殺訊息 */
   #feed{position:fixed;right:26px;top:84px;text-align:right;}
@@ -226,6 +238,7 @@
 
   <div id="top">
     <div id="waveBox"><div id="waveBig">第 1 波</div><div id="waveSub">剩餘敵人 0</div></div>
+    <div id="credBox"><div id="credBig">0</div><div id="credSub">點券</div></div>
     <div id="scoreBox"><div id="scoreBig">0</div><div id="scoreSub">分數 · 擊殺 0</div></div>
   </div>
 
@@ -291,7 +304,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~5 或滾輪／Q　<b>信條近戰刀</b> 5　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~9 或滾輪／Q　🔒<b>信條</b>5（1000）　🔒<b>北極星</b>6（2000）　🔒<b>爪刀</b>7（1500）　🔒<b>蝴蝶刀</b>8（2000）　🔒<b>苦無·無限投擲</b>9（5000）　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -303,7 +316,7 @@
 
 <div id="armory" class="hide">
   <div id="armTop">
-    <div id="armTitle">武器庫 <span>WEAPON SKINS · 點皮膚立即裝備</span></div>
+    <div id="armTitle">武器庫 <span>WEAPON SKINS · 點皮膚立即裝備</span><span id="armCred"></span></div>
     <button id="armClose">✕ 返回選單</button>
   </div>
   <div id="armMain">
@@ -442,9 +455,26 @@ const WEAPONS = {
          pellets:1, color:0x33373f},
   knife:{name:"信條", melee:true, mag:1, max:1, reserve:0, dmg:55, rpm:120, auto:false,
          spread:0, adsSpread:0, recoil:0, reload:0, range:3.2,
-         pellets:1, color:0xd9dde3}
+         pellets:1, color:0xd9dde3, price:1000, meleeStyle:'sweep', inspectStyle:'heavy', slashDur:0.32, stabDur:0.36},
+  // 北極星：三角洲首款彈簧刀 — 出刀快、攻擊距離長、傷害高
+  polaris:{name:"北極星", melee:true, mag:1, max:1, reserve:0, dmg:62, rpm:170, auto:false,
+         spread:0, adsSpread:0, recoil:0, reload:0, range:3.9,
+         pellets:1, color:0x2b4c86, price:2000, meleeStyle:'flick', inspectStyle:'flick', slashDur:0.22, stabDur:0.22},
+  // 爪刀：反手握、食指穿指環，攻擊是快速勾割
+  karambit:{name:"爪刀", melee:true, mag:1, max:1, reserve:0, dmg:58, rpm:200, auto:false,
+         spread:0, adsSpread:0, recoil:0, reload:0, range:3.3,
+         pellets:1, color:0x8e97a3, price:1500, meleeStyle:'hook', inspectStyle:'spin', slashDur:0.20, stabDur:0.22},
+  // 蝴蝶刀：正手握，檢視時做開合翻刀
+  butterfly:{name:"蝴蝶刀", melee:true, mag:1, max:1, reserve:0, dmg:60, rpm:175, auto:false,
+         spread:0, adsSpread:0, recoil:0, reload:0, range:3.6,
+         pellets:1, color:0xeef4fb, price:2000, meleeStyle:'flip', inspectStyle:'balisong', slashDur:0.24, stabDur:0.26},
+  // 苦無：投擲遠戰，子彈無限（thrown=不走 hitscan、丟實體投擲物）
+  kunai:{name:"苦無", thrown:true, infinite:true, mag:1, max:1, reserve:1, dmg:72, rpm:105, auto:false,
+         spread:0, adsSpread:0, recoil:0, reload:0, range:70,
+         pellets:1, color:0x2a2d33, price:5000, inspectStyle:'flick'}
 };
-const order=["rifle","aug","shotgun","pistol","knife"];
+const order=["rifle","aug","shotgun","pistol","knife","polaris","karambit","butterfly","kunai"];
+function isSpecial(k){ const w=WEAPONS[k]; return !!(w&&(w.melee||w.thrown)); }   // 近戰或投擲：沒有塗裝、要用點券解鎖
 let curKey="rifle";
 const ammo = {}; for(const k in WEAPONS){ ammo[k]={mag:WEAPONS[k].mag, res:WEAPONS[k].reserve}; }
 function W(){ return WEAPONS[curKey]; }
@@ -454,23 +484,43 @@ const gunGroup = new TH.Group();
 camera.add(gunGroup);
 scene.add(camera);
 const gunMeshes = {};
-/* ===== 握刀的精瘦健壯手（前臂肌肉收斂、不過壯；反手握指虎板）===== */
+/* ===== 信條的手（右手・戰術手套・正手握）=====
+   握把改細之後不再有指虎孔，改成四指環繞細握把（y±0.046、z±0.029）。 */
 function makeKnifeHand(){
-  const h=new TH.Group();
-  const skin =new TH.MeshStandardMaterial({color:0xc98a5e,roughness:.72,metalness:0});
-  const skinS=new TH.MeshStandardMaterial({color:0xa9713f,roughness:.78,metalness:0});
-  const gx=-0.31;
-  const palm=new TH.Mesh(new TH.SphereGeometry(0.185,16,14),skin); palm.scale.set(1.35,1.05,0.7); palm.position.set(gx,-0.01,-0.10); h.add(palm);   // 掌背
-  const fingers=new TH.Mesh(new TH.SphereGeometry(0.185,16,14),skin); fingers.scale.set(1.35,1.0,0.6); fingers.position.set(gx,-0.02,0.10); h.add(fingers);  // 四指
-  for(let i=0;i<4;i++){ const fx=gx-0.14+i*0.093; const kn=new TH.Mesh(new TH.SphereGeometry(0.05,10,8),skin); kn.scale.set(1,0.9,1); kn.position.set(fx,0.13,0.125); h.add(kn);}  // 骨感指節
-  for(let i=0;i<3;i++){ const fx=gx-0.13+i*0.088; const gv=new TH.Mesh(new TH.BoxGeometry(0.018,0.26,0.05),skinS); gv.position.set(fx,-0.01,0.175); h.add(gv);}  // 指溝
-  const th1=new TH.Mesh(new TH.SphereGeometry(0.078,12,10),skin); th1.scale.set(1.35,1.1,1); th1.position.set(gx+0.185,0.04,0.03); h.add(th1);   // 拇指
-  const th2=new TH.Mesh(new TH.SphereGeometry(0.068,12,10),skin); th2.position.set(gx+0.28,0.11,0.03); h.add(th2);
-  const wrist=new TH.Mesh(new TH.CylinderGeometry(0.108,0.118,0.14,18),skin); wrist.rotation.z=Math.PI/2; wrist.position.set(gx-0.25,-0.01,-0.02); h.add(wrist);   // 手腕
-  const cuffMat=new TH.MeshStandardMaterial({color:0x2a2e34,roughness:.85,metalness:.12});
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.126,0.126,0.085,20),cuffMat); cuff.rotation.z=Math.PI/2; cuff.position.set(gx-0.325,-0.01,-0.02); h.add(cuff);   // 戰術腕帶
-  const fore=new TH.Mesh(new TH.CylinderGeometry(0.125,0.10,0.60,20),skin); fore.rotation.z=Math.PI/2; fore.position.set(gx-0.56,-0.02,-0.02); h.add(fore);   // 前臂：自然收斂、正常手臂（非肌肉猛男）
-  const elbow=new TH.Mesh(new TH.SphereGeometry(0.132,16,12),skin); elbow.scale.set(0.92,0.96,0.96); elbow.position.set(gx-0.87,-0.03,-0.02); h.add(elbow);   // 手肘
+  const h=new TH.Group(); const M=gloveMats();
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);          // 掌心在 -z
+  palm.scale.set(0.32,0.180,0.112); palm.position.set(-0.200,-0.010,-0.082); h.add(palm);
+  const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
+  heel.scale.set(0.16,0.172,0.106); heel.position.set(-0.350,-0.026,-0.074); h.add(heel);
+  const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);          // 手背在 +z
+  back.scale.set(0.30,0.162,0.074); back.position.set(-0.195,0.028,0.056); h.add(back);
+
+  const FING=[[-0.058,0.038,0.004],[-0.152,0.039,0.008],[-0.246,0.036,0.000],[-0.336,0.031,-0.010]];
+  for(let i=0;i<FING.length;i++){
+    const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
+    // 由手背繞 +z 側 → 繞過底部 → 指尖收進掌心
+    limbSeg(h,[fx, 0.064,0.044],[fx,-0.010,0.070+ex],r,M.fab);
+    limbSeg(h,[fx,-0.010,0.070+ex],[fx,-0.080,0.020],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.080,0.020],[fx,-0.062,-0.054],r*0.84,M.fab);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad); // 指節護甲
+    pad.position.set(fx,0.070,0.040); pad.rotation.x=-0.30; h.add(pad);
+  }
+  const GAPS=[-0.105,-0.199,-0.291];
+  for(let i=0;i<GAPS.length;i++){
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.140,0.150),M.seam);
+    gv.position.set(GAPS[i],-0.018,0.032); h.add(gv);
+  }
+  // 拇指：壓在握把上緣往刀尖方向（分辨左右手的關鍵特徵）
+  limbSeg(h,[-0.212,-0.014,-0.086],[-0.156,0.058,-0.038],0.052,M.fab,0.046);
+  limbSeg(h,[-0.156,0.058,-0.038],[0.006,0.090,0.012],0.046,M.fab,0.038);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
+  nail.position.set(-0.020,0.122,0.010); nail.rotation.z=-0.16; h.add(nail);
+  // 手腕 → 腕帶 → 前臂
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.492,-0.048,-0.048); h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  tab.position.set(-0.492,0.050,-0.048); h.add(tab);
+  limbSeg(h,[-0.552,-0.054,-0.046],[-0.892,-0.092,-0.038],0.106,M.fab,0.078);
   return h;
 }
 /* ===== 信條 近戰刀模型（依設計圖：clip-point 鋸齒刀身 + 白骨指虎 + 紅寶石徽章）===== */
@@ -490,27 +540,27 @@ function makeKnifeModel(){
   const bone    =new TH.MeshStandardMaterial({map:bTex,color:0xffffff,roughness:.55,metalness:.05});
   const gem     =new TH.MeshStandardMaterial({color:0xe81414,roughness:.1, metalness:.35,envMap:env,envMapIntensity:.95,emissive:0x6a0707,emissiveIntensity:.8});
   const rivetM  =new TH.MeshStandardMaterial({color:0x9198a1,roughness:.32,metalness:.93,envMap:env});
-  const thick=0.019;                                     // 再瘦（0.028→0.019）
+  const thick=0.014;                                     // 再瘦（0.028→0.019→0.017，向北極星看齊）
   const ex={depth:thick,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
   // 刀刃：刀腹 + 刀尖 + 火焰倒刺刀背（barb 越靠護手越大、後掃）
   const bs=new TH.Shape();
-  bs.moveTo(0.10,-0.045); bs.lineTo(0.34,-0.068); bs.lineTo(0.56,-0.066); bs.lineTo(0.70,-0.036);
-  bs.lineTo(0.83,0.004);                    // 更長更尖的刀尖
-  bs.lineTo(0.66,0.048); bs.lineTo(0.60,0.05); bs.lineTo(0.575,0.052);
-  bs.lineTo(0.555,0.115); bs.lineTo(0.515,0.058);
-  bs.lineTo(0.495,0.135); bs.lineTo(0.45,0.064);
-  bs.lineTo(0.43,0.152);  bs.lineTo(0.385,0.07);
-  bs.lineTo(0.365,0.163); bs.lineTo(0.315,0.075);
-  bs.lineTo(0.295,0.166); bs.lineTo(0.24,0.08);
-  bs.lineTo(0.22,0.155);  bs.lineTo(0.165,0.082);
-  bs.lineTo(0.10,0.072); bs.closePath();
+  bs.moveTo(0.10,-0.029); bs.lineTo(0.34,-0.043); bs.lineTo(0.56,-0.041); bs.lineTo(0.70,-0.022);
+  bs.lineTo(0.87,0.004);                    // 再瘦一輪：刀腹更窄、倒刺更收
+  bs.lineTo(0.69,0.030); bs.lineTo(0.60,0.032); bs.lineTo(0.575,0.034);
+  bs.lineTo(0.555,0.066); bs.lineTo(0.515,0.037);
+  bs.lineTo(0.495,0.075); bs.lineTo(0.45,0.040);
+  bs.lineTo(0.43,0.083);  bs.lineTo(0.385,0.044);
+  bs.lineTo(0.365,0.089); bs.lineTo(0.315,0.047);
+  bs.lineTo(0.295,0.090); bs.lineTo(0.24,0.050);
+  bs.lineTo(0.22,0.085);  bs.lineTo(0.165,0.051);
+  bs.lineTo(0.10,0.045); bs.closePath();
   const hole=new TH.Path(); hole.moveTo(0.30,0.004); hole.lineTo(0.50,0.012); hole.lineTo(0.50,0.03); hole.lineTo(0.30,0.022); hole.closePath();
   bs.holes.push(hole);
   const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,ex),bladeMat); blade.position.z=-thick/2; g.add(blade);
   // 開刃鏡面斜面（形狀跟著刀腹、雙面凸出 → 刀身兩色磨紋）
   const bev=new TH.Shape();
-  bev.moveTo(0.10,-0.045); bev.lineTo(0.34,-0.068); bev.lineTo(0.56,-0.066); bev.lineTo(0.70,-0.036); bev.lineTo(0.83,0.004);
-  bev.lineTo(0.75,-0.014); bev.lineTo(0.58,-0.036); bev.lineTo(0.40,-0.038); bev.lineTo(0.16,-0.026); bev.lineTo(0.10,-0.03);
+  bev.moveTo(0.10,-0.029); bev.lineTo(0.34,-0.043); bev.lineTo(0.56,-0.041); bev.lineTo(0.70,-0.022); bev.lineTo(0.87,0.004);
+  bev.lineTo(0.77,-0.009); bev.lineTo(0.58,-0.022); bev.lineTo(0.40,-0.024); bev.lineTo(0.16,-0.016); bev.lineTo(0.10,-0.019);
   bev.closePath();
   const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:thick+0.009,bevelEnabled:false}),bevelMat); bevM.position.z=-(thick+0.009)/2; g.add(bevM);
   // 刀根符文蝕刻（長短交錯 + 小菱形，雙面）
@@ -518,26 +568,33 @@ function makeKnifeModel(){
     for(let i=0;i<3;i++){ const w=[0.12,0.08,0.11][i]; const ln=new TH.Mesh(new TH.BoxGeometry(w,0.005,0.004),engrave); ln.position.set(0.19,(i-1)*0.019,zf); g.add(ln); }
     const dm=new TH.Mesh(new TH.BoxGeometry(0.02,0.02,0.004),engrave); dm.position.set(0.115,0,zf); dm.rotation.z=Math.PI/4; g.add(dm);
   }
-  // 護手 + 指虎 + 握把（-x=尾端）
+  // 護手 + 細握把（-x=尾端）：與刀身同高（±0.040），不再是指虎板；z 方向加厚才握得住
+  const gripZ=thick*3.2;
+  const exG={depth:gripZ,bevelEnabled:true,bevelThickness:0.005,bevelSize:0.005,bevelSegments:2};
   const ks=new TH.Shape();
-  ks.moveTo(0.10,0.125); ks.lineTo(-0.55,0.135); ks.lineTo(-0.59,0.055); ks.lineTo(-0.59,-0.09);
-  ks.lineTo(-0.49,-0.165); ks.lineTo(-0.08,-0.18); ks.lineTo(0.055,-0.11); ks.lineTo(0.10,0.02); ks.closePath();
-  const h1=new TH.Path(); h1.absarc(-0.195,-0.02,0.088,0,Math.PI*2,true); ks.holes.push(h1);
-  const h2=new TH.Path(); h2.absarc(-0.415,-0.02,0.088,0,Math.PI*2,true); ks.holes.push(h2);
-  const knuck=new TH.Mesh(new TH.ExtrudeGeometry(ks,ex),bone); knuck.position.z=-thick/2; g.add(knuck);
-  const topTrim=new TH.Mesh(new TH.BoxGeometry(0.66,0.028,thick+0.012), trim); topTrim.position.set(-0.23,0.14,0); g.add(topTrim);   // 頂部金屬飾條
-  const frontTrim=new TH.Mesh(new TH.BoxGeometry(0.022,0.17,thick+0.012), trim); frontTrim.position.set(0.088,-0.03,0); g.add(frontTrim);   // 護手前緣金屬框
-  const fsp=new TH.Mesh(new TH.ConeGeometry(0.026,0.14,6),steel2); fsp.position.set(0.135,-0.055,0); fsp.rotation.z=-Math.PI/2-0.35; g.add(fsp);   // 護手前尖刺
-  for(let i=0;i<6;i++){ const x=-0.03-i*0.095; const len=(i%2?0.09:0.14); const sp=new TH.Mesh(new TH.ConeGeometry(0.018,len,6),steel2);
-    sp.position.set(x,-0.18-len*0.5+0.02,0); sp.rotation.z=Math.PI; g.add(sp); }             // 指虎下緣尖刺（長短交錯）
-  const dia=new TH.Mesh(new TH.BoxGeometry(0.1,0.1,thick+0.028),trim); dia.rotation.z=Math.PI/4; g.add(dia);   // 凸起菱形寶石座
-  for(const zf of [thick/2+0.014,-thick/2-0.014]){ const set=new TH.Mesh(new TH.TorusGeometry(0.048,0.008,4,4),trim); set.position.set(0,0,zf); set.rotation.z=Math.PI/4; g.add(set); }  // 金屬鑲框
-  const gA=new TH.Mesh(new TH.OctahedronGeometry(0.044),gem); gA.position.set(0,0,thick/2+0.018); gA.scale.set(1,1,0.6); g.add(gA);
-  const gB=gA.clone(); gB.position.z=-thick/2-0.018; g.add(gB);                               // 紅寶石徽章（雙面凸起）
-  for(const rp of [[-0.056,0.076],[0.056,0.076],[-0.056,-0.076],[0.056,-0.076]]){            // 四顆鉚釘
-    const rv=new TH.Mesh(new TH.CylinderGeometry(0.011,0.011,thick+0.028,8),rivetM); rv.rotation.x=Math.PI/2; rv.position.set(rp[0],rp[1],0); g.add(rv); }
-  for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.055,0.04,thick+0.012),gem); rb.position.set(-0.15-i*0.095,0.115,0); rb.rotation.z=0.015; g.add(rb); }
-  const ring=new TH.Mesh(new TH.TorusGeometry(0.028,0.009,6,16),trim); ring.position.set(0.055,0.145,0); g.add(ring);   // 吊環
+  ks.moveTo(0.10,0.040); ks.lineTo(-0.12,0.046); ks.lineTo(-0.38,0.043); ks.lineTo(-0.56,0.034);
+  ks.lineTo(-0.618,0.012); ks.lineTo(-0.618,-0.020);
+  ks.lineTo(-0.52,-0.042); ks.lineTo(-0.30,-0.048); ks.lineTo(-0.06,-0.044); ks.lineTo(0.10,-0.030);
+  ks.closePath();
+  const knuck=new TH.Mesh(new TH.ExtrudeGeometry(ks,exG),bone); knuck.position.z=-gripZ/2; g.add(knuck);
+  const topTrim=new TH.Mesh(new TH.BoxGeometry(0.62,0.014,gripZ+0.010), trim); topTrim.position.set(-0.25,0.046,0); g.add(topTrim);   // 頂部金屬飾條
+  const botTrim=new TH.Mesh(new TH.BoxGeometry(0.58,0.012,gripZ+0.010), trim); botTrim.position.set(-0.27,-0.046,0); g.add(botTrim);  // 底部金屬飾條
+  const frontTrim=new TH.Mesh(new TH.BoxGeometry(0.020,0.100,gripZ+0.012), trim); frontTrim.position.set(0.088,-0.002,0); g.add(frontTrim);   // 護手前緣金屬框
+  const fsp=new TH.Mesh(new TH.ConeGeometry(0.024,0.12,6),steel2); fsp.position.set(0.132,-0.036,0); fsp.rotation.z=-Math.PI/2-0.35; g.add(fsp);   // 護手前尖刺
+  for(let i=0;i<3;i++){ const x=-0.12-i*0.150; const len=0.052;                              // 握把下緣小尖刺（保留兇器感）
+    const sp=new TH.Mesh(new TH.ConeGeometry(0.014,len,6),steel2);
+    sp.position.set(x,-0.046-len*0.5+0.012,0); sp.rotation.z=Math.PI; g.add(sp); }
+  for(let i=0;i<5;i++){                                                                       // 防滑刻紋
+    for(const zf of [gripZ/2+0.001,-gripZ/2-0.005]){
+      const j=new TH.Mesh(new TH.BoxGeometry(0.012,0.062,0.005),trim);
+      j.position.set(-0.17-i*0.082,-0.002,zf); j.rotation.z=0.24; g.add(j); }
+  }
+  const dia=new TH.Mesh(new TH.BoxGeometry(0.050,0.050,gripZ+0.020),trim); dia.rotation.z=Math.PI/4; dia.position.set(-0.02,0,0); g.add(dia);   // 菱形寶石座
+  for(const zf of [gripZ/2+0.012,-gripZ/2-0.012]){ const set=new TH.Mesh(new TH.TorusGeometry(0.026,0.005,4,4),trim); set.position.set(-0.02,0,zf); set.rotation.z=Math.PI/4; g.add(set); }
+  const gA=new TH.Mesh(new TH.OctahedronGeometry(0.024),gem); gA.position.set(-0.02,0,gripZ/2+0.014); gA.scale.set(1,1,0.6); g.add(gA);
+  const gB=gA.clone(); gB.position.z=-gripZ/2-0.014; g.add(gB);                               // 紅寶石徽章（雙面凸起）
+  for(let i=0;i<3;i++){ const rb=new TH.Mesh(new TH.BoxGeometry(0.042,0.016,gripZ+0.008),gem); rb.position.set(-0.24-i*0.098,0.030,0); g.add(rb); }
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.026,0.008,6,16),trim); ring.position.set(-0.646,-0.004,0); g.add(ring);   // 尾端吊環
   // 模型保持中性方向（方便武器庫 360° 預覽）；手持 pose 於建構後單獨套用到 gunMeshes.knife
   // 相容槍枝介面（step() 會存取 flash / flashLight）
   const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
@@ -545,8 +602,539 @@ function makeKnifeModel(){
   g.userData.flashLight=new TH.PointLight(0xffffff,0,1); g.add(g.userData.flashLight);
   return g;
 }
+/* ===== 共用：四芒星外框（星芒紋飾用）===== */
+function starShape(R,r,pts){
+  const s=new TH.Shape(), n=pts||4;
+  for(let i=0;i<n*2;i++){
+    const a=Math.PI/2+i*Math.PI/n, rad=(i%2)?r:R;
+    const x=Math.cos(a)*rad, y=Math.sin(a)*rad;
+    i?s.lineTo(x,y):s.moveTo(x,y);
+  }
+  s.closePath(); return s;
+}
+/* ===== 北極星 彈簧刀（三角洲：鈦鋼深藍刀身 + 星塵紋 + 藍光溝槽 + 口袋夾）===== */
+function makePolarisModel(){
+  const g=new TH.Group(); const env=getMainEnv();
+  // 陽極氧化鈦貼圖：深藍漸層 + 星塵 + 幾顆帶十字光芒的亮星
+  const tiTex=makeTex((c,S)=>{
+    const gr=c.createLinearGradient(0,0,S,S);
+    gr.addColorStop(0,'#16294d'); gr.addColorStop(.42,'#22456f');
+    gr.addColorStop(.72,'#111f3a'); gr.addColorStop(1,'#27548f');
+    c.fillStyle=gr; c.fillRect(0,0,S,S);
+    for(let i=0;i<240;i++){
+      const x=Math.random()*S, y=Math.random()*S, r=Math.random()*1.9+0.3;
+      c.fillStyle='rgba(196,228,255,'+(0.10+Math.random()*0.55)+')';
+      c.beginPath(); c.arc(x,y,r,0,7); c.fill();
+    }
+    for(let i=0;i<8;i++){
+      const x=Math.random()*S, y=Math.random()*S, L=6+Math.random()*14;
+      c.strokeStyle='rgba(218,242,255,.72)'; c.lineWidth=1.2;
+      c.beginPath(); c.moveTo(x-L,y); c.lineTo(x+L,y); c.moveTo(x,y-L); c.lineTo(x,y+L); c.stroke();
+    }
+    grain(c,S,5);
+  });
+  const ti    =new TH.MeshStandardMaterial({map:tiTex,color:0xffffff,roughness:.30,metalness:.92,envMap:env,envMapIntensity:1.15});
+  const tiD   =new TH.MeshStandardMaterial({map:tiTex,color:0x93a9cc,roughness:.46,metalness:.82,envMap:env,envMapIntensity:.85});
+  const mirror=new TH.MeshStandardMaterial({color:0xe8f1ff,roughness:.07,metalness:.97,envMap:env,envMapIntensity:1.6});
+  const steel =new TH.MeshStandardMaterial({color:0x9aa6b6,roughness:.30,metalness:.93,envMap:env});
+  const glow  =new TH.MeshStandardMaterial({color:0x4cc2ff,roughness:.25,metalness:.20,emissive:0x1f8ede,emissiveIntensity:2.0});
+  const bt=0.020, ht=0.050;                                   // 刀身厚 / 握把厚
+  const exB={depth:bt,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
+  const exH={depth:ht,bevelEnabled:true,bevelThickness:0.006,bevelSize:0.006,bevelSegments:2};
+
+  // ── 刀身：drop-point，刀背由中段緩降到尖、刀腹上揚（刀刃在 -y，與信條同慣例）──
+  const bs=new TH.Shape();
+  bs.moveTo(0.045,-0.050); bs.lineTo(0.34,-0.062); bs.lineTo(0.60,-0.055);
+  bs.lineTo(0.762,-0.028); bs.lineTo(0.865,0.014);            // 刀尖
+  bs.lineTo(0.705,0.049); bs.lineTo(0.42,0.061); bs.lineTo(0.045,0.057);
+  bs.closePath();
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,exB),ti); blade.position.z=-bt/2; g.add(blade);
+  // 開刃鏡面斜面（沿刀腹、雙面凸出）
+  const bev=new TH.Shape();
+  bev.moveTo(0.045,-0.050); bev.lineTo(0.34,-0.062); bev.lineTo(0.60,-0.055);
+  bev.lineTo(0.762,-0.028); bev.lineTo(0.865,0.014);
+  bev.lineTo(0.775,-0.006); bev.lineTo(0.60,-0.030); bev.lineTo(0.34,-0.036); bev.lineTo(0.045,-0.026);
+  bev.closePath();
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:bt+0.008,bevelEnabled:false}),mirror);
+  bevM.position.z=-(bt+0.008)/2; g.add(bevM);
+  // 血溝：刀身上的藍光溝槽（雙面）
+  for(const zf of [bt/2+0.001,-bt/2-0.005]){
+    const fu=new TH.Mesh(new TH.BoxGeometry(0.40,0.011,0.004),glow);
+    fu.position.set(0.34,0.012,zf); g.add(fu);
+  }
+  // 刀身星芒：三顆漸小的四芒星
+  for(const sp of [[0.20,0.006,0.030],[0.35,0.014,0.021],[0.47,0.020,0.014]]){
+    for(const zf of [bt/2,-bt/2-0.004]){
+      const st=new TH.Mesh(new TH.ExtrudeGeometry(starShape(sp[2],sp[2]*0.30),{depth:0.004,bevelEnabled:false}),glow);
+      st.position.set(sp[0],sp[1],zf); g.add(st);
+    }
+  }
+  // ── 握把：略帶收腰的長條，比刀身厚（手要能環握）──
+  const hs=new TH.Shape();
+  hs.moveTo(0.045,0.057); hs.lineTo(-0.10,0.072); hs.lineTo(-0.40,0.068);
+  hs.lineTo(-0.578,0.047); hs.lineTo(-0.628,0.010);
+  hs.lineTo(-0.600,-0.050); hs.lineTo(-0.36,-0.072); hs.lineTo(-0.08,-0.068);
+  hs.lineTo(0.045,-0.050); hs.closePath();
+  const grip=new TH.Mesh(new TH.ExtrudeGeometry(hs,exH),tiD); grip.position.z=-ht/2; g.add(grip);
+  // 握把藍光溝槽 + 尾端主星徽（雙面）
+  for(const zf of [ht/2+0.002,-ht/2-0.006]){
+    const ln=new TH.Mesh(new TH.BoxGeometry(0.44,0.009,0.005),glow);
+    ln.position.set(-0.30,0.014,zf); g.add(ln);
+    const st=new TH.Mesh(new TH.ExtrudeGeometry(starShape(0.032,0.010),{depth:0.005,bevelEnabled:false}),glow);
+    st.position.set(-0.505,-0.006,zf); g.add(st);
+  }
+  // 防滑刻紋
+  for(let i=0;i<7;i++){
+    for(const zf of [ht/2+0.001,-ht/2-0.006]){
+      const j=new TH.Mesh(new TH.BoxGeometry(0.014,0.062,0.005),steel);
+      j.position.set(-0.10-i*0.058,-0.020,zf); j.rotation.z=0.30; g.add(j);
+    }
+  }
+  // 護手 / 軸心 / 拇指釘（彈簧刀的特徵件）
+  const bolster=new TH.Mesh(new TH.BoxGeometry(0.036,0.150,ht+0.014),steel);
+  bolster.position.set(0.052,0.004,0); g.add(bolster);
+  const pivot=new TH.Mesh(new TH.CylinderGeometry(0.031,0.031,ht+0.020,16),steel);
+  pivot.rotation.x=Math.PI/2; pivot.position.set(-0.020,0.002,0); g.add(pivot);
+  for(const zf of [(ht+0.020)/2,-(ht+0.020)/2-0.004]){
+    const cap=new TH.Mesh(new TH.ExtrudeGeometry(starShape(0.020,0.007),{depth:0.004,bevelEnabled:false}),glow);
+    cap.position.set(-0.020,0.002,zf); g.add(cap);             // 軸心星形螺帽
+  }
+  const stud=new TH.Mesh(new TH.CylinderGeometry(0.017,0.017,ht+0.052,12),steel);
+  stud.rotation.x=Math.PI/2; stud.position.set(0.145,0.044,0); g.add(stud);
+  // 口袋夾（-z 側）
+  const clip=new TH.Mesh(new TH.BoxGeometry(0.34,0.030,0.012),steel);
+  clip.position.set(-0.34,0.052,-ht/2-0.014); clip.rotation.z=-0.03; g.add(clip);
+  const clipF=new TH.Mesh(new TH.BoxGeometry(0.030,0.030,0.026),steel);
+  clipF.position.set(-0.508,0.050,-ht/2-0.008); g.add(clipF);
+  // 尾繩孔
+  const lan=new TH.Mesh(new TH.TorusGeometry(0.020,0.007,6,14),steel);
+  lan.position.set(-0.590,-0.020,0); g.add(lan);
+
+  // 相容槍枝介面（step() 會存取 flash / flashLight）
+  const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+  fl.visible=false; g.add(fl); g.userData.flash=fl;
+  g.userData.flashLight=new TH.PointLight(0x4cc2ff,0,1); g.add(g.userData.flashLight);
+  return g;
+}
+/* ===== 戰術手套材質（信條與北極星共用；裸手改手套是「不醜」的關鍵）===== */
+function gloveMats(){
+  return {
+    // 布面提亮到中灰藍：太深會讓四根手指在暗處糊成一塊
+    fab  :new TH.MeshStandardMaterial({color:0x3d434e,roughness:.90,metalness:.06}),  // 布面
+    pad  :new TH.MeshStandardMaterial({color:0x16191f,roughness:.45,metalness:.30}),  // 指節護甲（壓深＝有對比）
+    seam :new TH.MeshStandardMaterial({color:0x0e1014,roughness:.96,metalness:0}),    // 縫線/指縫
+    strap:new TH.MeshStandardMaterial({color:0x4a515c,roughness:.85,metalness:.14}),  // 腕帶
+  };
+}
+/* ===== 圓角骨段（兩點間圓柱＋兩端球；three r128 沒有 CapsuleGeometry）===== */
+function limbSeg(parent,a,b,r,mat,r2){
+  const A=new TH.Vector3(a[0],a[1],a[2]), B=new TH.Vector3(b[0],b[1],b[2]);
+  const d=new TH.Vector3().subVectors(B,A), len=d.length(), rB=(r2==null?r:r2);
+  const cyl=new TH.Mesh(new TH.CylinderGeometry(rB,r,len,12),mat);
+  cyl.position.copy(A).addScaledVector(d,0.5);
+  cyl.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),d.clone().normalize());
+  parent.add(cyl);
+  const ends=[[A,r],[B,rB]];
+  for(let i=0;i<2;i++){
+    const s=new TH.Mesh(new TH.SphereGeometry(ends[i][1],12,10),mat);
+    s.position.copy(ends[i][0]); parent.add(s);
+  }
+}
+/* ===== 北極星的手（右手・戰術手套）：四指環繞握把包一圈、拇指壓在握把上緣 =====
+   握把 local：沿 x 由 -0.63(尾) 到 0.05(軸心)，y±0.07、z±0.025。 */
+function makePolarisHand(){
+  const h=new TH.Group(); const M=gloveMats();
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);          // 掌心那面在 -z
+  palm.scale.set(0.36,0.185,0.115); palm.position.set(-0.285,-0.010,-0.078); h.add(palm);
+  const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
+  heel.scale.set(0.17,0.175,0.108); heel.position.set(-0.430,-0.026,-0.070); h.add(heel);
+  const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);          // 手背在 +z
+  back.scale.set(0.34,0.165,0.075); back.position.set(-0.278,0.030,0.052); h.add(back);
+
+  const FING=[[-0.140,0.038,0.004],[-0.235,0.039,0.008],[-0.330,0.036,0.000],[-0.422,0.031,-0.010]];
+  for(let i=0;i<FING.length;i++){
+    const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
+    // 由手背繞 +z 側 → 繞過底部 → 指尖收進掌心：真正「包住」握把
+    limbSeg(h,[fx, 0.086,0.042],[fx,-0.010,0.068+ex],r,M.fab);
+    limbSeg(h,[fx,-0.010,0.068+ex],[fx,-0.098,0.018],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.098,0.018],[fx,-0.076,-0.054],r*0.84,M.fab);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad); // 指節護甲
+    pad.position.set(fx,0.090,0.038); pad.rotation.x=-0.30; h.add(pad);
+  }
+  const GAPS=[-0.187,-0.282,-0.376];
+  for(let i=0;i<GAPS.length;i++){
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
+    gv.position.set(GAPS[i],-0.020,0.030); h.add(gv);
+  }
+  // 拇指（加粗＋指甲片，明確壓在握把上緣）
+  limbSeg(h,[-0.292,-0.014,-0.080],[-0.238,0.066,-0.032],0.052,M.fab,0.046);
+  limbSeg(h,[-0.238,0.066,-0.032],[-0.078,0.104,0.010],0.046,M.fab,0.038);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
+  nail.position.set(-0.104,0.136,0.008); nail.rotation.z=-0.16; h.add(nail);
+  // 手腕束帶 → 前臂護套
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.560,-0.048,-0.046); h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);        // 魔鬼氈壓條
+  tab.position.set(-0.560,0.050,-0.046); h.add(tab);
+  limbSeg(h,[-0.620,-0.054,-0.044],[-0.960,-0.092,-0.036],0.106,M.fab,0.078); // 前臂護套
+  return h;
+}
+/* ===== 爪刀 Karambit（三角洲風：黑鋼虎紋握把 + 古銅指環 + hawkbill 內凹刃）=====
+   local 座標：指環在 -x 尾端、刀身由原點往右上弧彎（外緣=刀背、內凹面=刀刃）。 */
+function makeKarambitModel(){
+  const g=new TH.Group(); const env=getMainEnv();
+  // 繞「指環中心」旋轉用的樞軸：F 檢視時轉指環，手不跟著轉（inner 把偏移抵銷掉，子物件座標維持原樣）
+  const spinPivot=new TH.Group(); spinPivot.position.set(-0.500,-0.020,0);
+  const inner=new TH.Group();     inner.position.set(0.500,0.020,0);
+  spinPivot.add(inner); g.add(spinPivot); g.userData.spin=spinPivot;
+  const gripTex=makeTex((c,S)=>{                       // 黑鋼 + 暗虎紋
+    c.fillStyle='#1b1d21'; c.fillRect(0,0,S,S);
+    for(let i=0;i<16;i++){
+      c.strokeStyle='rgba(96,72,44,'+(0.10+Math.random()*0.22)+')';
+      c.lineWidth=3+Math.random()*9; c.beginPath();
+      const y=Math.random()*S; c.moveTo(-10,y);
+      for(let x=0;x<=S;x+=18) c.lineTo(x,y+Math.sin(x/26+i)*13);
+      c.stroke();
+    }
+    wear(c,S,0.32); grain(c,S,7);
+  });
+  const steelD=new TH.MeshStandardMaterial({color:0x8e97a3,roughness:.34,metalness:.92,envMap:env,envMapIntensity:1.0});
+  const mirror=new TH.MeshStandardMaterial({color:0xe4ebf3,roughness:.08,metalness:.97,envMap:env,envMapIntensity:1.5});
+  const grip  =new TH.MeshStandardMaterial({map:gripTex,color:0xffffff,roughness:.72,metalness:.28,envMap:env,envMapIntensity:.55});
+  const bronze=new TH.MeshStandardMaterial({color:0xc08a3e,roughness:.30,metalness:.94,envMap:env,envMapIntensity:1.2});
+  const dark  =new TH.MeshStandardMaterial({color:0x24272c,roughness:.62,metalness:.42,envMap:env});
+  const t=0.019;
+  const exB={depth:t,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
+  const exH={depth:t*2.4,bevelEnabled:true,bevelThickness:0.005,bevelSize:0.005,bevelSegments:2};
+
+  // ── 刀身：沿圓弧取樣，外緣是刀背、內緣（凹面）是刀刃 ──
+  const R=0.52, cx=0.02, cy=0.50, a0=-1.62, a1=-0.30, N=16;
+  // 刀腹寬、刀尖細：q^1.6 讓收尖集中在前段，看起來更鋒利
+  const W=i=>{ const q=Math.pow(i/N,1.6); return 0.172+(0.026-0.172)*q; };
+  const P=(i,off)=>{ const a=a0+(a1-a0)*(i/N);
+    return [cx+Math.cos(a)*(R+off), cy+Math.sin(a)*(R+off)]; };
+  const bs=new TH.Shape();
+  let p0=P(0,W(0)*0.5); bs.moveTo(p0[0],p0[1]);
+  for(let i=1;i<=N;i++){ const q=P(i,W(i)*0.5); bs.lineTo(q[0],q[1]); }
+  for(let i=N;i>=0;i--){ const q=P(i,-W(i)*0.5); bs.lineTo(q[0],q[1]); }
+  bs.closePath();
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,exB),steelD); blade.position.z=-t/2; inner.add(blade);
+  // 內凹刃的鏡面開刃帶
+  const bev=new TH.Shape();
+  p0=P(0,-W(0)*0.5); bev.moveTo(p0[0],p0[1]);
+  for(let i=1;i<=N;i++){ const q=P(i,-W(i)*0.5); bev.lineTo(q[0],q[1]); }
+  for(let i=N;i>=0;i--){ const q=P(i,-W(i)*0.5+W(i)*0.52); bev.lineTo(q[0],q[1]); }   // 開刃帶加寬 0.36→0.52
+  bev.closePath();
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:t+0.007,bevelEnabled:false}),mirror);
+  bevM.position.z=-(t+0.007)/2; inner.add(bevM);
+  // 刀背血槽
+  for(const zf of [t/2+0.001,-t/2-0.004]){
+    for(let i=3;i<=N-3;i+=2){ const q=P(i,W(i)*0.16);
+      const d=new TH.Mesh(new TH.BoxGeometry(0.030,0.008,0.004),dark);
+      d.position.set(q[0],q[1],zf); d.rotation.z=a0+(a1-a0)*(i/N)+Math.PI/2; inner.add(d); }
+  }
+
+  // ── 握把（-x 方向）──
+  const hs=new TH.Shape();
+  hs.moveTo(0.035,0.068); hs.lineTo(-0.20,0.080); hs.lineTo(-0.355,0.066); hs.lineTo(-0.410,0.024);
+  hs.lineTo(-0.410,-0.070); hs.lineTo(-0.22,-0.094); hs.lineTo(-0.02,-0.078); hs.lineTo(0.035,-0.032);
+  hs.closePath();
+  const hM=new TH.Mesh(new TH.ExtrudeGeometry(hs,exH),grip); hM.position.z=-t*2.4/2; inner.add(hM);
+  // 防滑刻紋
+  for(let i=0;i<4;i++){
+    for(const zf of [t*1.2+0.002,-t*1.2-0.006]){
+      const j=new TH.Mesh(new TH.BoxGeometry(0.013,0.082,0.005),bronze);
+      j.position.set(-0.085-i*0.078,-0.008,zf); j.rotation.z=0.26; inner.add(j);
+    }
+  }
+  // ── 指環（軸沿 z，手指從這裡穿過去）──
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.108,0.027,10,24),bronze);
+  ring.position.set(-0.500,-0.020,0); inner.add(ring);
+  const ringIn=new TH.Mesh(new TH.TorusGeometry(0.108,0.012,8,24),dark);
+  ringIn.position.set(-0.500,-0.020,0); inner.add(ringIn);
+  // 安全突起（食指前擋）+ 護手
+  const spur=new TH.Mesh(new TH.ConeGeometry(0.030,0.085,7),bronze);
+  spur.position.set(-0.345,0.106,0); spur.rotation.z=-0.22; inner.add(spur);
+  const guard=new TH.Mesh(new TH.BoxGeometry(0.030,0.135,t*2.4+0.014),bronze);
+  guard.position.set(0.045,0.010,0); inner.add(guard);
+  const pin=new TH.Mesh(new TH.CylinderGeometry(0.020,0.020,t*2.4+0.020,12),bronze);
+  pin.rotation.x=Math.PI/2; pin.position.set(-0.130,-0.005,0); inner.add(pin);
+
+  const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+  fl.visible=false; g.add(fl); g.userData.flash=fl;
+  g.userData.flashLight=new TH.PointLight(0xffffff,0,1); g.add(g.userData.flashLight);
+  return g;
+}
+/* ===== 蝴蝶刀 Balisong（鏡面刀身 + 兩片可翻轉握把 + 卡榫）=====
+   local 座標：軸心在原點、刀身往 +x、兩片握把往 -x。
+   userData.handleA / handleB 是可繞軸心旋轉的 group —— 翻刀動畫轉它們。 */
+function makeButterflyModel(){
+  const g=new TH.Group(); const env=getMainEnv();
+  const mirror=new TH.MeshStandardMaterial({color:0xeef4fb,roughness:.06,metalness:.98,envMap:env,envMapIntensity:1.7});
+  const satin =new TH.MeshStandardMaterial({color:0xb9c2cd,roughness:.30,metalness:.92,envMap:env,envMapIntensity:1.05});
+  const hMat  =new TH.MeshStandardMaterial({color:0x1e2228,roughness:.52,metalness:.60,envMap:env,envMapIntensity:.8});
+  const accent=new TH.MeshStandardMaterial({color:0xd2233f,roughness:.34,metalness:.55,envMap:env,envMapIntensity:.9});
+  const brass =new TH.MeshStandardMaterial({color:0xcfa64a,roughness:.28,metalness:.95,envMap:env,envMapIntensity:1.15});
+  const t=0.017;
+  const exB={depth:t,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
+
+  // ── 刀身（clip-point，軸心在原點）──
+  const bs=new TH.Shape();
+  bs.moveTo(0.00,-0.050); bs.lineTo(0.26,-0.058); bs.lineTo(0.48,-0.048);
+  bs.lineTo(0.60,-0.022); bs.lineTo(0.700,0.010);          // 更尖的刀尖
+  bs.lineTo(0.60,0.028); bs.lineTo(0.47,0.038);            // clip point：刀背在尖端前凹下去
+  bs.lineTo(0.40,0.054); bs.lineTo(0.20,0.058); bs.lineTo(0.00,0.052); bs.closePath();
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,exB),satin); blade.position.z=-t/2; g.add(blade);
+  const bev=new TH.Shape();
+  bev.moveTo(0.00,-0.050); bev.lineTo(0.26,-0.058); bev.lineTo(0.48,-0.048); bev.lineTo(0.60,-0.022); bev.lineTo(0.700,0.010);
+  bev.lineTo(0.60,-0.008); bev.lineTo(0.46,-0.026); bev.lineTo(0.26,-0.034); bev.lineTo(0.00,-0.028); bev.closePath();
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:t+0.008,bevelEnabled:false}),mirror);
+  bevM.position.z=-(t+0.008)/2; g.add(bevM);
+  const swedge=new TH.Mesh(new TH.BoxGeometry(0.20,0.014,t+0.006),mirror);   // 假刃（clip 上的磨面）
+  swedge.position.set(0.545,0.026,0); swedge.rotation.z=-0.16; g.add(swedge);
+  const groove=new TH.Mesh(new TH.BoxGeometry(0.30,0.008,t+0.004),accent);   // 刀身導線
+  groove.position.set(0.26,0.016,0); g.add(groove);
+  const tang=new TH.Mesh(new TH.BoxGeometry(0.10,0.088,t+0.004),satin);      // 刀根
+  tang.position.set(-0.030,0.000,0); g.add(tang);
+  const kick=new TH.Mesh(new TH.BoxGeometry(0.048,0.038,t+0.008),satin);     // 擋刀跟（kicker）
+  kick.position.set(-0.052,-0.050,0); g.add(kick);
+
+  // ── 兩片握把：pivot 在原點，幾何往 -x 長；rotation.z 轉 ±π 就折到刀身上 ──
+  const mkHandle=(zf,withLatch)=>{
+    const grp=new TH.Group(); grp.position.set(0,0,zf);
+    // 三明治通道結構：外層鋼殼夾住深色內襯（真 balisong 的握把就是這樣疊的）
+    const shell=new TH.Mesh(new TH.BoxGeometry(0.62,0.088,0.030),satin);
+    shell.position.set(-0.352,0,0); grp.add(shell);
+    const liner=new TH.Mesh(new TH.BoxGeometry(0.60,0.064,0.036),hMat);       // 內襯露出一圈
+    liner.position.set(-0.348,0,0); grp.add(liner);
+    const head=new TH.Mesh(new TH.CylinderGeometry(0.046,0.046,0.034,16),satin);   // 軸心端的圓頭
+    head.rotation.x=Math.PI/2; head.position.set(-0.030,0,0); grp.add(head);
+    for(let i=0;i<4;i++){                                                     // 骨架長槽（不是圓珠）
+      const x=-0.155-i*0.120;
+      const rim=new TH.Mesh(new TH.BoxGeometry(0.094,0.050,0.033),accent);    // 紅內襯只露邊
+      rim.position.set(x,0,0); grp.add(rim);
+      const slot=new TH.Mesh(new TH.BoxGeometry(0.078,0.034,0.039),hMat);     // 深色凹槽本體
+      slot.position.set(x,0,0); grp.add(slot);
+    }
+    const butt=new TH.Mesh(new TH.BoxGeometry(0.040,0.096,0.040),brass);      // 尾端配重
+    butt.position.set(-0.648,0,0); grp.add(butt);
+    const lan=new TH.Mesh(new TH.CylinderGeometry(0.011,0.011,0.046,10),hMat);// 尾繩孔
+    lan.rotation.x=Math.PI/2; lan.position.set(-0.648,0,0); grp.add(lan);
+    if(withLatch){                                                            // 卡榫：桿 + 環
+      const lb=new TH.Mesh(new TH.CylinderGeometry(0.015,0.015,0.105,12),brass);
+      lb.rotation.z=Math.PI/2; lb.position.set(-0.646,0,0.031); grp.add(lb);
+      const lg=new TH.Mesh(new TH.TorusGeometry(0.021,0.0065,6,14),brass);
+      lg.position.set(-0.700,0,0.031); lg.rotation.y=Math.PI/2; grp.add(lg);
+    }
+    return grp;
+  };
+  const hA=mkHandle( 0.031,true);  g.add(hA);
+  const hB=mkHandle(-0.031,false); g.add(hB);
+  g.userData.handleA=hA; g.userData.handleB=hB;
+  // 軸心銷
+  for(const zf of [0.031,-0.031]){
+    const pv=new TH.Mesh(new TH.CylinderGeometry(0.022,0.022,0.050,14),brass);
+    pv.rotation.x=Math.PI/2; pv.position.set(0,0,zf); g.add(pv);
+  }
+
+  const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+  fl.visible=false; g.add(fl); g.userData.flash=fl;
+  g.userData.flashLight=new TH.PointLight(0xffffff,0,1); g.add(g.userData.flashLight);
+  return g;
+}
+/* ===== 爪刀的手（右手・反手握）：食指穿過指環、其餘三指握住握把 ===== */
+function makeKarambitHand(){
+  const h=new TH.Group(); const M=gloveMats();
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);
+  palm.scale.set(0.30,0.180,0.112); palm.position.set(-0.285,-0.012,-0.076); h.add(palm);
+  const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
+  heel.scale.set(0.15,0.170,0.105); heel.position.set(-0.415,-0.026,-0.068); h.add(heel);
+  const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);
+  back.scale.set(0.28,0.160,0.072); back.position.set(-0.275,0.028,0.050); h.add(back);
+
+  // 食指：直接穿過指環（環內半徑約 0.081）
+  limbSeg(h,[-0.500,-0.020,-0.070],[-0.500,-0.020,0.076],0.036,M.fab);
+  limbSeg(h,[-0.500,-0.020,0.076],[-0.458,-0.098,0.052],0.033,M.fab);
+  const ipad=new TH.Mesh(new TH.BoxGeometry(0.070,0.052,0.042),M.pad);
+  ipad.position.set(-0.500,0.056,0.036); ipad.rotation.x=-0.30; h.add(ipad);
+  // 其餘三指：環繞握把（握把 y±0.075、z±0.023）
+  const FING=[[-0.345,0.037,0.004],[-0.232,0.035,0.000],[-0.120,0.030,-0.008]];
+  for(let i=0;i<FING.length;i++){
+    const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
+    limbSeg(h,[fx, 0.090,0.040],[fx,-0.008,0.070+ex],r,M.fab);
+    limbSeg(h,[fx,-0.008,0.070+ex],[fx,-0.100,0.018],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.100,0.018],[fx,-0.078,-0.054],r*0.84,M.fab);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    pad.position.set(fx,0.094,0.036); pad.rotation.x=-0.30; h.add(pad);
+  }
+  const GAPS=[-0.288,-0.176];
+  for(let i=0;i<GAPS.length;i++){
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
+    gv.position.set(GAPS[i],-0.020,0.030); h.add(gv);
+  }
+  // 拇指：壓在握把上緣、朝刀身方向
+  limbSeg(h,[-0.390,-0.014,-0.082],[-0.330,0.074,-0.034],0.052,M.fab,0.046);
+  limbSeg(h,[-0.330,0.074,-0.034],[-0.160,0.112,0.010],0.046,M.fab,0.038);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
+  nail.position.set(-0.186,0.144,0.008); nail.rotation.z=-0.16; h.add(nail);
+  // 腕帶 + 前臂：越過指環往 -x 伸，讓手臂跟其他三把刀一樣從畫面右下進來（往 +x 伸會擋住整個畫面）
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.672,-0.052,-0.048); h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  tab.position.set(-0.672,0.046,-0.048); h.add(tab);
+  limbSeg(h,[-0.732,-0.058,-0.046],[-1.072,-0.096,-0.038],0.106,M.fab,0.078);
+  return h;
+}
+/* ===== 蝴蝶刀的手（右手・正手握）：四指環繞合起來的兩片握把 =====
+   合刀時握把是 x 0~-0.66、y±0.048、z±0.048 的方棒。 */
+function makeButterflyHand(){
+  const h=new TH.Group(); const M=gloveMats();
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);
+  palm.scale.set(0.36,0.190,0.118); palm.position.set(-0.310,-0.010,-0.098); h.add(palm);
+  const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
+  heel.scale.set(0.17,0.178,0.110); heel.position.set(-0.455,-0.026,-0.090); h.add(heel);
+  const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);
+  back.scale.set(0.34,0.168,0.076); back.position.set(-0.300,0.030,0.072); h.add(back);
+
+  const FING=[[-0.160,0.038,0.004],[-0.258,0.039,0.008],[-0.356,0.036,0.000],[-0.450,0.031,-0.010]];
+  for(let i=0;i<FING.length;i++){
+    const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
+    limbSeg(h,[fx, 0.076,0.062],[fx,-0.010,0.090+ex],r,M.fab);
+    limbSeg(h,[fx,-0.010,0.090+ex],[fx,-0.092,0.030],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.092,0.030],[fx,-0.074,-0.060],r*0.84,M.fab);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    pad.position.set(fx,0.082,0.056); pad.rotation.x=-0.30; h.add(pad);
+  }
+  const GAPS=[-0.209,-0.307,-0.403];
+  for(let i=0;i<GAPS.length;i++){
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.160),M.seam);
+    gv.position.set(GAPS[i],-0.020,0.044); h.add(gv);
+  }
+  limbSeg(h,[-0.318,-0.014,-0.100],[-0.262,0.062,-0.048],0.052,M.fab,0.046);
+  limbSeg(h,[-0.262,0.062,-0.048],[-0.098,0.096,0.014],0.046,M.fab,0.038);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
+  nail.position.set(-0.124,0.128,0.012); nail.rotation.z=-0.16; h.add(nail);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.590,-0.048,-0.062); h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  tab.position.set(-0.590,0.050,-0.062); h.add(tab);
+  limbSeg(h,[-0.650,-0.054,-0.060],[-0.990,-0.092,-0.050],0.106,M.fab,0.078);
+  return h;
+}
+/* ===== 苦無 Kunai（黑鋼葉形雙刃 + 緋紅纏繩 + 金環吊符）=====
+   local 座標：+x=刀尖、-x=尾環。雙刃對稱，飛行時 +x 對準飛行方向。 */
+function makeKunaiModel(light){
+  const g=new TH.Group(); const env=light?null:getMainEnv();
+  const cordTex=light?null:makeTex((c,S)=>{                 // 纏繩：緋紅斜紋
+    c.fillStyle='#5e1220'; c.fillRect(0,0,S,S);
+    for(let i=-2;i<24;i++){
+      c.strokeStyle='rgba(190,40,58,'+(0.55+Math.random()*0.35)+')';
+      c.lineWidth=S/26; c.beginPath();
+      c.moveTo(i*S/12,0); c.lineTo(i*S/12+S/3,S); c.stroke();
+    }
+    for(let i=0;i<10;i++){ c.strokeStyle='rgba(20,6,10,.5)'; c.lineWidth=2;
+      c.beginPath(); c.moveTo(0,i*S/10); c.lineTo(S,i*S/10+6); c.stroke(); }
+    grain(c,S,6);
+  });
+  const mk=(o)=>new TH.MeshStandardMaterial(Object.assign({},o,env?{envMap:env}:{}));
+  const black =mk({color:0x2a2d33,roughness:.44,metalness:.86,envMapIntensity:.9});
+  const mirror=mk({color:0xdfe7f0,roughness:.07,metalness:.97,envMapIntensity:1.6});
+  const glow  =new TH.MeshStandardMaterial({color:0xff3a4e,roughness:.3,metalness:.2,
+                                            emissive:0x8e0d1c,emissiveIntensity:1.7});
+  const gold  =mk({color:0xd7a83c,roughness:.26,metalness:.95,envMapIntensity:1.25});
+  const cord  =cordTex?mk({map:cordTex,color:0xffffff,roughness:.86,metalness:.05})
+                      :new TH.MeshStandardMaterial({color:0x7a1a28,roughness:.86});
+  const t=0.030;
+  const exB={depth:t,bevelEnabled:true,bevelThickness:0.004,bevelSize:0.004,bevelSegments:1};
+
+  // ── 葉形雙刃 ──
+  const bs=new TH.Shape();
+  bs.moveTo(0.08,-0.030); bs.lineTo(0.22,-0.082); bs.lineTo(0.46,-0.060);
+  bs.lineTo(0.80,0.000);                                   // 尖端
+  bs.lineTo(0.46,0.060); bs.lineTo(0.22,0.082); bs.lineTo(0.08,0.030);
+  bs.closePath();
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,exB),black); blade.position.z=-t/2; g.add(blade);
+  // 兩側鏡面開刃（雙刃各一條）
+  for(const sgn of [1,-1]){
+    const bv=new TH.Shape();
+    bv.moveTo(0.08,sgn*0.030); bv.lineTo(0.22,sgn*0.082); bv.lineTo(0.46,sgn*0.060); bv.lineTo(0.80,0);
+    bv.lineTo(0.46,sgn*0.034); bv.lineTo(0.22,sgn*0.046); bv.lineTo(0.08,sgn*0.016);
+    bv.closePath();
+    const m=new TH.Mesh(new TH.ExtrudeGeometry(bv,{depth:t+0.008,bevelEnabled:false}),mirror);
+    m.position.z=-(t+0.008)/2; g.add(m);
+  }
+  // 中央稜線（菱形斷面）+ 緋紅蝕刻線
+  for(const zf of [t/2+0.004,-t/2-0.004]){
+    const rid=new TH.Mesh(new TH.BoxGeometry(0.62,0.024,0.012),black);
+    rid.position.set(0.40,0,zf); g.add(rid);
+    const ln=new TH.Mesh(new TH.BoxGeometry(0.40,0.008,0.005),glow);
+    ln.position.set(0.32,0,zf+0.008); g.add(ln);
+  }
+  // ── 握把：緋紅纏繩（一段段繞）──
+  const shaft=new TH.Mesh(new TH.CylinderGeometry(0.036,0.033,0.50,14),black);
+  shaft.rotation.z=Math.PI/2; shaft.position.set(-0.17,0,0); g.add(shaft);
+  for(let i=0;i<9;i++){
+    const w=new TH.Mesh(new TH.CylinderGeometry(0.046,0.046,0.040,14),cord);
+    w.rotation.z=Math.PI/2+0.10; w.position.set(0.03-i*0.052,0,0); g.add(w);
+  }
+  const collar=new TH.Mesh(new TH.CylinderGeometry(0.050,0.050,0.030,16),gold);   // 護環
+  collar.rotation.z=Math.PI/2; collar.position.set(0.072,0,0); g.add(collar);
+  // ── 尾環 + 吊符 ──
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.088,0.021,10,22),gold);
+  ring.position.set(-0.500,0,0); g.add(ring);
+  const tag=new TH.Mesh(new TH.BoxGeometry(0.055,0.10,0.010),black);
+  tag.position.set(-0.560,-0.130,0); tag.rotation.z=0.18; g.add(tag);
+  const tagLine=new TH.Mesh(new TH.BoxGeometry(0.030,0.006,0.012),glow);
+  tagLine.position.set(-0.560,-0.130,0.008); tagLine.rotation.z=0.18; g.add(tagLine);
+
+  if(!light){
+    const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+    fl.visible=false; g.add(fl); g.userData.flash=fl;
+    g.userData.flashLight=new TH.PointLight(0xff3a4e,0,1); g.add(g.userData.flashLight);
+  }
+  return g;
+}
+/* ===== 苦無的手（右手・投擲握法）：四指握纏繩段、拇指壓在刀根 ===== */
+function makeKunaiHand(){
+  const h=new TH.Group(); const M=gloveMats();
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);
+  palm.scale.set(0.30,0.185,0.115); palm.position.set(-0.190,-0.010,-0.086); h.add(palm);
+  const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
+  heel.scale.set(0.15,0.175,0.108); heel.position.set(-0.330,-0.026,-0.078); h.add(heel);
+  const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);
+  back.scale.set(0.28,0.165,0.075); back.position.set(-0.185,0.030,0.060); h.add(back);
+
+  const FING=[[-0.040,0.038,0.004],[-0.130,0.039,0.008],[-0.220,0.036,0.000],[-0.306,0.031,-0.010]];
+  for(let i=0;i<FING.length;i++){
+    const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
+    limbSeg(h,[fx, 0.078,0.050],[fx,-0.010,0.078+ex],r,M.fab);
+    limbSeg(h,[fx,-0.010,0.078+ex],[fx,-0.096,0.022],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.096,0.022],[fx,-0.074,-0.056],r*0.84,M.fab);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    pad.position.set(fx,0.084,0.044); pad.rotation.x=-0.30; h.add(pad);
+  }
+  const GAPS=[-0.085,-0.175,-0.263];
+  for(let i=0;i<GAPS.length;i++){
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
+    gv.position.set(GAPS[i],-0.020,0.034); h.add(gv);
+  }
+  limbSeg(h,[-0.200,-0.014,-0.090],[-0.145,0.066,-0.040],0.052,M.fab,0.046);   // 拇指壓在刀根
+  limbSeg(h,[-0.145,0.066,-0.040],[0.012,0.098,0.012],0.046,M.fab,0.038);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
+  nail.position.set(-0.014,0.130,0.010); nail.rotation.z=-0.16; h.add(nail);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.470,-0.048,-0.050); h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  tab.position.set(-0.470,0.050,-0.050); h.add(tab);
+  limbSeg(h,[-0.530,-0.054,-0.048],[-0.870,-0.092,-0.040],0.106,M.fab,0.078);
+  return h;
+}
 function makeGunModel(key){
   if(key==='knife') return makeKnifeModel();
+  if(key==='polaris') return makePolarisModel();
+  if(key==='karambit') return makeKarambitModel();
+  if(key==='butterfly') return makeButterflyModel();
+  if(key==='kunai') return makeKunaiModel();
   const g = new TH.Group();
   const matB = new TH.MeshStandardMaterial({color:0x3a3f4a,roughness:.55,metalness:.55});
   const matD = new TH.MeshStandardMaterial({color:0x202329,roughness:.5,metalness:.6});
@@ -916,6 +1504,25 @@ try{ const sv=JSON.parse(localStorage.getItem('sz_skins')||'{}');
 }catch(e){}
 function saveSkins(){ try{localStorage.setItem('sz_skins',JSON.stringify(equipped));}catch(e){} }
 
+/* ========= 點券：擊殺敵人賺取，用來解鎖近戰武器（存 localStorage，關掉遊戲也留著）========= */
+const CREDIT_BY_TIER=[10,25,50];          // 偵察兵(綠) / 突擊兵(紅) / 重裝兵(紫)
+let credits=0;
+let owned={knife:false, polaris:false, karambit:false, butterfly:false, kunai:false};
+try{ const wv=JSON.parse(localStorage.getItem('sz_wallet')||'{}');
+  if(typeof wv.credits==='number' && isFinite(wv.credits)) credits=Math.max(0,Math.floor(wv.credits));
+  if(wv.owned) for(const k in owned) owned[k]=!!wv.owned[k];
+}catch(e){}
+function saveWallet(){ try{localStorage.setItem('sz_wallet',JSON.stringify({credits:credits,owned:owned}));}catch(e){} }
+function updCredits(){
+  const el=$('credBig'); if(!el) return;
+  el.textContent=credits.toLocaleString();
+}
+function addCredits(n){
+  credits+=n; saveWallet(); updCredits();
+  const el=$('credBig'); if(!el) return;
+  el.classList.add('pop'); setTimeout(()=>el.classList.remove('pop'),130);
+}
+
 function applySkin(model,key,skinId,env){
   const mats=skinById(skinId).make(key);
   if(env){ mats.body.envMap=env; mats.accent.envMap=env;
@@ -929,14 +1536,26 @@ function applySkin(model,key,skinId,env){
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
 const knifeHand=makeKnifeHand(); gunMeshes.knife.add(knifeHand); gunMeshes.knife.userData.hand=knifeHand;   // 手是刀的子物件、自動跟刀姿
-gunMeshes.knife.rotation.set(0.2,-0.6,1.78); gunMeshes.knife.scale.set(0.26,0.26,0.26); gunMeshes.knife.position.set(0.10,-0.085,-0.12);   // 反手握(依三角洲持刀)：刀在右下、刀刃朝左上、拳在底部、前臂往右下（已對圖驗證）
+const polarisHand=makePolarisHand(); gunMeshes.polaris.add(polarisHand); gunMeshes.polaris.userData.hand=polarisHand;
+gunMeshes.polaris.rotation.set(-0.12,1.82,0.62); gunMeshes.polaris.scale.set(0.30,0.30,0.30); gunMeshes.polaris.position.set(0.10,0.09,0.01);   // 正手握，與信條同一套朝向
+const karambitHand=makeKarambitHand(); gunMeshes.karambit.add(karambitHand); gunMeshes.karambit.userData.hand=karambitHand;
+gunMeshes.karambit.rotation.set(0.15,-1.34,3.30); gunMeshes.karambit.scale.set(0.33,0.33,0.33); gunMeshes.karambit.position.set(0.16,0.11,0.02);   // 真·反手握：刀尖朝下勾、拳頭在右上（rz≈π 面內翻 + 反向 yaw）
+const butterflyHand=makeButterflyHand(); gunMeshes.butterfly.add(butterflyHand); gunMeshes.butterfly.userData.hand=butterflyHand;
+gunMeshes.butterfly.rotation.set(-0.12,1.82,0.62); gunMeshes.butterfly.scale.set(0.32,0.32,0.32); gunMeshes.butterfly.position.set(0.10,0.09,0.01);
+const kunaiHand=makeKunaiHand(); gunMeshes.kunai.add(kunaiHand); gunMeshes.kunai.userData.hand=kunaiHand;
+gunMeshes.kunai.rotation.set(-0.10,1.86,0.46); gunMeshes.kunai.scale.set(0.34,0.34,0.34); gunMeshes.kunai.position.set(0.11,0.08,0.01);   // 投擲握法：刀尖朝前上
+gunMeshes.knife.rotation.set(-0.12,1.82,0.62); gunMeshes.knife.scale.set(0.29,0.29,0.29); gunMeshes.knife.position.set(0.10,0.10,0.02);   // 正手握：刀尖朝前上、刀刃朝下、拳頭在右下、前臂往右後（已對圖驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
   aug:    new TH.Vector3(0,-0.24,-0.44),
   shotgun:new TH.Vector3(0,-0.115,-0.38),
   pistol: new TH.Vector3(0,-0.13,-0.36),
-  knife:  new TH.Vector3(0.16,-0.16,-0.34)
+  knife:  new TH.Vector3(0.16,-0.16,-0.34),
+  polaris:new TH.Vector3(0.16,-0.16,-0.34),
+  karambit:new TH.Vector3(0.16,-0.16,-0.34),
+  butterfly:new TH.Vector3(0.16,-0.16,-0.34),
+  kunai:new TH.Vector3(0.16,-0.16,-0.34)
 };
 function showGun(){ for(const k in gunMeshes) gunMeshes[k].visible=(k===curKey); }
 showGun();
@@ -1116,6 +1735,10 @@ addEventListener('keydown',e=>{
   if(e.code==='Digit3') swap('shotgun');
   if(e.code==='Digit4') swap('pistol');
   if(e.code==='Digit5') swap('knife');
+  if(e.code==='Digit6') swap('polaris');
+  if(e.code==='Digit7') swap('karambit');
+  if(e.code==='Digit8') swap('butterfly');
+  if(e.code==='Digit9') swap('kunai');
   if(e.code==='KeyQ') cycle();
   if(e.code==='KeyF') inspect();
   if(e.code==='Escape'&&armoryOpen) closeArmory();
@@ -1191,20 +1814,35 @@ let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
 let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.30;   // 近戰橫斬/重戳連段
+let atkDur=SLASH_DUR;                     // 這一擊實際長度（每把近戰武器不同）
+let bflyFlip=0;                           // 蝴蝶刀兩片握把的開合角（rad），每幀由動作寫入
+let throwT=0, throwReleased=false; const THROW_DUR=0.44;   // 苦無投擲
 const ray = new TH.Raycaster();
 
 function inspect(){
   if(!running||menuOpen||reloading||inspectT>0||adsAmt>0.4) return;
   inspectT=INSPECT_DUR;
 }
-function swap(k){ if(k===curKey||reloading)return; curKey=k; inspectT=0; showGun(); updHUD(); reloading=false; }
+function swap(k){
+  if(k===curKey||reloading)return;
+  if(WEAPONS[k].price && !owned[k]){                       // 未解鎖：不給拿，提示去武器庫買
+    addFeed('<b class="lockTag">🔒 '+WEAPONS[k].name+'</b> 未解鎖 — 需要 '+WEAPONS[k].price.toLocaleString()+' 點券');
+    return;
+  }
+  curKey=k; inspectT=0; showGun(); updHUD(); reloading=false;
+}
+function isLocked(k){ return !!(WEAPONS[k].price && !owned[k]); }
 function cycle(dir){
+  const step=(dir>0?1:dir<0?-1:1);
   let i=order.indexOf(curKey);
-  i=(i+(dir>0?1:dir<0?-1:1)+order.length)%order.length;
-  swap(order[i]);
+  for(let n=0;n<order.length;n++){                          // 跳過還沒買的武器
+    i=(i+step+order.length)%order.length;
+    if(!isLocked(order[i])){ swap(order[i]); return; }
+  }
 }
 function reload(){
   const a=ammo[curKey], w=W();
+  if(w.melee||w.thrown) return;            // 近戰與無限彈藥的投擲武器不需要換彈
   if(reloading||a.mag>=w.mag||a.res<=0) return;
   inspectT=0;
   reloading=true; reloadT=w.reload * (w.reloadPer? (w.mag-a.mag):1);
@@ -1228,12 +1866,18 @@ function fire(){
   if(reloading) return;
   inspectT=0;
   let atkMul=1;
+  if(w.thrown){                             // 投擲武器：不耗彈、不走 hitscan，改丟實體投擲物
+    throwT=THROW_DUR; throwReleased=false;
+    blip(760,0.05,0.10,'triangle'); setTimeout(()=>blip(420,0.09,0.12,'sawtooth'),90);
+    return;
+  }
   if(w.melee){                              // 近戰刀：橫斬為主、第三下改重戳，不耗彈、不噴火光
     if(atkGap>1.2) atkCount=0;              // 停手超過 1.2s → 連段重置
     atkGap=0; atkCount++;
     atkType = (atkCount%3===0) ? 'stab' : 'slash';   // 砍、砍 → 第三下重戳
     if(atkType==='slash') slashDir=-slashDir;         // 兩刀左右交替橫斬
-    atkT = (atkType==='stab') ? STAB_DUR : SLASH_DUR;
+    atkDur = (atkType==='stab') ? (w.stabDur||STAB_DUR) : (w.slashDur||SLASH_DUR);
+    atkT = atkDur;
     atkMul = (atkType==='stab') ? 1.6 : 1;            // 重戳傷害加成
     if(atkType==='stab') sStab(); else sSlash();
   } else {
@@ -1323,6 +1967,59 @@ function shotFx(a,b){
   else bcast({t:'fx',a:m.a,b:m.b,g:m.g,o:NET.id});
 }
 
+/* ========= 苦無投擲物：飛出去、命中結算、插在地上 ========= */
+const kunais=[]; let kunaiTpl=null;
+function spawnKunai(){
+  if(!kunaiTpl) kunaiTpl=makeKunaiModel(true);      // 輕量版模板，之後 clone
+  const m=kunaiTpl.clone(); m.scale.setScalar(0.26);
+  const dir=new TH.Vector3(); camera.getWorldDirection(dir); dir.normalize();
+  const o=camera.getWorldPosition(new TH.Vector3());
+  m.position.copy(o).addScaledVector(dir,0.55).add(new TH.Vector3(0,-0.10,0));
+  scene.add(m);
+  kunais.push({mesh:m, vel:dir.clone().multiplyScalar(52), life:7, stuck:false, spin:0});
+}
+function stepKunais(dt){
+  const XA=new TH.Vector3(1,0,0);
+  for(let i=kunais.length-1;i>=0;i--){
+    const k=kunais[i];
+    k.life-=dt;
+    if(k.life<=0){ scene.remove(k.mesh); kunais.splice(i,1); continue; }
+    if(k.stuck) continue;
+    const prev=k.mesh.position.clone();
+    k.vel.y-=9.5*dt;                                  // 輕微下墜，丟遠會有拋物線
+    k.mesh.position.addScaledVector(k.vel,dt);
+    const d=k.vel.clone().normalize();
+    k.mesh.quaternion.setFromUnitVectors(XA,d);       // 刀尖朝飛行方向
+    k.spin+=dt*20; k.mesh.rotateX(k.spin);            // 沿飛行軸自旋
+    const seg=new TH.Vector3().subVectors(k.mesh.position,prev);
+    const len=seg.length();
+    let gone=false;
+    if(len>0.0001 && NET.mode!=='pvp'){                // 命中敵人？
+      ray.set(prev,seg.clone().normalize()); ray.far=len+0.3;
+      for(const e of enemies){ if(e.dead) continue;
+        const hit=ray.intersectObject(e.grp,true);
+        if(hit.length){
+          const head=hit[0].object.userData.head===true;
+          const dmg=WEAPONS.kunai.dmg*(head?2.4:1);
+          if(isHost()) damageEnemy(e,dmg,head,NET.id);
+          else { toHost({t:'ehit',id:e.id,d:dmg,h:head}); showHit(false,head); }
+          sHitEnemy(); sparkBurst(hit[0].point.clone(),0xff5050);
+          scene.remove(k.mesh); kunais.splice(i,1); gone=true; break;
+        }
+      }
+    }
+    if(gone) continue;
+    if(k.mesh.position.y<=0.08){                       // 落地 → 插住幾秒
+      k.mesh.position.y=0.08; k.stuck=true;
+      k.mesh.rotation.set(-Math.PI*0.32,k.mesh.rotation.y,0);
+      k.life=Math.min(k.life,4.5);
+      sparkBurst(k.mesh.position.clone(),0xffd27a);
+    }
+    if(Math.abs(k.mesh.position.x)>WALL||Math.abs(k.mesh.position.z)>WALL){
+      scene.remove(k.mesh); kunais.splice(i,1);
+    }
+  }
+}
 function damageEnemy(e,dmg,head,by){
   by = by || NET.id;
   e.hp-=dmg;
@@ -1331,14 +2028,15 @@ function damageEnemy(e,dmg,head,by){
   if(dead){
     e.dead=true; e.grp.userData.t=0;
     const pts = e.tier===2?60:(e.tier===1?30:18);
-    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); }
+    const cr  = CREDIT_BY_TIER[e.tier]||CREDIT_BY_TIER[0];
+    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); }
     else if(players[by]){ players[by].sc=(players[by].sc||0)+pts;
       players[by].k=(players[by].k||0)+1; }
     const lbl = e.tier===2?'重裝兵':(e.tier===1?'突擊兵':'偵察兵');
     const nm = (by===NET.id?NET.name:(players[by]?players[by].nm:'?'));
     const fh = '<b>'+nm+'</b> 擊殺 '+lbl;
-    addFeed(fh);
-    if(isHost()&&isMP()) bcast({t:'kill',h:fh});
+    addFeed(fh + (by===NET.id?' <b style="color:#5fd0ff">+'+cr+'</b>':''));
+    if(isHost()&&isMP()) bcast({t:'kill',h:fh});   // 廣播不含點券（點券是各自的）
   }
 }
 
@@ -1381,8 +2079,10 @@ function spawnOne(){
 
 /* ========= HUD ========= */
 function updHUD(){
+  updCredits();
   const a=ammo[curKey], w=W();
   if(w.melee) $('ammoBig').innerHTML = '<small style="letter-spacing:2px">近戰</small>';
+  else if(w.infinite) $('ammoBig').innerHTML = '∞<small style="letter-spacing:2px"> 投擲</small>';
   else $('ammoBig').innerHTML = a.mag+'<small> / '+a.res+'</small>';
   const sk=skinById(equipped[curKey]);
   $('gunName').textContent = w.name + (sk.id!=='default'?' · '+sk.name:'');
@@ -1487,7 +2187,7 @@ function step(dt){
   recoilKick=Math.max(0,recoilKick-dt*0.6);
   recoilYaw *= (1-Math.min(1,dt*6));
   // ADS
-  const adsTarget = ((adsHold||keys.KeyE||adsToggle) && !W().melee)?1:0;
+  const adsTarget = ((adsHold||keys.KeyE||adsToggle) && !W().melee && !W().thrown)?1:0;
   adsAmt += (adsTarget-adsAmt)*Math.min(1,dt*14);
 
   /* --- 玩家移動 --- */
@@ -1540,15 +2240,35 @@ function step(dt){
   const fovT = 78 - adsAmt*16;
   if(Math.abs(camera.fov-fovT)>0.05){ camera.fov=fovT; camera.updateProjectionMatrix(); }
   let insX=0, insY=0, insZ=0;
+  bflyFlip=0;                              // 近戰刀的可動件每幀先歸位，再由檢視/攻擊動作寫入
+  if(gunMeshes.karambit&&gunMeshes.karambit.userData.spin) gunMeshes.karambit.userData.spin.rotation.z=0;
   if(adsAmt>0.5) inspectT=0;               // 開鏡取消檢視
   if(inspectT>0){
     inspectT-=dt;
     const p=Math.min(1,1-Math.max(0,inspectT)/INSPECT_DUR);
     const lift=Math.sin(p*Math.PI);
-    if(W().melee){                          // 刀：舉到眼前整把「旋轉」展示
-      gx+=(0.02-gx)*lift; gy+=(-0.05-gy)*lift; gz+=(-0.42-gz)*lift;
-      insY=p*Math.PI*4;                     // 轉兩整圈
-      insX=0.35*lift;                        // 微傾看到立體
+    if(W().melee){                          // 刀：每把有自己的耍刀動作（手全程看得見，才看得出是在耍刀）
+      gx+=(0.03-gx)*lift; gy+=(-0.04-gy)*lift; gz+=(-0.40-gz)*lift;
+      const ease=p<.5? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+      const st=W().inspectStyle;
+      if(st==='spin'){                       // 爪刀：刀掛在食指上繞「指環」轉兩圈，手不動
+        const kb=gunMeshes.karambit;
+        if(kb&&kb.userData.spin) kb.userData.spin.rotation.z = -ease*Math.PI*4;
+        insX=0.26*lift; insZ=Math.sin(p*Math.PI)*0.18; insY=Math.sin(p*Math.PI)*0.25;
+      } else if(st==='balisong'){            // 蝴蝶刀：兩片握把開合翻刀兩趟 + 手腕翻轉
+        bflyFlip = Math.sin(Math.min(1,p*1.06)*Math.PI*2)*Math.PI;
+        insZ = Math.sin(p*Math.PI*2)*0.55;
+        insX = 0.22*lift;
+        insY = Math.sin(p*Math.PI)*0.42;
+      } else if(st==='flick'){               // 北極星：手腕滾一整圈，讓星芒與藍光掃過畫面
+        insZ = ease*Math.PI*2;
+        insX = 0.30*lift;
+        insY = Math.sin(p*Math.PI)*0.34;
+      } else {                               // 信條：厚重刀，左右傾展示（不做整圈翻轉才有份量）
+        insY = Math.sin(p*Math.PI*2)*0.70;
+        insX = 0.34*lift;
+        insZ = Math.sin(p*Math.PI)*0.30;
+      }
     } else {                                 // 槍：舉到眼前轉一圈
       const ease=p<.5? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
       gx+=(0.03-gx)*lift; gy+=(-0.11-gy)*lift; gz+=(-0.30-gz)*lift;
@@ -1559,29 +2279,101 @@ function step(dt){
   }
   if(atkT>0){                               // 近戰：橫斬(快速橫掃) / 重戳(前下刺)
     atkT-=dt;
-    if(atkType==='stab'){                        // 第三下：反手前刺（重擊收尾）
-      const p=1-Math.max(0,atkT)/STAB_DUR, s=Math.sin(p*Math.PI);
-      gz += -s*0.44; gy += -s*0.05;              // 大幅前刺
-      insX += s*0.45;                            // 刀尖翻向前下刺入
-      insY += s*0.12*slashDir; insZ += s*0.30*slashDir;   // 順勢帶一點角度
-    } else {                                     // 橫斬：整條手臂由右下直立 → 水平橫掃過畫面（刀刃領先）
-      const p=1-Math.max(0,atkT)/SLASH_DUR;
-      const wind=p<0.18?Math.sin(p/0.18*Math.PI*0.5):Math.max(0,Math.cos((p-0.18)/0.82*Math.PI*0.5));
-      const sw  =p<0.18?0:Math.sin((p-0.18)/0.82*Math.PI);
-      insZ += (-wind*0.22 + sw*1.15)*slashDir;  // 主：手臂翻轉橫掃＝真的砍過去（非旋轉、非前推）
-      insY += (sw*0.20)*slashDir;               // 帶一點橫向轉
-      gx   += (wind*0.06 - sw*0.22)*slashDir;   // 橫移：先微收再掃向另一側
-      gy   += -wind*0.04 + sw*0.16;             // 蓄力略沉、揮出上抬
-      gz   += -sw*0.14;                          // 略前伸探出
-      insX += sw*0.05;
+    const p=1-Math.max(0,atkT)/atkDur;
+    if(atkType==='stab'){
+      // 共通原則：刀離鏡頭只有 ~0.33，z 位移會被透視放大成「大小暴衝」（±0.36 → 螢幕長度 2.27↔0.42，
+      // 貼臉又縮成點）。所以 z 只留一點點，靠 x/y 把刀尖推向準心來表現「刺進去」。
+      if(W().meleeStyle==='flick'){              // 北極星：彈簧刀快速直刺 — 短蓄力、瞬間彈出、立刻收
+        const back=p<0.18?Math.sin(p/0.18*Math.PI*0.5):Math.max(0,1-(p-0.18)/0.14);
+        const push=p<0.18?0:(p<0.52?Math.pow((p-0.18)/0.34,0.42):Math.max(0,1-(p-0.52)/0.48));
+        gz   += back*0.04 - push*0.12;
+        gx   += (back*0.13 - push*0.26)*slashDir;   // 蓄力極短 → 直接朝準心彈出去
+        gy   += back*0.10 - push*0.22;
+        insX += back*0.20 - push*0.32;
+        insY += (back*0.15 - push*0.28)*slashDir;
+        insZ += (back*0.10 - push*0.07)*slashDir;
+      } else {                                   // 信條：厚重的收刀蓄力 → 爆發前刺
+        const back=p<0.30?Math.sin(p/0.30*Math.PI*0.5):Math.max(0,1-(p-0.30)/0.28);
+        const push=p<0.30?0:(p<0.64?Math.pow((p-0.30)/0.34,0.55):Math.max(0,1-(p-0.64)/0.36));
+        gz   += back*0.05 - push*0.13;
+        gx   += (back*0.18 - push*0.16)*slashDir;  // 蓄力往右後收 → 刺出時往準心送
+        gy   += back*0.14 - push*0.16;
+        insX += back*0.28 - push*0.26;             // 蓄力抬刀尖 → 刺出時壓平朝前（+insX=上抬）
+        insY += (back*0.22 - push*0.20)*slashDir;
+        insZ += (back*0.16 - push*0.10)*slashDir;
+      }
+    } else if(W().meleeStyle==='flick'){         // 北極星（三角洲彈簧刀）：極短前搖 → 由上而下斜劈 → 瞬間回位
+      const wind=p<0.12?Math.sin(p/0.12*Math.PI*0.5):Math.max(0,Math.cos((p-0.12)/0.88*Math.PI*0.5));
+      // 快出慢收：前 45% 爆發砍出、後 55% 確實收回 0（用 sin^0.55 尾巴衰減太慢，收招會瞬間彈回）
+      const q=(p-0.12)/0.88;
+      const sw =p<0.12?0:(q<0.45 ? Math.pow(q/0.45,0.55) : Math.pow(1-(q-0.45)/0.55,1.4));
+      // 旋轉要小、平移要大：只轉不移＝刀在原地打轉，刀尖不會掃過畫面
+      gx   += (wind*0.14 - sw*0.82)*slashDir;   // 主：整把刀橫向掃過畫面
+      gy   += wind*0.16 - sw*0.28;              // 斜劈：先抬起蓄力再往下切
+      gz   += wind*0.07 - sw*0.05;              // 幾乎不前後移動：往前推會縮小成「被丟出去」而不是掃過畫面
+      insY += (wind*0.12 + sw*0.36)*slashDir;   // 轉向要與行進同向：往左掃就要往左轉，反了會變成拖刀
+      insX += wind*0.22 - sw*0.46;              // +insX = 刀尖上抬（別搞反）
+      insZ += (sw*0.48)*slashDir;               // 側傾讓刀刃領先
+    } else if(W().meleeStyle==='hook'){          // 爪刀：短促的勾割 — 由外往內拉、刀尖大幅下勾
+      const wind=p<0.14?Math.sin(p/0.14*Math.PI*0.5):Math.max(0,Math.cos((p-0.14)/0.86*Math.PI*0.5));
+      const q=(p-0.14)/0.86;
+      const sw =p<0.14?0:(q<0.40?Math.pow(q/0.40,0.50):Math.pow(1-(q-0.40)/0.60,1.30));
+      // 反手握（刀尖朝下）之後，往下的量要大幅收斂 —— 原本會把刀尖拉到 y=-0.93 掃出畫面外
+      gx   += (wind*0.16 - sw*0.60)*slashDir;   // 由外往內拉割
+      gy   += wind*0.22 - sw*0.12;              // 由上往下勾（幅度要小，刀尖本來就在低位）
+      gz   += wind*0.06 - sw*0.06;
+      insY += (wind*0.10 + sw*0.30)*slashDir;
+      insX += wind*0.20 - sw*0.30;
+      insZ += (sw*0.34)*slashDir;
+    } else if(W().meleeStyle==='flip'){          // 蝴蝶刀：橫斬時握把微張，收招「啪」地合上
+      const wind=p<0.16?Math.sin(p/0.16*Math.PI*0.5):Math.max(0,Math.cos((p-0.16)/0.84*Math.PI*0.5));
+      const q=(p-0.16)/0.84;
+      const sw =p<0.16?0:(q<0.46?Math.pow(q/0.46,0.60):Math.pow(1-(q-0.46)/0.54,1.35));
+      gx   += (wind*0.16 - sw*0.80)*slashDir;
+      gy   += wind*0.18 - sw*0.28;
+      gz   += wind*0.06 - sw*0.05;
+      insY += (wind*0.12 + sw*0.34)*slashDir;
+      insX += wind*0.22 - sw*0.46;
+      insZ += (sw*0.46)*slashDir;
+      bflyFlip = wind*0.62;                     // 蓄力時張開、揮出後合起
+    } else {                                     // 信條：以手腕為軸水平橫掃過畫面（繞 Z 會變螺旋槳，故繞 Y）
+      const wind=p<0.20?Math.sin(p/0.20*Math.PI*0.5):Math.max(0,Math.cos((p-0.20)/0.80*Math.PI*0.5));
+      const q=(p-0.20)/0.80;
+      const sw  =p<0.20?0:(q<0.50?Math.pow(q/0.50,0.70):Math.pow(1-(q-0.50)/0.50,1.3));
+      gx   += (wind*0.16 - sw*0.88)*slashDir;   // 主：厚重的大橫掃（原本靠旋轉，刀尖幾乎不動）
+      gy   += wind*0.18 - sw*0.32;
+      gz   += wind*0.08 - sw*0.05;
+      insY += (wind*0.14 + sw*0.34)*slashDir;
+      insX += wind*0.24 - sw*0.52;
+      insZ += (sw*0.46)*slashDir;
     }
   }
-  if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視旋轉時收起手（手是刀子物件、自動跟持刀顯示）
+  if(throwT>0){                             // 苦無：後拉過肩蓄力 → 前甩脫手
+    throwT-=dt;
+    const p=1-Math.max(0,throwT)/THROW_DUR;
+    const back=p<0.34?Math.sin(p/0.34*Math.PI*0.5):Math.max(0,1-(p-0.34)/0.18);
+    const fwd =p<0.34?0:(p<0.60?Math.pow((p-0.34)/0.26,0.45):Math.max(0,1-(p-0.60)/0.40));
+    gx   += back*0.18 - fwd*0.12;
+    gy   += back*0.28 - fwd*0.22;
+    gz   += back*0.12 - fwd*0.16;
+    insX += -back*0.80 + fwd*0.50;          // 舉過肩 → 甩下來
+    insZ += (back*0.34 - fwd*0.26);
+    if(!throwReleased && p>=0.36){ throwReleased=true; spawnKunai(); }   // 甩到頂點才脫手
+  }
+  for(const mk of ['knife','polaris','karambit','butterfly','kunai']){        // 近戰的檢視動作是「手上耍刀」，手要全程看得見
+    const hm=gunMeshes[mk]&&gunMeshes[mk].userData.hand; if(hm) hm.visible = true;
+  }
+  const bfM=gunMeshes.butterfly;                                      // 蝴蝶刀兩片握把繞軸心開合
+  if(bfM&&bfM.userData.handleA){
+    bfM.userData.handleA.rotation.z = -bflyFlip;
+    bfM.userData.handleB.rotation.z =  bflyFlip;
+  }
   gunGroup.position.set(gx,gy,gz - recoilKick*0.25);
   gunGroup.rotation.x = -recoilKick*1.2 + insX;
   gunGroup.rotation.y = insY;
   gunGroup.rotation.z = Math.sin(player.speedBob*0.5)*0.01*(moving?1:0) + insZ;
 
+  stepKunais(dt);                          // 苦無投擲物
   /* --- 敵人 --- */
   aliveCount = 0;
   for(let i=enemies.length-1;i>=0;i--){
@@ -1678,9 +2470,10 @@ function step(dt){
     } else if(aliveCount===0){
       betweenT-=dt;
       if(betweenT<=0){
-        if(wave>0){ phaseTxt='第 '+wave+' 波 完成|+'+(wave*20)+' 分 · 彈藥已補滿';
-          bigText('第 '+wave+' 波 完成','+'+(wave*20)+' 分 · 彈藥已補滿');
-          score+=wave*20; refillAllAmmo(); }
+        if(wave>0){ const bonus=wave*25;                       // 過波獎勵：波數×25（第 20 波剛好 500 點）
+          phaseTxt='第 '+wave+' 波 完成|+'+(wave*20)+' 分 · +'+bonus+' 點券 · 彈藥已補滿';
+          bigText('第 '+wave+' 波 完成','+'+(wave*20)+' 分 · +'+bonus+' 點券 · 彈藥已補滿');
+          score+=wave*20; addCredits(bonus); refillAllAmmo(); }
         betweenT=3.0; setTimeout(()=>{ if(running) startWave(); },3000);
         spawnQueue=-1; // 防重入
       }
@@ -2127,7 +2920,7 @@ function pvShow(key,skinId){
   pvInit(); pvDestroyModel();
   pvModel=makeGunModel(key);
   applySkin(pvModel,key,skinId);
-  if(WEAPONS[key].melee){          // 近戰刀金屬反射改用預覽場景環境（主 renderer 的 envMap 無法跨 renderer）
+  if(isSpecial(key)){               // 近戰/投擲的金屬反射改用預覽場景環境（主 renderer 的 envMap 無法跨 renderer）
     pvModel.traverse(o=>{ if(o.isMesh&&o.material&&o.material.metalness>0.4){
       o.material.envMap=pvScene.environment; o.material.needsUpdate=true; } });
   }
@@ -2139,8 +2932,9 @@ function pvShow(key,skinId){
   const dim=Math.max(sz.x,sz.y,sz.z);
   pvCam.position.set(0,dim*0.1,dim*0.95+0.32);
   pvCam.lookAt(0,0,0);
-  if(WEAPONS[key].melee){
-    $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:#eb4b4b">近戰武器</b><small>拖曳旋轉檢視</small>';
+  if(isSpecial(key)){
+    $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:#eb4b4b">'
+      +(WEAPONS[key].thrown?'投擲武器':'近戰武器')+'</b><small>拖曳旋轉檢視</small>';
   } else {
     const sk=skinById(skinId);
     $('pvName').innerHTML=WEAPONS[key].name+'｜<b style="color:'+RARITY[sk.rar].c+'">'+
@@ -2149,18 +2943,38 @@ function pvShow(key,skinId){
 }
 function renderArmTabs(){
   let h='';
-  for(const k of order){ const melee=WEAPONS[k].melee; const sk=skinById(equipped[k]);
-    h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+WEAPONS[k].name+
-      '<small style="color:'+(melee?'#cfd3d8':RARITY[sk.rar].c)+'">'+(melee?'近戰武器':sk.name)+'</small></div>'; }
+  for(const k of order){ const melee=isSpecial(k); const sk=skinById(equipped[k]); const lock=isLocked(k);
+    h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+(lock?'🔒 ':'')+WEAPONS[k].name+
+      '<small style="color:'+(lock?'#ff9a5a':(melee?'#cfd3d8':RARITY[sk.rar].c))+'">'
+      +(lock?WEAPONS[k].price.toLocaleString()+' 點券':(melee?(WEAPONS[k].thrown?'投擲武器':'近戰武器'):sk.name))+'</small></div>'; }
+  const ac=$('armCred'); if(ac) ac.innerHTML='💠 <b>'+credits.toLocaleString()+'</b> 點券';
   $('armTabs').innerHTML=h;
   const tabs=document.querySelectorAll('.armTab');
   for(const el of tabs) el.onclick=()=>{ armWeap=el.dataset.k; refreshArmory(); };
 }
 function renderSkinGrid(){
-  if(WEAPONS[armWeap].melee){
+  if(isSpecial(armWeap)){
+    const w=WEAPONS[armWeap], have=!!owned[armWeap], can=credits>=w.price;
+    const kindTxt=w.thrown?'投擲武器':'近戰武器', kindIcon=w.thrown?'🗡':'🗡️';
+    const foot = have
+      ? '<div class="ownTag">✓ 已擁有</div><small style="color:#7f8da6">遊戲中按 <b style="color:#cfd3d8">'
+        +(order.indexOf(armWeap)+1)+'</b> 拿出　<b style="color:#cfd3d8">左鍵</b> '+(w.thrown?'投擲（無限）':'揮砍')+'　<b style="color:#cfd3d8">F</b> 旋轉檢視</small>'
+      : '<small style="color:#7f8da6">擊殺敵人賺點券：<b style="color:#66c04a">綠兵 10</b> · <b style="color:#e8483d">紅兵 25</b> · <b style="color:#9a5cff">紫兵 50</b></small>'
+        +'<br><button id="buyBtn" class="buyBtn'+(can?'':' no')+'">'+(can?'購買':'點券不足')+'　'
+        +w.price.toLocaleString()+' 點券</button>'
+        +'<div style="margin-top:8px;font-size:12px;color:#7f8da6">目前 <b style="color:#5fd0ff">'+credits.toLocaleString()+'</b> 點券'
+        +(can?'':'，還差 <b style="color:#ff9a5a">'+(w.price-credits).toLocaleString()+'</b>')+'</div>';
     $('armSkins').innerHTML='<div style="grid-column:1/-1;padding:22px 16px;text-align:center;color:#9aa7bd;line-height:1.8">'
-      +'🗡️ <b style="color:#e9e3d3">信條</b> 是<b>近戰武器</b><br>無塗裝可換，這裡供你 360° 檢視<br>'
-      +'<small style="color:#7f8da6">遊戲中按 <b style="color:#cfd3d8">5</b> 拿出　<b style="color:#cfd3d8">左鍵</b> 揮砍　<b style="color:#cfd3d8">F</b> 旋轉檢視</small></div>';
+      +kindIcon+' <b style="color:#e9e3d3">'+w.name+'</b> 是<b>'+kindTxt+'</b><br>無塗裝可換，這裡供你 360° 檢視<br>'
+      +foot+'</div>';
+    const bb=$('buyBtn');
+    if(bb) bb.onclick=()=>{
+      const ww=WEAPONS[armWeap];
+      if(owned[armWeap]||credits<ww.price) return;
+      credits-=ww.price; owned[armWeap]=true; saveWallet(); updCredits();
+      addFeed('已解鎖 <b style="color:#5fd0ff">'+ww.name+'</b>');
+      refreshArmory();
+    };
     return;
   }
   let h='';
@@ -2227,6 +3041,84 @@ $('bStart').onclick=()=>{ NET.mode=selMode;
 reflectMode();
 updHUD();
 requestAnimationFrame(loop);
+
+/* ========= 開發用把手（Browser 窗格隱藏時也能驗證：手動 step + render + 存圖） ========= */
+window.__sz = {
+  scene, camera, renderer, gunMeshes, player,
+  get curKey(){ return curKey; },
+  begin, swap,
+  get knife(){ return gunMeshes.knife; },
+  get hand(){ return gunMeshes.knife.userData.hand; },
+  setPose(o){
+    const k=gunMeshes.knife;
+    if(o.rot) k.rotation.set(o.rot[0],o.rot[1],o.rot[2]);
+    if(o.pos) k.position.set(o.pos[0],o.pos[1],o.pos[2]);
+    if(o.scale!=null) k.scale.setScalar(o.scale);
+    return this.pose();
+  },
+  pose(){
+    const k=gunMeshes.knife,r=k.rotation,p=k.position;
+    return {rot:[+r.x.toFixed(3),+r.y.toFixed(3),+r.z.toFixed(3)],
+            pos:[+p.x.toFixed(3),+p.y.toFixed(3),+p.z.toFixed(3)],scale:+k.scale.x.toFixed(3)};
+  },
+  get credits(){ return credits; },
+  set credits(v){ credits=Math.max(0,v|0); saveWallet(); updCredits(); },
+  get owned(){ return owned; },
+  awardKill(tier){ addCredits(CREDIT_BY_TIER[tier]||CREDIT_BY_TIER[0]); return credits; },
+  buy(k){ const w=WEAPONS[k];
+    if(!w||!w.price) return 'not purchasable';
+    if(owned[k]) return 'already owned';
+    if(credits<w.price) return 'not enough ('+credits+'/'+w.price+')';
+    credits-=w.price; owned[k]=true; saveWallet(); updCredits();
+    return {credits:credits, owned:JSON.parse(JSON.stringify(owned))}; },
+  resetWallet(){ credits=0; for(const k in owned) owned[k]=false; saveWallet(); updCredits(); return 'reset'; },
+  // 窗格內 pointer lock 會失敗 → 合成 mousedown 觸發不了開火，測試時直接設 firing
+  setFiring(v){ firing=!!v; return firing; },
+  fireOnce(){ firing=true; return 'firing set — 呼叫 stepFrames 讓它送出'; },
+  get kunaiCount(){ return kunais.length; },
+  get throwT(){ return throwT; },
+  attack(type){ const w=WEAPONS[curKey]; atkType=type||'slash';
+    atkDur=(atkType==='stab')?(w.stabDur||STAB_DUR):(w.slashDur||SLASH_DUR); atkT=atkDur; return atkDur; },
+  stepFrames(n,dt){ n=n||1; dt=dt||1/60; for(let i=0;i<n;i++) step(dt); },
+  // preserveDrawingBuffer=false → render 後必須同一個 task 取像素
+  snap(w){
+    renderer.render(scene,camera);
+    const src=renderer.domElement, W=w||960, H=Math.round(W*src.height/src.width);
+    const c=document.createElement('canvas'); c.width=W; c.height=H;
+    c.getContext('2d').drawImage(src,0,0,W,H);
+    return c.toDataURL('image/png');
+  },
+  save(w){ return fetch('/save',{method:'POST',body:this.snap(w)}).then(r=>r.text()); },
+  // 窗格隱藏時 innerWidth=0 → 畫布會是 0x0，渲染前強制給解析度
+  setup(w,h){
+    w=w||1280; h=h||720;
+    this.renderer.setPixelRatio(1); this.renderer.setSize(w,h,false);
+    this.camera.aspect=w/h; this.camera.updateProjectionMatrix();
+    if(!this._began){ this.begin(); this._began=true; }
+    this.swap('knife'); this.stepFrames(6);
+    return {size:[w,h],curKey:this.curKey,pose:this.pose()};
+  },
+  // 專用檢視相機：直接框住刀＋手（off 是相機相對刀中心的方向，以刀的尺寸為單位）
+  inspect(off,fov,noHand){
+    this.stepFrames(2);
+    if(noHand) this.hand.visible=false;              // step() 每幀會設回來，所以要在 step 之後關
+    const k=this.knife; k.updateWorldMatrix(true,true);
+    const box=new TH.Box3().setFromObject(k), c=new TH.Vector3(); box.getCenter(c);
+    const size=box.getSize(new TH.Vector3()).length();
+    const cam=new TH.PerspectiveCamera(fov||40,1280/720,0.005,100);
+    cam.position.copy(c).add(new TH.Vector3(off[0],off[1],off[2]).multiplyScalar(size).applyQuaternion(this.camera.quaternion));
+    cam.lookAt(c);
+    this.renderer.render(this.scene,cam);
+    return this._post();
+  },
+  _post(w){
+    const src=this.renderer.domElement, W=w||1000, H=Math.round(W*src.height/src.width);
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    cv.getContext('2d').drawImage(src,0,0,W,H);
+    return fetch('/save',{method:'POST',body:cv.toDataURL('image/png')}).then(r=>r.text());
+  },
+};
+
 })();
 </script>
 </body>
