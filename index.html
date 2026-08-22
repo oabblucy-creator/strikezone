@@ -454,6 +454,23 @@ const gunGroup = new TH.Group();
 camera.add(gunGroup);
 scene.add(camera);
 const gunMeshes = {};
+/* ===== 握刀的低多邊形人手（在刀「中性座標」握指虎：指穿過孔、掌在後、刀刃從拳上方伸出）===== */
+function makeKnifeHand(){
+  const h=new TH.Group();
+  const skin =new TH.MeshStandardMaterial({color:0xcf9b74,roughness:.8,metalness:0.02});
+  const skinD=new TH.MeshStandardMaterial({color:0xbe8a63,roughness:.82,metalness:0.02});
+  const finger=(fx,fy)=>{                       // 一根手指：穿過孔(沿 z)、指節在前(+z)
+    const f=new TH.Mesh(new TH.CylinderGeometry(0.04,0.04,0.24,8), skin); f.rotation.x=Math.PI/2; f.position.set(fx,fy,-0.01); h.add(f);
+    const k1=new TH.Mesh(new TH.SphereGeometry(0.045,8,6), skin); k1.position.set(fx,fy+0.015,0.10); h.add(k1);
+  };
+  const palm=new TH.Mesh(new TH.BoxGeometry(0.42,0.26,0.12), skin); palm.position.set(-0.30,-0.02,-0.085); h.add(palm);
+  const palmR=new TH.Mesh(new TH.SphereGeometry(0.15,10,8), skin); palmR.scale.set(1.45,0.95,0.6); palmR.position.set(-0.30,-0.02,-0.12); h.add(palmR);
+  finger(-0.15,-0.02); finger(-0.245,-0.02); finger(-0.37,-0.02); finger(-0.465,-0.02);   // 四指穿過兩個指孔
+  const th=new TH.Mesh(new TH.CylinderGeometry(0.048,0.04,0.26,8), skin); th.rotation.set(Math.PI/2,0,-0.7); th.position.set(-0.10,0.05,0.05); h.add(th);   // 拇指
+  h.add(new TH.Mesh(new TH.SphereGeometry(0.05,8,6),skin).translateX(-0.22).translateY(0.10).translateZ(0.08));
+  const arm=new TH.Mesh(new TH.CylinderGeometry(0.15,0.185,0.6,12), skinD); arm.rotation.set(0,0,Math.PI/2); arm.position.set(-0.66,-0.03,0.02); h.add(arm);   // 前臂
+  return h;
+}
 /* ===== 信條 近戰刀模型（依設計圖：clip-point 鋸齒刀身 + 白骨指虎 + 紅寶石徽章）===== */
 function makeKnifeModel(){
   const g=new TH.Group(); const env=getMainEnv();
@@ -909,7 +926,8 @@ function applySkin(model,key,skinId,env){
 
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
-gunMeshes.knife.rotation.set(0.0,0.3,1.571); gunMeshes.knife.scale.set(0.34,0.34,0.34); gunMeshes.knife.position.set(0.11,-0.17,-0.10);   // 直握：刀身垂直朝上、縮小不過高、右下角、不擋準心（已驗證）
+const knifeHand=makeKnifeHand(); gunMeshes.knife.add(knifeHand); gunMeshes.knife.userData.hand=knifeHand;   // 加上握刀的手
+gunMeshes.knife.rotation.set(0.0,0.3,1.571); gunMeshes.knife.scale.set(0.32,0.32,0.32); gunMeshes.knife.position.set(0.085,-0.02,-0.11);   // 手握直刀、刀刃朝上、不擋準心（已驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
@@ -1539,6 +1557,7 @@ function step(dt){
     gx   += -slash*0.05;
     gz   +=  wind*0.02 - slash*0.22;         // 劈出往前刺送
   }
+  if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視時只轉刀、收起手
   gunGroup.position.set(gx,gy,gz - recoilKick*0.25);
   gunGroup.rotation.x = -recoilKick*1.2 + insX;
   gunGroup.rotation.y = insY;
