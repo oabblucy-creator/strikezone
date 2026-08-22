@@ -454,21 +454,22 @@ const gunGroup = new TH.Group();
 camera.add(gunGroup);
 scene.add(camera);
 const gunMeshes = {};
-/* ===== 握刀的圓潤人手（在刀「中性座標」握指虎板：四指穿孔、掌在後、拇指近刃、前臂+袖往尾端 -x；反手握）===== */
+/* ===== 握刀的肌肉猛男手（健康膚色、寬拳、骨感指節、前臂肌肉隆起+血管；反手握指虎板）===== */
 function makeKnifeHand(){
   const h=new TH.Group();
-  const skin  =new TH.MeshStandardMaterial({color:0xcf9b74,roughness:.82,metalness:0});
-  const groove=new TH.MeshStandardMaterial({color:0x9c7452,roughness:.85,metalness:0});
-  const sleeve=new TH.MeshStandardMaterial({color:0x40454e,roughness:.85,metalness:0.1});
+  const skin =new TH.MeshStandardMaterial({color:0xc98a5e,roughness:.72,metalness:0});
+  const skinS=new TH.MeshStandardMaterial({color:0xa9713f,roughness:.78,metalness:0});
   const gx=-0.31;
-  const palm=new TH.Mesh(new TH.SphereGeometry(0.20,16,14),skin); palm.scale.set(1.35,1.05,0.72); palm.position.set(gx,-0.01,-0.12); h.add(palm);   // 掌背(後)
-  const fingers=new TH.Mesh(new TH.SphereGeometry(0.20,16,14),skin); fingers.scale.set(1.4,1.0,0.6); fingers.position.set(gx,-0.01,0.10); h.add(fingers);  // 四指(前)
-  const knu=new TH.Mesh(new TH.SphereGeometry(0.19,16,12),skin); knu.scale.set(1.4,0.5,0.62); knu.position.set(gx,0.12,0.11); h.add(knu);   // 指節列
-  for(let i=0;i<3;i++){ const fx=gx-0.135+i*0.09; const gv=new TH.Mesh(new TH.BoxGeometry(0.016,0.26,0.05),groove); gv.position.set(fx,-0.01,0.185); h.add(gv);}  // 分四指
-  const th1=new TH.Mesh(new TH.SphereGeometry(0.078,12,10),skin); th1.scale.set(1.4,1.1,1); th1.position.set(gx+0.19,0.05,0.03); h.add(th1);   // 拇指
-  const th2=new TH.Mesh(new TH.SphereGeometry(0.072,12,10),skin); th2.position.set(gx+0.28,0.12,0.03); h.add(th2);
-  const arm=new TH.Mesh(new TH.CylinderGeometry(0.16,0.175,0.3,14),skin); arm.rotation.z=Math.PI/2; arm.position.set(gx-0.34,-0.01,-0.03); h.add(arm);   // 前臂
-  const sl=new TH.Mesh(new TH.CylinderGeometry(0.18,0.21,0.34,14),sleeve); sl.rotation.z=Math.PI/2; sl.position.set(gx-0.64,0.0,-0.03); h.add(sl);   // 袖
+  const palm=new TH.Mesh(new TH.SphereGeometry(0.20,16,14),skin); palm.scale.set(1.5,1.08,0.72); palm.position.set(gx,-0.01,-0.11); h.add(palm);   // 寬厚掌背
+  const fingers=new TH.Mesh(new TH.SphereGeometry(0.20,16,14),skin); fingers.scale.set(1.5,1.0,0.62); fingers.position.set(gx,-0.02,0.10); h.add(fingers);  // 四指
+  for(let i=0;i<4;i++){ const fx=gx-0.15+i*0.10; const kn=new TH.Mesh(new TH.SphereGeometry(0.055,10,8),skin); kn.scale.set(1,0.9,1); kn.position.set(fx,0.14,0.135); h.add(kn);}  // 骨感指節
+  for(let i=0;i<3;i++){ const fx=gx-0.14+i*0.095; const gv=new TH.Mesh(new TH.BoxGeometry(0.02,0.28,0.05),skinS); gv.position.set(fx,-0.01,0.19); h.add(gv);}  // 指溝
+  const th1=new TH.Mesh(new TH.SphereGeometry(0.09,12,10),skin); th1.scale.set(1.4,1.15,1); th1.position.set(gx+0.20,0.04,0.03); h.add(th1);   // 粗拇指
+  const th2=new TH.Mesh(new TH.SphereGeometry(0.078,12,10),skin); th2.position.set(gx+0.30,0.12,0.03); h.add(th2);
+  const wrist=new TH.Mesh(new TH.CylinderGeometry(0.135,0.15,0.16,16),skin); wrist.rotation.z=Math.PI/2; wrist.position.set(gx-0.27,-0.01,-0.02); h.add(wrist);   // 手腕(細)
+  const fore=new TH.Mesh(new TH.SphereGeometry(0.20,18,14),skin); fore.scale.set(1.55,1.05,1.0); fore.position.set(gx-0.52,-0.02,-0.02); h.add(fore);   // 前臂肌肉隆起
+  const elbow=new TH.Mesh(new TH.CylinderGeometry(0.155,0.13,0.2,16),skin); elbow.rotation.z=Math.PI/2; elbow.position.set(gx-0.83,-0.02,-0.02); h.add(elbow);
+  for(const v of [-0.06,0.06]){ const vn=new TH.Mesh(new TH.CylinderGeometry(0.009,0.009,0.5,6),skinS); vn.rotation.z=Math.PI/2; vn.position.set(gx-0.52,0.14,-0.02+v); vn.rotation.y=0.15*(v>0?1:-1); h.add(vn);}   // 血管/肌腱
   return h;
 }
 /* ===== 信條 近戰刀模型（依設計圖：clip-point 鋸齒刀身 + 白骨指虎 + 紅寶石徽章）===== */
@@ -927,7 +928,7 @@ function applySkin(model,key,skinId,env){
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
 const knifeHand=makeKnifeHand(); gunMeshes.knife.add(knifeHand); gunMeshes.knife.userData.hand=knifeHand;   // 手是刀的子物件、自動跟刀姿
-gunMeshes.knife.rotation.set(0.25,0.5,-1.0); gunMeshes.knife.scale.set(0.27,0.27,0.27); gunMeshes.knife.position.set(0.06,-0.06,-0.14);   // 反手握：刀刃朝下前、指虎在拳、前臂往手肘（已驗證）
+gunMeshes.knife.rotation.set(0.25,0.5,-1.0); gunMeshes.knife.scale.set(0.26,0.26,0.26); gunMeshes.knife.position.set(0.06,-0.06,-0.14);   // 反手握：刀刃朝下前、指虎在拳、前臂往手肘（已驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
@@ -1188,7 +1189,7 @@ let mv={x:0,y:0};
 let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
-let atkT=0, atkType='stab', atkCount=0, atkGap=99; const STAB_DUR=0.22, SLASH_DUR=0.36;   // 近戰戳/砍連段
+let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.32;   // 近戰橫斬/重戳連段
 const ray = new TH.Raycaster();
 
 function inspect(){
@@ -1226,13 +1227,14 @@ function fire(){
   if(reloading) return;
   inspectT=0;
   let atkMul=1;
-  if(w.melee){                              // 近戰刀：戳/砍連段，不耗彈、不噴火光
+  if(w.melee){                              // 近戰刀：橫斬為主、第三下改重戳，不耗彈、不噴火光
     if(atkGap>1.2) atkCount=0;              // 停手超過 1.2s → 連段重置
     atkGap=0; atkCount++;
-    atkType = (atkCount%3===0) ? 'slash' : 'stab';   // 連戳兩下 → 第三下重砍
-    atkT = (atkType==='slash') ? SLASH_DUR : STAB_DUR;
-    atkMul = (atkType==='slash') ? 1.7 : 1;          // 重砍傷害加成
-    if(atkType==='slash') sSlash(); else sStab();
+    atkType = (atkCount%3===0) ? 'stab' : 'slash';   // 砍、砍 → 第三下重戳
+    if(atkType==='slash') slashDir=-slashDir;         // 兩刀左右交替橫斬
+    atkT = (atkType==='stab') ? STAB_DUR : SLASH_DUR;
+    atkMul = (atkType==='stab') ? 1.6 : 1;            // 重戳傷害加成
+    if(atkType==='stab') sStab(); else sSlash();
   } else {
     if(a.mag<=0){ blip(120,0.05,0.15,'square'); if(a.res>0) reload(); return;}
     a.mag--;
@@ -1554,16 +1556,17 @@ function step(dt){
       insZ=Math.sin(p*Math.PI)*0.14;
     }
   }
-  if(atkT>0){                               // 近戰：戳(快速前刺) / 砍(蓄力斜劈)
+  if(atkT>0){                               // 近戰：橫斬(快速橫掃) / 重戳(前下刺)
     atkT-=dt;
     if(atkType==='stab'){
       const p=1-Math.max(0,atkT)/STAB_DUR, s=Math.sin(p*Math.PI);
-      gz += -s*0.28; insX += -s*0.12; gy += s*0.02;
+      gz += -s*0.30; gy += -s*0.05; insX += -s*0.10;
     } else {
       const p=1-Math.max(0,atkT)/SLASH_DUR;
-      const wind=p<0.3?Math.sin(p/0.3*Math.PI*0.5):Math.max(0,Math.cos((p-0.3)/0.7*Math.PI*0.5));
-      const sl=p<0.3?0:Math.sin((p-0.3)/0.7*Math.PI);
-      insZ += wind*0.4 - sl*1.4; insX += -wind*0.3 + sl*0.9; gz += -sl*0.12; gx += -sl*0.05;
+      const wind=p<0.25?Math.sin(p/0.25*Math.PI*0.5):Math.max(0,Math.cos((p-0.25)/0.75*Math.PI*0.5));
+      const sw=p<0.25?0:Math.sin((p-0.25)/0.75*Math.PI);
+      insY += (wind*0.35 - sw*0.95)*slashDir;   // 橫斬：揚一側 → 快速橫掃另一側（左右交替）
+      insZ += -sw*0.35*slashDir; insX += sw*0.12; gz += -sw*0.08;
     }
   }
   if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視旋轉時收起手（手是刀子物件、自動跟持刀顯示）
