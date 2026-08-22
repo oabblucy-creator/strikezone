@@ -909,7 +909,7 @@ function applySkin(model,key,skinId,env){
 
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
-gunMeshes.knife.rotation.set(0.0,0.3,1.571); gunMeshes.knife.scale.set(0.44,0.44,0.44); gunMeshes.knife.position.set(0.10,-0.16,-0.10);   // 直握：刀身垂直、刀尖朝正上方、不歪、不擋準心（已驗證）
+gunMeshes.knife.rotation.set(0.0,0.3,1.571); gunMeshes.knife.scale.set(0.34,0.34,0.34); gunMeshes.knife.position.set(0.11,-0.17,-0.10);   // 直握：刀身垂直朝上、縮小不過高、右下角、不擋準心（已驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
