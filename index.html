@@ -929,7 +929,7 @@ function applySkin(model,key,skinId,env){
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
 const knifeHand=makeKnifeHand(); gunMeshes.knife.add(knifeHand); gunMeshes.knife.userData.hand=knifeHand;   // 手是刀的子物件、自動跟刀姿
-gunMeshes.knife.rotation.set(0.25,0.5,-1.0); gunMeshes.knife.scale.set(0.26,0.26,0.26); gunMeshes.knife.position.set(0.06,-0.06,-0.14);   // 反手握：刀刃朝下前、指虎在拳、前臂往手肘（已驗證）
+gunMeshes.knife.rotation.set(0.2,-0.6,1.78); gunMeshes.knife.scale.set(0.26,0.26,0.26); gunMeshes.knife.position.set(0.10,-0.085,-0.12);   // 反手握(依三角洲持刀)：刀在右下、刀刃朝左上、拳在底部、前臂往右下（已對圖驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
   rifle:  new TH.Vector3(0,-0.15,-0.40),
@@ -1559,23 +1559,21 @@ function step(dt){
   }
   if(atkT>0){                               // 近戰：橫斬(快速橫掃) / 重戳(前下刺)
     atkT-=dt;
-    if(atkType==='stab'){
+    if(atkType==='stab'){                        // 第三下：反手前刺（重擊收尾）
       const p=1-Math.max(0,atkT)/STAB_DUR, s=Math.sin(p*Math.PI);
-      const wu=p<0.25?Math.sin(p/0.25*Math.PI*0.5):1;
-      gz += -s*0.42;               // 大幅前刺
-      gx += (0.09*wu - s*0.09);    // 先收回中線再刺出
-      gy += -s*0.04;
-      insX += s*0.22;              // 反手向下前刺
-    } else {
+      gz += -s*0.44; gy += -s*0.05;              // 大幅前刺
+      insX += s*0.45;                            // 刀尖翻向前下刺入
+      insY += s*0.12*slashDir; insZ += s*0.30*slashDir;   // 順勢帶一點角度
+    } else {                                     // 橫斬：整條手臂由右下直立 → 水平橫掃過畫面（刀刃領先）
       const p=1-Math.max(0,atkT)/SLASH_DUR;
       const wind=p<0.18?Math.sin(p/0.18*Math.PI*0.5):Math.max(0,Math.cos((p-0.18)/0.82*Math.PI*0.5));
       const sw  =p<0.18?0:Math.sin((p-0.18)/0.82*Math.PI);
-      // 反手橫斬：先向右上蓄力 →（整個視角）橫掃過畫面並前伸 → 收
-      gx  += (wind*0.13 - sw*0.36)*slashDir;   // 由右往左水平橫移（下一刀反向）
-      insY+= (wind*0.32 - sw*0.88)*slashDir;   // 主：視角橫掃＝刀真的揮過去
-      gz  += -sw*0.26;                          // 揮擊時前伸探出
-      insX+= wind*0.10 + sw*0.15;               // 蓄力微抬、劈出略下壓
-      insZ+= -sw*0.28*slashDir;                 // 斜角讓刀刃領先劃過
+      insZ += (-wind*0.22 + sw*1.15)*slashDir;  // 主：手臂翻轉橫掃＝真的砍過去（非旋轉、非前推）
+      insY += (sw*0.20)*slashDir;               // 帶一點橫向轉
+      gx   += (wind*0.06 - sw*0.22)*slashDir;   // 橫移：先微收再掃向另一側
+      gy   += -wind*0.04 + sw*0.16;             // 蓄力略沉、揮出上抬
+      gz   += -sw*0.14;                          // 略前伸探出
+      insX += sw*0.05;
     }
   }
   if(gunMeshes.knife&&gunMeshes.knife.userData.hand) gunMeshes.knife.userData.hand.visible = !(inspectT>0);   // F 檢視旋轉時收起手（手是刀子物件、自動跟持刀顯示）
