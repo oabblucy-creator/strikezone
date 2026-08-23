@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>3D 槍戰 FPS — STRIKE ZONE</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -116,6 +117,7 @@
     background:linear-gradient(90deg,#ffcf6b,#ff9a5a);box-shadow:0 8px 24px rgba(255,150,80,.35);}
   #playBtn:hover{filter:brightness(1.08);}
   #menu .small{color:#5f6d85;font-size:12px;}
+  #verTag{color:#7f8da6;letter-spacing:1px;border:1px solid #2c3a52;border-radius:6px;padding:4px 10px;background:rgba(255,255,255,.03)}
   #deadStats{color:#cdd9ec;font-size:15px;letter-spacing:2px;}
   #menu input{pointer-events:auto;font:600 15px "Segoe UI";text-align:center;
     padding:10px 14px;border-radius:8px;border:1px solid #2c3a52;
@@ -402,6 +404,7 @@
     對戰：玩家互相射擊，被擊倒 4 秒後重生，比擊殺數。
   </div>
   <div class="small">建議電腦＋滑鼠遊玩；連線用 PeerJS，需連網</div>
+  <div class="small" id="verTag">版本 v24 · 爪刀新握法＋新揮砍　<b style="color:#7fe0a0">看到 v24 就是最新版</b></div>
 </div>
 
 <div id="armory" class="hide">
