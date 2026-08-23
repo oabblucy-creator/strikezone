@@ -580,15 +580,15 @@ function makeHand(mode){
   const blob=(sx,sy,sz,x,y,z,seg)=>{ const m=new TH.Mesh(new TH.SphereGeometry(0.5,seg||16,12),M.fab); m.scale.set(sx,sy,sz); m.position.set(x,y,z); h.add(m); return m; };
   if(rev){ blob(0.36,0.17,0.10,-0.285,-0.005,0.125,18); blob(0.30,0.16,0.10,-0.27,0.095,0.12,14); blob(0.34,0.15,0.07,-0.27,0.02,0.17,16); }   // 反手指虎：手掌在握把前面(+z)，手腕在 +y 側
   else if(through){ blob(0.36,0.17,0.10,-0.285,-0.005,0.125,18); blob(0.17,0.16,0.10,-0.43,-0.02,0.125,14); blob(0.34,0.15,0.07,-0.27,0.03,0.17,16); }   // 正手指虎
-  else if(claw){ blob(0.34,0.185,0.115,-0.250,-0.010,-0.078,18); blob(0.17,0.175,0.108,-0.075,-0.026,-0.070,14); blob(0.32,0.165,0.075,-0.245,0.030,0.052,16); }   // 爪刀反手：掌根在刀那端（+x）
+  else if(claw){ blob(0.36,0.190,0.118,-0.300,-0.022,-0.070,18); blob(0.17,0.150,0.100,-0.078,-0.030,-0.062,14); blob(0.34,0.170,0.078,-0.300,0.028,0.056,16); }   // 爪刀反手：掌心 -z、手背 +z、手腕在 -y
   else { blob(0.36,0.185,0.115,-0.285,-0.010,-0.078,18); blob(0.17,0.175,0.108,-0.430,-0.026,-0.070,14); blob(0.34,0.165,0.075,-0.278,0.030,0.052,16); }   // 一般握法：掌心 -z、手背 +z
   /* 四根手指＝三節關節鏈（指根 J1 → 中節 J2 → 指尖 J3）。wrap：從指節往上、繞過握把；through：從手掌直直穿過指孔(-z)、在背面彎下去 */
   const FL=[]; h.userData.fingerList=FL;
   const FING=rev?[[-0.140,0.031,0.86],[-0.235,0.036,0.96],[-0.330,0.039,1.02],[-0.422,0.038,1.00]]   // 反手：小指在刀刃那端
-            :claw?[[-0.500,0.038,1.00,1],[-0.335,0.039,1.02],[-0.228,0.036,0.96],[-0.120,0.031,0.86]]   // 爪刀：食指穿指環(-0.50)、小指靠刀
+            :claw?[[-0.500,0.040,1.00,2],[-0.335,0.039,1.02],[-0.228,0.036,0.96],[-0.120,0.031,0.86]]   // 爪刀：食指穿指環(-0.50)、小指靠刀
                 :[[-0.140,0.038,1.00],[-0.235,0.039,1.02],[-0.330,0.036,0.96],[-0.422,0.031,0.86]];
-  for(const f of FING){ const fx=f[0], r=f[1], k=f[2], thr=through||!!f[3], L=thr?[0.165,0.085*k,0.070*k]:[0.075*k,0.090*k,0.080*k];
-    const J1=new TH.Group(); J1.position.set(fx,thr?(f[3]?-0.02:0.0):0.086,thr?0.115:0.042); h.add(J1);
+  for(const f of FING){ const fx=f[0], r=f[1], k=f[2], ringF=(f[3]===2), thr=through||!!f[3], L=ringF?[0.175,0.082*k,0.068*k]:thr?[0.165,0.085*k,0.070*k]:[0.075*k,0.090*k,0.080*k];
+    const J1=new TH.Group(); J1.position.set(fx,ringF?0.098:(thr?(f[3]?-0.02:0.0):0.086),ringF?-0.020:(thr?0.115:0.042)); h.add(J1);
     const J2=new TH.Group(); J2.position.set(0,L[0],0); J1.add(J2);
     const J3=new TH.Group(); J3.position.set(0,L[1],0); J2.add(J3);
     limbSeg(J1,[0,0,0],[0,L[0],0],r,M.fab,r*0.96);
@@ -597,18 +597,18 @@ function makeHand(mode){
     const pz=thr?r*0.45:-r*0.45;
     const pad=new TH.Mesh(new TH.BoxGeometry(r*1.7,r*1.0,r*0.9),M.pad); pad.position.set(0,0.016,pz); J1.add(pad);        // 指根護甲
     const pad2=new TH.Mesh(new TH.BoxGeometry(r*1.5,r*0.9,r*0.8),M.pad); pad2.position.set(0,0.012,pz*0.9); J2.add(pad2);  // 中節護甲
-    FL.push(thr?{j:[J1,J2,J3],base:[-Math.PI/2,0,0],q:[0,-1.35,-1.10]}:{j:[J1,J2,J3],base:[0,0,0],q:[2.27,1.05,1.31]}); }
+    FL.push(ringF?{j:[J1,J2,J3],base:[Math.PI,0,0],q:[0,-1.32,-1.06]}:thr?{j:[J1,J2,J3],base:[-Math.PI/2,0,0],q:[0,-1.35,-1.10]}:{j:[J1,J2,J3],base:[0,0,0],q:[2.27,1.05,1.31]}); }
   // 拇指（基部關節，rotation.z>0 = 翹起）：壓在握把脊背靠鏡頭這側、指向刀尖
-  const tb=rev?[-0.46,0.08,0.125]:through?[-0.30,0.03,0.125]:[-0.292,-0.014,-0.070], tm=rev?[-0.53,0.01,0.08]:through?[-0.22,0.095,0.075]:[-0.232,0.074,0.016], tt=rev?[-0.55,-0.07,0.05]:through?[-0.05,0.11,0.045]:[-0.060,0.100,0.050];
+  const tb=rev?[-0.46,0.08,0.125]:claw?[-0.316,-0.052,-0.062]:through?[-0.30,0.03,0.125]:[-0.292,-0.014,-0.070], tm=rev?[-0.53,0.01,0.08]:claw?[-0.430,0.010,-0.030]:through?[-0.22,0.095,0.075]:[-0.232,0.074,0.016], tt=rev?[-0.55,-0.07,0.05]:claw?[-0.545,0.052,0.004]:through?[-0.05,0.11,0.045]:[-0.060,0.100,0.050];
   const th=new TH.Group(); th.position.set(tb[0],tb[1],tb[2]); const ti=new TH.Group(); ti.position.set(-tb[0],-tb[1],-tb[2]); th.add(ti); h.add(th); h.userData.thumb=th;
   limbSeg(ti,tb,tm,0.054,M.fab,0.048); limbSeg(ti,tm,tt,0.048,M.fab,0.040);
-  const nail=new TH.Mesh(new TH.BoxGeometry(rev?0.054:0.078,0.016,rev?0.078:0.054),M.pad); if(rev){ nail.position.set(tt[0]-0.004,tt[1]-0.004,tt[2]+0.028); nail.rotation.x=-0.3; } else { nail.position.set(tt[0]-0.024,tt[1]+0.026,tt[2]+0.002); nail.rotation.z=-0.16; } ti.add(nail);
+  const nail=new TH.Mesh(new TH.BoxGeometry(rev?0.054:0.078,0.016,rev?0.078:0.054),M.pad); if(rev){ nail.position.set(tt[0]-0.004,tt[1]-0.004,tt[2]+0.028); nail.rotation.x=-0.3; } else if(claw){ nail.position.set(tt[0]-0.020,tt[1]+0.020,tt[2]+0.004); nail.rotation.z=-0.42; } else { nail.position.set(tt[0]-0.024,tt[1]+0.026,tt[2]+0.002); nail.rotation.z=-0.16; } ti.add(nail);
   // 前臂（組裝時拆出去固定，手腕轉它不轉）
   const fa=new TH.Group(); h.add(fa); h.userData.forearm=fa; const fz=through?0.115:0;
-  if(claw){                                                                                // 爪刀反手：前臂從小指那端（+x，刀的下方）斜著伸出去
-    const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap); cuff.position.set(0.080,-0.085,-0.050); cuff.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),new TH.Vector3(0.82,-0.55,0.15).normalize()); fa.add(cuff);
-    const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad); tab.position.set(0.070,0.0,-0.050); tab.rotation.z=-0.6; fa.add(tab);
-    limbSeg(fa,[0.12,-0.115,-0.045],[0.42,-0.33,-0.00],0.079,M.fab,0.058);
+  if(claw){                                                                                // 爪刀反手（榔頭握）：握把橫過掌心，前臂從手掌正下方(-y)接出去
+    const cuff=new TH.Mesh(new TH.CylinderGeometry(0.092,0.086,0.084,20),M.strap); cuff.position.set(-0.300,-0.225,-0.026); cuff.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),new TH.Vector3(-0.10,-1,0.12).normalize()); fa.add(cuff);
+    const tab=new TH.Mesh(new TH.BoxGeometry(0.094,0.044,0.022),M.pad); tab.position.set(-0.300,-0.228,-0.084); fa.add(tab);
+    limbSeg(fa,[-0.300,-0.150,-0.028],[-0.345,-0.570,0.024],0.076,M.fab,0.056);
   } else if(rev){                                                                                 // 反手：前臂從手掌 +y 側（螢幕右下）接出去
     const cuff=new TH.Mesh(new TH.CylinderGeometry(0.092,0.098,0.086,20),M.strap); cuff.position.set(-0.27,0.19,0.115); cuff.rotation.z=0.08; fa.add(cuff);
     const tab=new TH.Mesh(new TH.BoxGeometry(0.096,0.046,0.024),M.pad); tab.position.set(-0.27,0.19,0.175); fa.add(tab);
@@ -878,22 +878,28 @@ function makeKarambitModel(){
   }
 
   // ── 握把（-x 方向）──
+  const exH2={depth:t*3.9,bevelEnabled:true,bevelThickness:0.006,bevelSize:0.006,bevelSegments:2};
   const hs=new TH.Shape();
-  hs.moveTo(0.035,0.049); hs.lineTo(-0.20,0.058); hs.lineTo(-0.355,0.048); hs.lineTo(-0.410,0.017);
-  hs.lineTo(-0.410,-0.050); hs.lineTo(-0.22,-0.068); hs.lineTo(-0.02,-0.056); hs.lineTo(0.035,-0.023);
+  hs.moveTo(0.035,0.055); hs.lineTo(-0.20,0.066); hs.lineTo(-0.355,0.056); hs.lineTo(-0.416,0.022);
+  hs.lineTo(-0.416,-0.058); hs.lineTo(-0.22,-0.078); hs.lineTo(-0.02,-0.064); hs.lineTo(0.035,-0.026);
   hs.closePath();
-  const hM=new TH.Mesh(new TH.ExtrudeGeometry(hs,exH),grip); hM.position.z=-t*2.4/2; inner.add(hM);
-  // 防滑刻紋
+  const hM=new TH.Mesh(new TH.ExtrudeGeometry(hs,exH2),grip); hM.position.z=-t*3.9/2; inner.add(hM);
+  const spine=new TH.Mesh(new TH.BoxGeometry(0.40,0.020,t*3.9+0.014),bronze); spine.position.set(-0.185,0.058,0); inner.add(spine);      // 握把上緣金屬條
+  const belly=new TH.Mesh(new TH.BoxGeometry(0.38,0.018,t*3.9+0.012),steelD); belly.position.set(-0.200,-0.070,0); inner.add(belly);      // 下緣墊片
+  // 防滑刻紋（兩側 + 正面，手指縫看得到）
   for(let i=0;i<4;i++){
-    for(const zf of [t*1.2+0.002,-t*1.2-0.006]){
-      const j=new TH.Mesh(new TH.BoxGeometry(0.011,0.058,0.005),bronze);
+    for(const zf of [t*1.95+0.004,-t*1.95-0.008]){
+      const j=new TH.Mesh(new TH.BoxGeometry(0.013,0.070,0.006),bronze);
       j.position.set(-0.085-i*0.078,-0.008,zf); j.rotation.z=0.26; inner.add(j);
     }
+    const ridge=new TH.Mesh(new TH.BoxGeometry(0.016,0.014,t*3.9+0.016),bronze);
+    ridge.position.set(-0.085-i*0.078,0.040,0); ridge.rotation.z=0.26; inner.add(ridge);
   }
+  const bolster=new TH.Mesh(new TH.BoxGeometry(0.030,0.130,t*3.9+0.020),bronze); bolster.position.set(0.030,-0.004,0); inner.add(bolster);  // 刀根護環（拳頭到刀身的過渡）
   // ── 指環（軸沿 z，手指從這裡穿過去）──
-  const ring=new TH.Mesh(new TH.TorusGeometry(0.104,0.020,10,24),bronze);
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.128,0.026,12,28),bronze);
   ring.position.set(-0.500,-0.020,0); inner.add(ring);
-  const ringIn=new TH.Mesh(new TH.TorusGeometry(0.104,0.009,8,24),dark);
+  const ringIn=new TH.Mesh(new TH.TorusGeometry(0.128,0.011,8,28),dark);
   ringIn.position.set(-0.500,-0.020,0); inner.add(ringIn);
   // 安全突起（食指前擋）+ 護手
   const spur=new TH.Mesh(new TH.ConeGeometry(0.023,0.066,7),bronze);
@@ -1844,20 +1850,30 @@ const PX=(()=>{
     s2:  {dur:0.28,t0:0.16,t1:0.20,t2:0.36,t3:0.56,pw:0.6, w:[-0.22,-0.13,0.02, -0.22,0.18,-0.18], e:[0.15,0.09,-0.03, 0.28,-0.28,-0.30], m:[0,0,0.07], ww:[0.30,0,-0.22], wr:[-0.75,-0.18,0.45]},
     stab:{dur:0.34,t0:0.16,t1:0.16,t2:0.22,t3:0.52,pw:0.5, w:[0.10,0.05,0.12], a:[-0.60,-0.20,0.0], e:[-0.22,-0.10,-0.30, -0.08,0.0,0.0]}
   };
-  const ATK_C={                                                      // 信條（反手指虎）：① 指虎重拳 ② 反手橫掃 ③ 回掃
-    s1:  {dur:0.36,t0:0.20,t1:0.20,t2:0.34,t3:0.60,pw:0.55, crit:true, noTrail:true, w:[0.10,0.06,0.10, 0.10,-0.10,0.05], e:[-0.22,-0.06,-0.40, -0.20,0.12,0.0], m:[0,0,-0.03], ww:[-0.2,0,0.1], wr:[0.3,0,-0.2]},
-    s2:  {dur:0.32,t0:0.16,t1:0.20,t2:0.36,t3:0.58,pw:0.6, w:[0.14,0.05,0.04, 0.06,-0.35,-0.08], e:[-0.42,-0.06,-0.08, 0.02,0.62,0.22], m:[0,0.02,0.05], ww:[-0.10,0.10,0.10], wr:[0.15,-0.30,-0.25]},
-    stab:{dur:0.32,t0:0.16,t1:0.20,t2:0.36,t3:0.58,pw:0.6, generic:true, w:[-0.22,-0.04,0.02, 0.02,0.30,0.12], e:[0.26,0.04,-0.08, 0.04,-0.55,-0.26], m:[0,0.02,0.05], ww:[0.10,-0.10,-0.10], wr:[-0.15,0.30,0.25]}
+  /* 信條（三角洲官方三段）：① 重擊「虎指攻擊」＝指虎直拳 ② ③ 輕擊「左右揮刀」＝以手腕為軸的大弧橫砍
+     重點：靠「轉」(insY 偏擺 + insZ 翻滾) 把刀尖甩過整個畫面，位移只留一點點，才不會看起來像用推的 */
+  const ATK_C={
+    s1:  {dur:0.34,t0:0.22,t1:0.16,t2:0.30,t3:0.58,pw:0.45, crit:true, noTrail:true, punch:true,
+          w:[0.13,0.08,0.14,  0.20,-0.16,0.08], e:[-0.09,-0.03,-0.25, -0.46,0.12,-0.04], m:[0,-0.02,-0.05], ww:[-0.40,0.12,0.18], wr:[0.66,-0.14,-0.26]},
+    s2:  {dur:0.30,t0:0.18,t1:0.18,t2:0.34,t3:0.60,pw:0.55,
+          w:[0.13,0.09,0.05,  -0.14,-0.46,-0.40], e:[-0.17,-0.05,-0.11,  0.20,0.74,0.62], m:[0,0.03,-0.03], ww:[-0.22,-0.18,0.30], wr:[0.34,0.34,-0.62]},
+    stab:{dur:0.30,t0:0.18,t1:0.18,t2:0.34,t3:0.60,pw:0.55, generic:true,
+          w:[-0.13,0.09,0.05,  -0.14,0.46,0.40], e:[0.17,-0.05,-0.11,  0.20,-0.74,-0.62], m:[0,0.03,-0.03], ww:[-0.22,0.18,-0.30], wr:[0.34,-0.34,0.62]}
   };
-  const ATK_K={                                                      // 爪刀（反手）：① 往內勾割 ② 反手回勾 ③ 由下往上撕
-    s1:  {dur:0.24,t0:0.14,t1:0.18,t2:0.34,t3:0.56,pw:0.6, w:[0.10,0.06,0.02, 0.18,-0.20,-0.10], e:[-0.40,-0.12,-0.06, -0.22,0.42,0.38], m:[0,0.02,0.05], ww:[-0.25,0,0.18], wr:[0.6,0.15,-0.4]},
-    s2:  {dur:0.24,t0:0.14,t1:0.18,t2:0.34,t3:0.56,pw:0.6, w:[-0.18,-0.10,0.02, -0.18,0.16,-0.14], e:[0.14,0.08,-0.05, 0.24,-0.26,-0.28], m:[0,0,0.05], ww:[0.25,0,-0.18], wr:[-0.6,-0.15,0.4]},
-    stab:{dur:0.30,t0:0.16,t1:0.18,t2:0.34,t3:0.58,pw:0.55, generic:true, w:[0.06,-0.12,0.03, -0.25,0.05,0.10], e:[-0.10,0.18,-0.06, 0.30,-0.10,-0.22], m:[0,0.02,0.05], ww:[0.3,0,-0.1], wr:[-0.6,0.1,0.3]}
+  /* 爪刀（反手勾割，跟信條完全不同的節奏）：① 由外往內橫勾 ② 反手往外回勾 ③ 由下往上撩
+     反手刀是用「手腕滾動 + 前臂帶」把鉤子拉過去，所以 insZ(翻滾) 是主角，而且比信條快一截 */
+  const ATK_K={
+    s1:  {dur:0.22,t0:0.15,t1:0.16,t2:0.30,t3:0.54,pw:0.5,
+          w:[0.15,0.02,0.04,  -0.10,-0.46,-0.68], e:[-0.24,0.09,-0.08,  0.34,0.82,1.06], m:[0,0.05,-0.02], ww:[-0.34,-0.16,0.44], wr:[0.66,0.34,-0.92]},
+    s2:  {dur:0.22,t0:0.15,t1:0.16,t2:0.30,t3:0.54,pw:0.5,
+          w:[-0.15,0.02,0.04,  -0.10,0.46,0.68], e:[0.24,0.09,-0.08,  0.34,-0.82,-1.06], m:[0,0.05,-0.02], ww:[-0.34,0.16,-0.44], wr:[0.66,-0.34,0.92]},
+    stab:{dur:0.28,t0:0.17,t1:0.16,t2:0.32,t3:0.58,pw:0.5, generic:true,
+          w:[0.06,-0.13,0.05,  -0.44,0.12,0.20], e:[-0.10,0.24,-0.16,  0.82,-0.20,-0.38], m:[0,0.06,-0.02], ww:[0.40,0.08,-0.18], wr:[-0.78,-0.14,0.36]}
   };
   const CFG={
     polaris: {atk:ATK_P,otf:true, fl:'spin', heavy:false,trail:[[0.1,0.5,1.0],[0.65,0.96,1.0]],tip:0.80,trb:0.44,lightK:0.4},
     knife:   {atk:ATK_C,otf:false,fl:'heavy',heavy:true, trail:[[1.0,0.35,0.15],[1.0,0.85,0.6]],tip:[0.92,0],trb:[0.14,0],lightK:0.5,ins:{gx:0.0,gy:-0.12,gz:-0.34,ix:0.02,iy:0.30}},
-    karambit:{atk:ATK_K,otf:false,fl:'spin', heavy:false,trail:[[1.0,0.62,0.25],[1.0,0.92,0.65]],tip:[0.50,0.33],trb:[0.17,0.03],lightK:0,noToss:true,ins:{gx:0.0,gy:-0.08,gz:-0.36,ix:0.10,iy:0.20}}
+    karambit:{atk:ATK_K,otf:false,fl:'spin', heavy:false,trail:[[1.0,0.62,0.25],[1.0,0.92,0.65]],tip:[0.517,0.346],trb:[0.02,-0.02],lightK:0,noToss:true,ins:{gx:0.0,gy:-0.08,gz:-0.36,ix:0.10,iy:0.20}}
   };
   const FL_DUR=0.85, INS_DUR=2.6;
   const S={T:0,bladeOut:1,deployTarget:1,glowPulse:0,gripPulse:0,fOpen:[0,0,0,0],thOpen:0,fidT:9,fidType:0,fidCd:1.2,flPending:0,flDelay:0,flType:0,flT:0,prevAtkT:0,combo:1,dustT:0,raiseT:0,trailOn:false,pendingDeploy:false};
@@ -2045,7 +2061,7 @@ const PX=(()=>{
       S.pendingDeploy=(prevOut<1&&S.bladeOut>=1); }
     if(R.cr){ R.cr.gem.emissiveIntensity=1.4*(0.85+0.15*Math.sin(S.T*3))*(1+S.glowPulse*2.5); R.cr.light.intensity=0.35*(1+S.glowPulse*3)*cfg.lightK; }
     // 手指關節（套在指孔裡張不開）
-    for(let i=0;i<4;i++){ let fo=Math.max(-0.15,Math.min(1.3,S.fOpen[i])); if(R.mode==='through'||R.mode==='reverse'||(R.mode==='claw'&&i===0)) fo=Math.min(fo,0.35);
+    for(let i=0;i<4;i++){ let fo=Math.max(-0.15,Math.min(1.3,S.fOpen[i])); if(R.mode==='through'||R.mode==='reverse'||(R.mode==='claw'&&i===0)) fo=Math.min(fo,0.45);
       const c=Math.max(0,Math.min(1.12,1-fo*0.85)), F=R.FL[i];
       F.j[0].rotation.x=F.base[0]+F.q[0]*c; F.j[1].rotation.x=F.base[1]+F.q[1]*Math.min(1.12,c*1.08); F.j[2].rotation.x=F.base[2]+F.q[2]*Math.min(1.12,c*1.15); }
     R.thumb.rotation.z=Math.min(1,S.thOpen)*0.5;
@@ -2068,7 +2084,7 @@ const PX=(()=>{
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
 // 信條刀手持 pose（模型本身中性，只有拿在手上的實例套用；已驗證）
 gunMeshes.polaris=PX.buildRig('polaris',gunMeshes.polaris,'wrap',{rot:[-0.06,1.90,0.70],scale:0.38,pos:[0.02,0.13,-0.01],wpiv:[-0.50,-0.050,-0.040]});   // 北極星：正手環握
-gunMeshes.karambit=PX.buildRig('karambit',gunMeshes.karambit,'claw',{rot:[-0.56,-1.22,-2.14],scale:0.32,pos:[-0.02,0.16,0.0],wpiv:[-0.20,-0.050,-0.040],tpiv:[-0.50,-0.02,0],mrot:[Math.PI/2,0,0]});   // 爪刀：反手、食指穿指環、刀懸在拳頭下方
+gunMeshes.karambit=PX.buildRig('karambit',gunMeshes.karambit,'claw',{rot:[1.83,0.02,-3.53],scale:0.34,pos:[-0.031,0.060,0.036],wpiv:[-0.20,-0.050,-0.040],tpiv:[-0.50,-0.02,0],mrot:[Math.PI/2,0,0]});   // 爪刀：反手、食指穿指環、刀懸在拳頭下方
 const butterflyHand=makeButterflyHand(); gunMeshes.butterfly.add(butterflyHand); gunMeshes.butterfly.userData.hand=butterflyHand;
 gunMeshes.butterfly.rotation.set(-0.12,1.82,0.62); gunMeshes.butterfly.scale.set(0.32,0.32,0.32); gunMeshes.butterfly.position.set(0.10,0.09,0.01);
 const kunaiHand=makeKunaiHand(); gunMeshes.kunai.add(kunaiHand); gunMeshes.kunai.userData.hand=kunaiHand;
