@@ -803,14 +803,14 @@ function makeKarambitModel(){
   const grip  =new TH.MeshStandardMaterial({map:gripTex,color:0xffffff,roughness:.72,metalness:.28,envMap:env,envMapIntensity:.55});
   const bronze=new TH.MeshStandardMaterial({color:0xc08a3e,roughness:.30,metalness:.94,envMap:env,envMapIntensity:1.2});
   const dark  =new TH.MeshStandardMaterial({color:0x24272c,roughness:.62,metalness:.42,envMap:env});
-  const t=0.019;
+  const t=0.015;
   const exB={depth:t,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
-  const exH={depth:t*2.4,bevelEnabled:true,bevelThickness:0.005,bevelSize:0.005,bevelSegments:2};
+  const exH={depth:t*2.2,bevelEnabled:true,bevelThickness:0.005,bevelSize:0.005,bevelSegments:2};
 
   // ── 刀身：沿圓弧取樣，外緣是刀背、內緣（凹面）是刀刃 ──
   const R=0.52, cx=0.02, cy=0.50, a0=-1.62, a1=-0.30, N=16;
   // 刀腹寬、刀尖細：q^1.6 讓收尖集中在前段，看起來更鋒利
-  const W=i=>{ const q=Math.pow(i/N,1.6); return 0.172+(0.026-0.172)*q; };
+  const W=i=>{ const q=Math.pow(i/N,1.6); return 0.126+(0.019-0.126)*q; };   // 再瘦一輪（0.172→0.126）
   const P=(i,off)=>{ const a=a0+(a1-a0)*(i/N);
     return [cx+Math.cos(a)*(R+off), cy+Math.sin(a)*(R+off)]; };
   const bs=new TH.Shape();
@@ -836,28 +836,28 @@ function makeKarambitModel(){
 
   // ── 握把（-x 方向）──
   const hs=new TH.Shape();
-  hs.moveTo(0.035,0.068); hs.lineTo(-0.20,0.080); hs.lineTo(-0.355,0.066); hs.lineTo(-0.410,0.024);
-  hs.lineTo(-0.410,-0.070); hs.lineTo(-0.22,-0.094); hs.lineTo(-0.02,-0.078); hs.lineTo(0.035,-0.032);
+  hs.moveTo(0.035,0.049); hs.lineTo(-0.20,0.058); hs.lineTo(-0.355,0.048); hs.lineTo(-0.410,0.017);
+  hs.lineTo(-0.410,-0.050); hs.lineTo(-0.22,-0.068); hs.lineTo(-0.02,-0.056); hs.lineTo(0.035,-0.023);
   hs.closePath();
   const hM=new TH.Mesh(new TH.ExtrudeGeometry(hs,exH),grip); hM.position.z=-t*2.4/2; inner.add(hM);
   // 防滑刻紋
   for(let i=0;i<4;i++){
     for(const zf of [t*1.2+0.002,-t*1.2-0.006]){
-      const j=new TH.Mesh(new TH.BoxGeometry(0.013,0.082,0.005),bronze);
+      const j=new TH.Mesh(new TH.BoxGeometry(0.011,0.058,0.005),bronze);
       j.position.set(-0.085-i*0.078,-0.008,zf); j.rotation.z=0.26; inner.add(j);
     }
   }
   // ── 指環（軸沿 z，手指從這裡穿過去）──
-  const ring=new TH.Mesh(new TH.TorusGeometry(0.108,0.027,10,24),bronze);
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.104,0.020,10,24),bronze);
   ring.position.set(-0.500,-0.020,0); inner.add(ring);
-  const ringIn=new TH.Mesh(new TH.TorusGeometry(0.108,0.012,8,24),dark);
+  const ringIn=new TH.Mesh(new TH.TorusGeometry(0.104,0.009,8,24),dark);
   ringIn.position.set(-0.500,-0.020,0); inner.add(ringIn);
   // 安全突起（食指前擋）+ 護手
-  const spur=new TH.Mesh(new TH.ConeGeometry(0.030,0.085,7),bronze);
+  const spur=new TH.Mesh(new TH.ConeGeometry(0.023,0.066,7),bronze);
   spur.position.set(-0.345,0.106,0); spur.rotation.z=-0.22; inner.add(spur);
-  const guard=new TH.Mesh(new TH.BoxGeometry(0.030,0.135,t*2.4+0.014),bronze);
+  const guard=new TH.Mesh(new TH.BoxGeometry(0.024,0.100,t*2.2+0.012),bronze);
   guard.position.set(0.045,0.010,0); inner.add(guard);
-  const pin=new TH.Mesh(new TH.CylinderGeometry(0.020,0.020,t*2.4+0.020,12),bronze);
+  const pin=new TH.Mesh(new TH.CylinderGeometry(0.016,0.016,t*2.2+0.018,12),bronze);
   pin.rotation.x=Math.PI/2; pin.position.set(-0.130,-0.005,0); inner.add(pin);
 
   const fl=new TH.Mesh(new TH.ConeGeometry(0.01,0.02,6),new TH.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
@@ -961,11 +961,11 @@ function makeKarambitHand(){
   const FING=[[-0.345,0.037,0.004],[-0.232,0.035,0.000],[-0.120,0.030,-0.008]];
   for(let i=0;i<FING.length;i++){
     const fx=FING[i][0], r=FING[i][1], ex=FING[i][2];
-    limbSeg(h,[fx, 0.090,0.040],[fx,-0.008,0.070+ex],r,M.fab);
-    limbSeg(h,[fx,-0.008,0.070+ex],[fx,-0.100,0.018],r*0.94,M.fab);
-    limbSeg(h,[fx,-0.100,0.018],[fx,-0.078,-0.054],r*0.84,M.fab);
+    limbSeg(h,[fx, 0.068,0.036],[fx,-0.008,0.058+ex],r,M.fab);
+    limbSeg(h,[fx,-0.008,0.058+ex],[fx,-0.076,0.016],r*0.94,M.fab);
+    limbSeg(h,[fx,-0.076,0.016],[fx,-0.058,-0.050],r*0.84,M.fab);
     const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
-    pad.position.set(fx,0.094,0.036); pad.rotation.x=-0.30; h.add(pad);
+    pad.position.set(fx,0.072,0.034); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.288,-0.176];
   for(let i=0;i<GAPS.length;i++){
@@ -973,10 +973,10 @@ function makeKarambitHand(){
     gv.position.set(GAPS[i],-0.020,0.030); h.add(gv);
   }
   // 拇指：壓在握把上緣、朝刀身方向
-  limbSeg(h,[-0.390,-0.014,-0.082],[-0.330,0.074,-0.034],0.052,M.fab,0.046);
-  limbSeg(h,[-0.330,0.074,-0.034],[-0.160,0.112,0.010],0.046,M.fab,0.038);
-  const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
-  nail.position.set(-0.186,0.144,0.008); nail.rotation.z=-0.16; h.add(nail);
+  limbSeg(h,[-0.390,-0.014,-0.078],[-0.330,0.056,-0.032],0.050,M.fab,0.044);
+  limbSeg(h,[-0.330,0.056,-0.032],[-0.160,0.090,0.010],0.044,M.fab,0.036);
+  const nail=new TH.Mesh(new TH.BoxGeometry(0.074,0.015,0.050),M.pad);
+  nail.position.set(-0.186,0.118,0.008); nail.rotation.z=-0.16; h.add(nail);
   // 反手握的手腕是彎的：前臂不沿握把軸線，而是從小指外側往模型 (0.19,-0.88,0.48) 方向伸出去，
   // 這個方向在持刀 pose 下正好落在畫面右下（沿 -x 伸會變成往上戳出畫面）。
   limbSeg(h,[-0.105,-0.030,-0.020],[-0.020,-0.150,0.048],0.100,M.fab,0.096);   // 手腕
