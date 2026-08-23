@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>北極星 · POLARIS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#04060c;overflow:hidden;font-family:'Noto Sans TC',system-ui,sans-serif;color:#e6f0ff;user-select:none}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 52%,rgba(2,4,10,.62) 100%)}
+  #flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 68% 62%,rgba(140,225,255,.75),rgba(76,194,255,0) 58%);opacity:0}
+  #cross{position:fixed;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#d8f6ff;box-shadow:0 0 8px #4cc2ff,0 0 2px #fff;pointer-events:none;opacity:.9}
+  #cross i{position:absolute;background:rgba(190,240,255,.75);box-shadow:0 0 6px #4cc2ff}
+  #cross i:nth-child(1){left:-16px;top:1.5px;width:9px;height:2px}
+  #cross i:nth-child(2){left:12px;top:1.5px;width:9px;height:2px}
+  #cross i:nth-child(3){left:1.5px;top:-16px;width:2px;height:9px}
+  #cross i:nth-child(4){left:1.5px;top:12px;width:2px;height:9px}
+  .ui{position:fixed;pointer-events:none;transition:opacity .3s}
+  #name{right:30px;bottom:28px;text-align:right}
+  #name .big{font-weight:900;font-size:42px;line-height:1;letter-spacing:8px;color:#eef8ff;text-shadow:0 0 14px #4cc2ff,0 0 44px rgba(76,194,255,.55)}
+  #name .sub{font-family:Orbitron,monospace;font-size:12px;letter-spacing:5px;color:#8fd6ff;opacity:.9;margin-top:8px}
+  #name .bar{height:2px;margin-top:10px;background:linear-gradient(90deg,transparent,#4cc2ff 55%,#fff);box-shadow:0 0 10px #4cc2ff}
+  #hits{left:30px;bottom:28px;font-family:Orbitron,monospace;font-size:12px;letter-spacing:4px;color:#8fd6ff}
+  #hits b{display:block;font-size:36px;line-height:1;margin-bottom:6px;color:#fff;text-shadow:0 0 12px #4cc2ff;font-weight:800}
+  #combo{left:50%;top:58%;transform:translateX(-50%);font-family:Orbitron,monospace;font-size:22px;letter-spacing:6px;color:#fff;text-shadow:0 0 14px #4cc2ff,0 0 30px #4cc2ff;opacity:0}
+  #hint{left:50%;bottom:16px;transform:translateX(-50%);font-size:12px;letter-spacing:2px;color:rgba(200,225,255,.5);white-space:nowrap}
+  #hint b{color:#bfefff;font-weight:700;margin:0 3px 0 12px}
+  #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .45s;
+    background:radial-gradient(ellipse at center,rgba(4,8,18,.45),rgba(2,4,10,.93))}
+  #overlay.hide{opacity:0;pointer-events:none}
+  #overlay h1{font-size:104px;font-weight:900;letter-spacing:22px;margin:0 0 0 22px;color:#f4fbff;text-shadow:0 0 22px #4cc2ff,0 0 80px rgba(76,194,255,.6)}
+  #overlay h2{font-family:Orbitron,monospace;font-weight:500;font-size:15px;letter-spacing:13px;color:#8fd6ff;margin:14px 0 46px 13px}
+  #overlay .go{font-size:17px;letter-spacing:7px;color:#eaf6ff;padding:13px 36px 13px 43px;border:1px solid rgba(143,214,255,.65);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(76,194,255,.35),inset 0 0 18px rgba(76,194,255,.12)}50%{box-shadow:0 0 36px rgba(76,194,255,.8),inset 0 0 28px rgba(76,194,255,.28)}}
+  #overlay .keys{margin-top:38px;font-size:13px;letter-spacing:2px;color:rgba(200,225,255,.62);line-height:2.1;text-align:center}
+  #overlay .keys b{display:inline-block;min-width:64px;color:#bfefff;font-weight:700;margin-right:8px;text-align:right}
+  #overlay .tiny{margin-top:26px;font-size:11px;letter-spacing:1px;color:rgba(200,225,255,.35)}
+  #cross.hit{animation:hm .22s ease-out} #cross.hit i{background:#fff;box-shadow:0 0 10px #fff}
+  #cross.crit{animation:hmc .3s ease-out} #cross.crit i{background:#ffd166;box-shadow:0 0 12px #ff8c42}
+  @keyframes hm{0%{transform:scale(1.9)}100%{transform:scale(1)}}
+  @keyframes hmc{0%{transform:scale(2.6)}100%{transform:scale(1)}}
+  .dmg{position:fixed;font-family:Orbitron,monospace;font-weight:800;font-size:26px;color:#fff;text-shadow:0 0 10px #4cc2ff,0 0 2px #000;pointer-events:none;transform:translate(-50%,0);animation:dmgUp .85s ease-out forwards}
+  .dmg.crit{font-size:40px;color:#ffd166;text-shadow:0 0 14px #ff8c42,0 0 2px #000}
+  @keyframes dmgUp{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+  body.creed #name .big{text-shadow:0 0 14px #ff5a3a,0 0 44px rgba(255,90,58,.55)}
+  body.creed #name .sub{color:#ffb29a} body.creed #name .bar{background:linear-gradient(90deg,transparent,#ff5a3a 55%,#fff);box-shadow:0 0 10px #ff5a3a}
+  body.creed #cross{background:#ffd9cc;box-shadow:0 0 8px #ff5a3a,0 0 2px #fff} body.creed #cross i{background:rgba(255,200,180,.75);box-shadow:0 0 6px #ff5a3a}
+  body.creed #hits{color:#ffb29a} body.creed #hits b{text-shadow:0 0 12px #ff5a3a}
+  body.creed .dmg{text-shadow:0 0 10px #ff5a3a,0 0 2px #000}
+  body.creed #flash{background:radial-gradient(ellipse at 68% 62%,rgba(255,150,120,.75),rgba(255,90,58,0) 58%)}
+  #big{left:50%;top:40%;transform:translateX(-50%);font-family:Orbitron,monospace;font-weight:800;font-size:44px;letter-spacing:8px;color:#ffd166;text-shadow:0 0 18px #ff8c42,0 0 40px #ff8c42;opacity:0}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div>
+<div id="flash"></div>
+<div id="cross"><i></i><i></i><i></i><i></i></div>
+<div id="hits" class="ui"><b id="hitN">0</b>HITS · 命中</div>
+<div id="combo" class="ui">COMBO ×3</div>
+<div id="big" class="ui"></div>
+<div id="dmgs"></div>
+<div id="name" class="ui"><div class="big">北極星</div><div class="sub">POLARIS · OTF TACTICAL</div><div class="bar"></div></div>
+<div id="hint" class="ui"><b>WASD</b>移動<b>Shift</b>衝刺<b>左鍵</b>揮刀<b>F</b>耍刀<b>R</b>收刀 / 出刀<b>1 / 2</b>換刀<b>Esc</b>離開</div>
+<div id="overlay">
+  <h1>北極星</h1>
+  <h2>POLARIS · OTF SWITCHBLADE</h2>
+  <div class="go">點擊畫面 · 出刀</div>
+  <div class="keys"><b>WASD</b>移動 &nbsp;<b>Shift</b>衝刺 &nbsp;<b>空白鍵</b>跳<br><b>左鍵</b>揮刀（連按三下 = 砍 · 砍 · 刺） &nbsp;<b>F</b>耍刀 &nbsp;<b>R</b>收刀 / 出刀<br><b>1 / 2</b>北極星 / 信條（Q 也能切換）</div>
+  <div class="tiny">砍那幾個稻草靶試試手感</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+'use strict';
+const TH=window.THREE;
+const $=id=>document.getElementById(id);
+
+/* ================= 渲染器 / 相機 / 後製泛光 ================= */
+const canvas=$('c');
+const renderer=new TH.WebGLRenderer({canvas:canvas,antialias:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=TH.PCFSoftShadowMap;
+renderer.toneMapping=TH.ACESFilmicToneMapping; renderer.toneMappingExposure=1.0;
+renderer.outputEncoding=TH.sRGBEncoding;
+const scene=new TH.Scene();
+scene.fog=new TH.FogExp2(0x010307,0.0072);
+const camera=new TH.PerspectiveCamera(76,16/9,0.04,1500);
+camera.rotation.order='YXZ'; scene.add(camera);
+
+const composer=new TH.EffectComposer(renderer);
+composer.addPass(new TH.RenderPass(scene,camera));
+const bloom=new TH.UnrealBloomPass(new TH.Vector2(1280,720),0.62,0.28,0.88);   // 強度 / 半徑 / 門檻
+composer.addPass(bloom);
+composer.addPass(new TH.ShaderPass(TH.GammaCorrectionShader));
+function resize(w,h){
+  w=w||window.innerWidth; h=h||window.innerHeight; if(!w||!h) return;
+  renderer.setSize(w,h,false); composer.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',()=>resize()); resize();
+
+/* ================= 貼圖小工具（全部程序生成，沒有外部素材） ================= */
+function makeTex(draw,S){
+  S=S||512; const c=document.createElement('canvas'); c.width=c.height=S;
+  const g=c.getContext('2d'); draw(g,S);
+  const t=new TH.CanvasTexture(c); t.wrapS=t.wrapT=TH.RepeatWrapping; t.anisotropy=8; return t;
+}
+function grain(g,S,amt){
+  const im=g.getImageData(0,0,S,S),d=im.data;
+  for(let i=0;i<d.length;i+=4){ const n=(Math.random()-0.5)*amt; d[i]+=n; d[i+1]+=n; d[i+2]+=n; }
+  g.putImageData(im,0,0);
+}
+function wear(g,S,strength){                             // 使用痕跡：稜角掉漆露金屬 + 刮痕
+  strength=strength==null?1:strength;
+  const edge=S*0.09, mk=(x0,y0,x1,y1)=>{ const gr=g.createLinearGradient(x0,y0,x1,y1); gr.addColorStop(0,'rgba(92,94,100,'+(0.5*strength)+')'); gr.addColorStop(1,'rgba(92,94,100,0)'); return gr; };
+  g.fillStyle=mk(0,0,0,edge); g.fillRect(0,0,S,edge); g.fillStyle=mk(0,S,0,S-edge); g.fillRect(0,S-edge,S,edge);
+  g.fillStyle=mk(0,0,edge,0); g.fillRect(0,0,edge,S); g.fillStyle=mk(S,0,S-edge,0); g.fillRect(S-edge,0,edge,S);
+  for(let i=0;i<10*strength;i++){ g.fillStyle='rgba('+(78+Math.random()*34|0)+','+(80+Math.random()*34|0)+',92,'+(0.22+Math.random()*0.32)+')';
+    g.beginPath(); g.ellipse(Math.random()*S,Math.random()*S,3+Math.random()*10,2+Math.random()*7,Math.random()*6,0,7); g.fill(); }
+  for(let i=0;i<16*strength;i++){ g.strokeStyle=Math.random()<.5?'rgba(205,210,220,0.11)':'rgba(0,0,0,0.13)'; g.lineWidth=Math.random()<.82?1:2; g.beginPath();
+    const x=Math.random()*S,y=Math.random()*S,a=Math.random()*6.28,l=10+Math.random()*46; g.moveTo(x,y); g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l); g.stroke(); }
+}
+function brushed(hex){                                   // 拉絲金屬
+  const r=(hex>>16)&255,gg=(hex>>8)&255,b=hex&255;
+  return makeTex((g,S)=>{
+    g.fillStyle='rgb('+r+','+gg+','+b+')'; g.fillRect(0,0,S,S);
+    for(let i=0;i<300;i++){ const l=(Math.random()-0.5)*44;
+      g.strokeStyle='rgba('+(l>0?255:0)+','+(l>0?255:0)+','+(l>0?255:0)+','+(Math.abs(l)/44*0.09)+')';
+      g.lineWidth=1; g.beginPath(); const y=Math.random()*S; g.moveTo(0,y); g.lineTo(S,y); g.stroke(); }
+    grain(g,S,6);
+  });
+}
+function softDot(){                                      // 柔光點（粒子 / 光暈）
+  return makeTex((g,S)=>{ const r=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+    r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(.3,'rgba(255,255,255,.55)'); r.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=r; g.fillRect(0,0,S,S); },128);
+}
+function flareTex(){                                     // 四芒星光（北極星本尊）
+  return makeTex((g,S)=>{ const c=S/2;
+    const r=g.createRadialGradient(c,c,0,c,c,c*0.5);
+    r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(.22,'rgba(200,238,255,.75)'); r.addColorStop(1,'rgba(120,200,255,0)');
+    g.fillStyle=r; g.fillRect(0,0,S,S);
+    for(const a of [0,Math.PI/2]){ const gr=g.createLinearGradient(0,0,S,0);
+      gr.addColorStop(0,'rgba(200,240,255,0)'); gr.addColorStop(.5,'rgba(255,255,255,.95)'); gr.addColorStop(1,'rgba(200,240,255,0)');
+      g.save(); g.translate(c,c); g.rotate(a); g.fillStyle=gr; g.fillRect(-c,-S*0.011,S,S*0.022); g.restore(); }
+  },256);
+}
+const DOT=softDot(), FLARE=flareTex();
+
+/* ================= 夜空：星空球 + 銀河 + 北極星 + 小北斗 ================= */
+function skyTex(){
+  const W=2048,H=1024,c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,'#02040c'); gr.addColorStop(.36,'#070d22'); gr.addColorStop(.48,'#0d1a3c');
+  gr.addColorStop(.535,'#1a2f5c'); gr.addColorStop(.6,'#0a1226'); gr.addColorStop(1,'#03050a');
+  g.fillStyle=gr; g.fillRect(0,0,W,H);
+  g.save(); g.translate(W*0.62,H*0.34); g.rotate(-0.42);                 // 銀河帶
+  for(let i=0;i<320;i++){ const x=(Math.random()-0.5)*W*1.5, y=(Math.random()-0.5)*H*0.15*(0.4+Math.random());
+    const r=40+Math.random()*130, a=0.02+Math.random()*0.05;
+    const rg=g.createRadialGradient(x,y,0,x,y,r); rg.addColorStop(0,'rgba(160,185,245,'+a+')'); rg.addColorStop(1,'rgba(160,185,245,0)');
+    g.fillStyle=rg; g.fillRect(x-r,y-r,r*2,r*2); }
+  g.restore();
+  const t=new TH.CanvasTexture(c); t.encoding=TH.sRGBEncoding; return t;
+}
+scene.add(new TH.Mesh(new TH.SphereGeometry(1000,48,24),new TH.MeshBasicMaterial({map:skyTex(),side:TH.BackSide,fog:false,depthWrite:false})));
+{ const N=2600, pos=new Float32Array(N*3), sz=new Float32Array(N), col=new Float32Array(N*3);   // 星星用 Points 畫才夠銳利
+  for(let i=0;i<N;i++){ const a=Math.random()*6.283, e=Math.asin(Math.random()*0.98+0.02), r=950;
+    pos[i*3]=Math.cos(a)*Math.cos(e)*r; pos[i*3+1]=Math.sin(e)*r; pos[i*3+2]=Math.sin(a)*Math.cos(e)*r;
+    const b=Math.pow(Math.random(),2.2), w=0.7+Math.random()*0.3; sz[i]=1.2+b*3.4;
+    col[i*3]=w*(0.85+0.15*Math.random()); col[i*3+1]=w*(0.9+0.1*Math.random()); col[i*3+2]=w; }
+  const g=new TH.BufferGeometry(); g.setAttribute('position',new TH.BufferAttribute(pos,3)); g.setAttribute('aSize',new TH.BufferAttribute(sz,1)); g.setAttribute('color',new TH.BufferAttribute(col,3));
+  const m=new TH.ShaderMaterial({uniforms:{map:{value:DOT},pr:{value:renderer.getPixelRatio()}},transparent:true,depthWrite:false,blending:TH.AdditiveBlending,vertexColors:true,fog:false,
+    vertexShader:'attribute float aSize; uniform float pr; varying vec3 vC; void main(){ vC=color; gl_PointSize=aSize*pr; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader:'uniform sampler2D map; varying vec3 vC; void main(){ vec4 t=texture2D(map,gl_PointCoord); gl_FragColor=vec4(vC*t.a*0.9,t.a); }'});
+  const stars=new TH.Points(g,m); stars.frustumCulled=false; scene.add(stars); }
+const NORTH=new TH.Vector3(0,Math.sin(0.60),-Math.cos(0.60)).multiplyScalar(760);      // 北極星方向（仰角約 34°）
+function starSprite(pos,scale,color,op,tex){
+  const s=new TH.Sprite(new TH.SpriteMaterial({map:tex||FLARE,color:color,transparent:true,opacity:op,blending:TH.AdditiveBlending,depthWrite:false,fog:false}));
+  s.position.copy(pos); s.scale.set(scale,scale,1); scene.add(s); return s;
+}
+const polaris=starSprite(NORTH,60,0xffffff,1);
+starSprite(NORTH,150,0x6fb8ff,0.22,DOT);
+// 小北斗七星（尾巴第一顆就是北極星）：在天空上畫出來，和刀身上的刻紋呼應
+const RIGHT=new TH.Vector3(1,0,0), UP=new TH.Vector3(0,Math.cos(0.60),Math.sin(0.60));
+for(const p of [[-55,-40,18],[-125,-62,14],[-190,-30,15],[-250,-70,15],[-330,-48,15],[-300,-118,14]]){
+  starSprite(NORTH.clone().addScaledVector(RIGHT,p[0]).addScaledVector(UP,p[1]),p[2]*1.8,0xdfeeff,0.85);
+}
+
+/* ================= 極光（北方地平線上的流動光幕） ================= */
+const auroraMat=new TH.ShaderMaterial({uniforms:{t:{value:0}},transparent:true,depthWrite:false,blending:TH.AdditiveBlending,side:TH.DoubleSide,fog:false,
+  vertexShader:'varying vec2 vUv; uniform float t;\n'+
+    'void main(){ vUv=uv; vec3 p=position; p.y+=sin(uv.x*6.0+t*0.5)*7.0; gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0); }',
+  fragmentShader:'varying vec2 vUv; uniform float t;\n'+
+    'void main(){ float x=vUv.x, y=vUv.y;\n'+
+    ' float n=sin(x*5.0+t*0.45)*0.5+0.5;\n'+
+    ' float r1=sin(x*23.0+t*0.7)*0.5+0.5, r2=sin(x*57.0-t*1.3+2.0)*0.5+0.5, r3=sin(x*131.0+t*0.4+1.0)*0.5+0.5;\n'+
+    ' float rays=pow(0.35*r1+0.40*r2+0.25*r3,2.4)*1.7+0.12;\n'+
+    ' float rim=0.08+0.10*n+0.04*r1;\n'+
+    ' float v=max(0.0,(y-rim)/(1.0-rim));\n'+
+    ' float curtain=smoothstep(-0.03,0.02,y-rim)*exp(-v*3.4);\n'+
+    ' float i=curtain*rays*(0.7+0.3*n);\n'+
+    ' vec3 col=mix(vec3(0.15,1.0,0.55),vec3(0.25,0.55,1.0),clamp(v*2.6,0.0,1.0));\n'+
+    ' col=mix(col,vec3(0.7,0.3,1.0),smoothstep(0.35,1.0,v)*0.6);\n'+
+    ' float edge=smoothstep(0.0,0.16,x)*(1.0-smoothstep(0.84,1.0,x));\n'+
+    ' gl_FragColor=vec4(col*i*0.62*edge, i*edge); }'});
+for(const a of [[-140,20,-480,560,220,0.25],[160,16,-420,420,160,-0.35],[-10,26,-580,760,260,0.05]]){
+  const m=new TH.Mesh(new TH.PlaneGeometry(a[3],a[4],48,1),auroraMat);
+  m.position.set(a[0],a[1]+a[4]/2,a[2]); m.rotation.y=a[5]; scene.add(m);
+}
+
+/* ================= 月亮 / 燈光 ================= */
+const moonPos=new TH.Vector3(-420,250,-300);
+const moon=new TH.Mesh(new TH.SphereGeometry(8,24,16),new TH.MeshBasicMaterial({color:0xfff6e0,fog:false}));
+moon.position.copy(moonPos); scene.add(moon);
+starSprite(moonPos,70,0xcfdcff,0.2,DOT);
+const moonLight=new TH.DirectionalLight(0xbcd0ff,0.42);
+moonLight.position.copy(moonPos.clone().normalize().multiplyScalar(70)); moonLight.castShadow=true;
+moonLight.shadow.mapSize.set(2048,2048);
+{ const sc=moonLight.shadow.camera; sc.left=-28; sc.right=28; sc.top=28; sc.bottom=-28; sc.near=1; sc.far=220; }
+moonLight.shadow.bias=-0.0008;
+scene.add(moonLight); scene.add(moonLight.target);
+scene.add(new TH.HemisphereLight(0x2b4380,0x0b0d13,0.34));
+
+/* ================= 空地：地面 / 草叢 / 石頭 / 樹線 / 木柵欄 ================= */
+function groundTex(){
+  return makeTex((g,S)=>{
+    g.fillStyle='#2a2922'; g.fillRect(0,0,S,S);
+    for(let i=0;i<160;i++){ const x=Math.random()*S,y=Math.random()*S,r=30+Math.random()*100;
+      const col=Math.random()<.62?'52,66,38':'34,40,30';
+      const rg=g.createRadialGradient(x,y,0,x,y,r); rg.addColorStop(0,'rgba('+col+',.6)'); rg.addColorStop(1,'rgba('+col+',0)');
+      g.fillStyle=rg; g.fillRect(x-r,y-r,2*r,2*r); }
+    for(let i=0;i<3000;i++){ g.fillStyle=Math.random()<.5?'rgba(92,112,60,.5)':'rgba(18,20,16,.55)';
+      g.fillRect(Math.random()*S,Math.random()*S,1+Math.random()*2,1+Math.random()*3); }
+    for(let i=0;i<80;i++){ g.strokeStyle='rgba(64,78,46,.38)'; g.lineWidth=1+Math.random()*2; g.beginPath();
+      const x=Math.random()*S,y=Math.random()*S; g.moveTo(x,y); g.lineTo(x+(Math.random()-.5)*30,y-8-Math.random()*18); g.stroke(); }
+    grain(g,S,14);
+  },1024);
+}
+const gTex=groundTex(); gTex.repeat.set(90,90); gTex.encoding=TH.sRGBEncoding;
+const ground=new TH.Mesh(new TH.PlaneGeometry(1400,1400),new TH.MeshStandardMaterial({map:gTex,bumpMap:gTex,bumpScale:0.22,color:0x7e8a96,roughness:.96,metalness:0}));
+ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+const grassTime={value:0};
+function grassTex(){
+  return makeTex((g,S)=>{ g.clearRect(0,0,S,S);
+    for(let i=0;i<28;i++){ const x0=S*0.5+(Math.random()-0.5)*S*0.7, x1=x0+(Math.random()-0.5)*S*0.55;
+      const gr=g.createLinearGradient(0,S,0,0); gr.addColorStop(0,'#1f2c1a'); gr.addColorStop(1,'#73934d');
+      g.strokeStyle=gr; g.lineWidth=3+Math.random()*6; g.lineCap='round';
+      g.beginPath(); g.moveTo(x0,S); g.quadraticCurveTo(x0+(x1-x0)*0.3,S*0.5,x1,S*(0.05+Math.random()*0.3)); g.stroke(); }
+  },256);
+}
+const grassGeo=(()=>{
+  const g=new TH.BufferGeometry(), p=[],u=[],n=[];
+  const quad=ang=>{ const c=Math.cos(ang),s=Math.sin(ang), pts=[[-0.5,0],[0.5,0],[0.5,1],[-0.5,1]];
+    for(const i of [0,1,2,0,2,3]){ const q=pts[i]; p.push(q[0]*c,q[1],q[0]*s); u.push(q[0]+0.5,q[1]); n.push(0,1,0); } };
+  quad(0); quad(Math.PI/3); quad(2*Math.PI/3);
+  g.setAttribute('position',new TH.Float32BufferAttribute(p,3)); g.setAttribute('uv',new TH.Float32BufferAttribute(u,2)); g.setAttribute('normal',new TH.Float32BufferAttribute(n,3));
+  return g;
+})();
+const grassMat=new TH.MeshStandardMaterial({map:grassTex(),alphaTest:.45,side:TH.DoubleSide,roughness:.9,color:0x6d8299});
+grassMat.onBeforeCompile=sh=>{                                 // 風吹草動
+  sh.uniforms.uTime=grassTime;
+  sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\n vec3 ip=vec3(instanceMatrix[3][0],instanceMatrix[3][1],instanceMatrix[3][2]);\n float sw=sin(uTime*1.7+ip.x*0.7+ip.z*0.9)*0.12*uv.y; transformed.x+=sw; transformed.z+=sw*0.4;');
+};
+const GN=1100, grass=new TH.InstancedMesh(grassGeo,grassMat,GN);
+{ const d=new TH.Object3D();
+  for(let i=0;i<GN;i++){ let x,z; do{ x=(Math.random()-0.5)*120; z=(Math.random()-0.5)*120; }while(Math.hypot(x,z)<2.0);
+    d.position.set(x,0,z); d.rotation.y=Math.random()*Math.PI; const s=0.35+Math.random()*0.6;
+    d.scale.set(s*(0.8+Math.random()*0.5),s,s*(0.8+Math.random()*0.5)); d.updateMatrix(); grass.setMatrixAt(i,d.matrix);
+    grass.setColorAt(i,new TH.Color().setHSL(0.20+Math.random()*0.10,0.30+Math.random()*0.25,0.30+Math.random()*0.30)); }
+  grass.instanceMatrix.needsUpdate=true; grass.instanceColor.needsUpdate=true; scene.add(grass); }
+
+const rockMat=new TH.MeshStandardMaterial({color:0x5b616d,roughness:.85,flatShading:true});
+for(let i=0;i<16;i++){ const r=new TH.Mesh(new TH.DodecahedronGeometry(0.5,0),rockMat);
+  const a=Math.random()*6.283, d=5+Math.random()*42; r.position.set(Math.cos(a)*d,0.05,Math.sin(a)*d);
+  r.scale.set(0.5+Math.random()*1.6,0.35+Math.random()*0.8,0.5+Math.random()*1.6); r.rotation.set(Math.random(),Math.random()*6,Math.random());
+  r.castShadow=true; r.receiveShadow=true; scene.add(r); }
+const treeMat=new TH.MeshStandardMaterial({color:0x0c1420,roughness:1});
+for(let i=0;i<84;i++){ const a=i/84*6.283+Math.random()*0.06, d=95+Math.random()*45, h=9+Math.random()*9, t=new TH.Group();
+  for(const c of [[0.22,0.55,0.72],[0.30,0.50,0.45],[0.36,0.45,0.22]]){ const m=new TH.Mesh(new TH.ConeGeometry(h*c[0],h*c[1],7),treeMat); m.position.y=h*c[2]; t.add(m); }
+  const tr=new TH.Mesh(new TH.CylinderGeometry(h*0.03,h*0.045,h*0.3,6),treeMat); tr.position.y=h*0.12; t.add(tr);
+  t.position.set(Math.cos(a)*d,0,Math.sin(a)*d); scene.add(t); }
+function woodTex(){                                      // 木紋
+  return makeTex((g,S)=>{ g.fillStyle='#4a3622'; g.fillRect(0,0,S,S);
+    for(let i=0;i<72;i++){ g.strokeStyle='rgba(20,12,6,'+(0.06+Math.random()*0.16)+')'; g.lineWidth=1+Math.random()*3; g.beginPath();
+      const x0=Math.random()*S*1.2-S*0.1; for(let y=-10;y<=S;y+=10) g.lineTo(x0+Math.sin(y/70+x0*0.05)*8+Math.sin(y/13)*1.5,y); g.stroke(); }
+    for(let i=0;i<3;i++){ const cx=Math.random()*S,cy=Math.random()*S; for(let r=2;r<22;r+=2.2){ g.strokeStyle='rgba(30,18,8,'+(0.2-r*0.007)+')'; g.lineWidth=1.4; g.beginPath(); g.ellipse(cx,cy,r,r*0.7,0.5,0,7); g.stroke(); } }
+    grain(g,S,12); });
+}
+function burlapTex(){                                    // 麻布編織
+  return makeTex((g,S)=>{ g.fillStyle='#6b5a3c'; g.fillRect(0,0,S,S);
+    for(let i=0;i<S;i+=6){ g.strokeStyle='rgba(30,22,12,.28)'; g.lineWidth=2; g.beginPath(); g.moveTo(0,i); g.lineTo(S,i); g.stroke(); g.beginPath(); g.moveTo(i,0); g.lineTo(i,S); g.stroke();
+      g.strokeStyle='rgba(160,140,100,.18)'; g.lineWidth=1; g.beginPath(); g.moveTo(0,i+3); g.lineTo(S,i+3); g.stroke(); g.beginPath(); g.moveTo(i+3,0); g.lineTo(i+3,S); g.stroke(); }
+    for(let i=0;i<40;i++){ g.fillStyle='rgba(20,14,8,'+(0.08+Math.random()*0.18)+')'; g.beginPath(); g.ellipse(Math.random()*S,Math.random()*S,10+Math.random()*40,6+Math.random()*24,Math.random()*6,0,7); g.fill(); }
+    grain(g,S,16); });
+}
+const wTex=woodTex(); wTex.repeat.set(1,3);
+const woodMat=new TH.MeshStandardMaterial({map:wTex,color:0xb0a090,roughness:.92});
+for(let i=-8;i<=8;i++){ const post=new TH.Mesh(new TH.BoxGeometry(0.14,1.25,0.14),woodMat); post.position.set(13,0.62,i*2.6); post.castShadow=true; scene.add(post);
+  if(i<8) for(const y of [0.55,1.0]){ const rail=new TH.Mesh(new TH.BoxGeometry(0.06,0.1,2.6),woodMat); rail.position.set(13,y,i*2.6+1.3); rail.castShadow=true; scene.add(rail); } }
+
+const mtnMat=new TH.MeshStandardMaterial({color:0x0a1020,roughness:1});
+for(let i=0;i<9;i++){ const a=i/9*6.283+0.3, d=470+Math.random()*80, h=80+Math.random()*100, m=new TH.Mesh(new TH.ConeGeometry(h*1.15,h,7),mtnMat);   // 遠山剪影
+  m.position.set(Math.cos(a)*d,h*0.45,Math.sin(a)*d); m.rotation.y=Math.random()*6; scene.add(m); }
+const MIST=[];                                                                                                      // 貼地薄霧
+for(let i=0;i<16;i++){ const sp=new TH.Sprite(new TH.SpriteMaterial({map:DOT,color:0x9fb4d0,transparent:true,opacity:0.05+Math.random()*0.04,depthWrite:false}));
+  const a=Math.random()*6.283, d=4+Math.random()*36; sp.position.set(Math.cos(a)*d,0.3+Math.random()*0.5,Math.sin(a)*d); const sc=7+Math.random()*9; sp.scale.set(sc,sc*0.45,1);
+  sp.userData.v=(0.1+Math.random()*0.2); scene.add(sp); MIST.push(sp); }
+const lanternLight=new TH.PointLight(0xffb070,1.1,14,2); lanternLight.position.set(12.6,1.45,-5.2); scene.add(lanternLight);   // 油燈暖光
+{ const arm=new TH.Mesh(new TH.BoxGeometry(0.5,0.04,0.04),woodMat); arm.position.set(12.78,1.55,-5.2); scene.add(arm);
+  const body=new TH.Mesh(new TH.BoxGeometry(0.16,0.22,0.16),new TH.MeshStandardMaterial({color:0xffd28a,emissive:0xff9a3c,emissiveIntensity:2.2,roughness:.4}));
+  body.position.set(12.6,1.42,-5.2); scene.add(body);
+  const cap=new TH.Mesh(new TH.ConeGeometry(0.14,0.1,8),new TH.MeshStandardMaterial({color:0x2a2622,roughness:.8,metalness:.5})); cap.position.set(12.6,1.58,-5.2); scene.add(cap);
+  const halo=new TH.Sprite(new TH.SpriteMaterial({map:DOT,color:0xffb070,transparent:true,opacity:0.35,blending:TH.AdditiveBlending,depthWrite:false})); halo.position.set(12.6,1.42,-5.2); halo.scale.set(1.6,1.6,1); scene.add(halo); }
+
+/* ================= 稻草靶（砍它會晃、會噴火花） ================= */
+const DUM=[];
+const bTexD=burlapTex(); bTexD.repeat.set(3,3);
+const sackMat=new TH.MeshStandardMaterial({map:bTexD,color:0x9c8c70,roughness:.95});
+function makeDummy(x,z,ry){
+  const g=new TH.Group();
+  const post=new TH.Mesh(new TH.CylinderGeometry(0.09,0.11,2.0,10),woodMat); post.position.y=1.0; post.castShadow=true; g.add(post);
+  const sway=new TH.Group(); sway.position.y=0.35; g.add(sway);           // 被砍時以底部為軸晃動
+  const body=new TH.Mesh(new TH.CylinderGeometry(0.26,0.22,0.95,12),sackMat); body.position.y=0.85; body.castShadow=true; sway.add(body);
+  const head=new TH.Mesh(new TH.SphereGeometry(0.19,14,10),sackMat); head.position.y=1.55; head.castShadow=true; sway.add(head);
+  const bar=new TH.Mesh(new TH.BoxGeometry(1.1,0.09,0.09),woodMat); bar.position.y=1.2; bar.castShadow=true; sway.add(bar);
+  for(const s of [-1,1]){ const arm=new TH.Mesh(new TH.CylinderGeometry(0.055,0.05,0.5,8),sackMat); arm.position.set(s*0.62,1.05,0); arm.rotation.z=s*0.25; sway.add(arm); }
+  const tg=new TH.Mesh(new TH.CircleGeometry(0.12,24),new TH.MeshStandardMaterial({color:0xe8edf2,roughness:.8})); tg.position.set(0,0.95,0.265); sway.add(tg);
+  const tg2=new TH.Mesh(new TH.CircleGeometry(0.05,20),new TH.MeshStandardMaterial({color:0x4cc2ff,emissive:0x1f8ede,emissiveIntensity:1.2})); tg2.position.set(0,0.95,0.27); sway.add(tg2);
+  g.position.set(x,0,z); g.rotation.y=ry; scene.add(g);
+  DUM.push({g:g,sway:sway,head:head,x:x,z:z,ax:0,az:0,vx:0,vz:0,cd:0,hp:100,dead:false,respawnT:0,pop:0});
+}
+makeDummy(1.7,-3.4,-0.25); makeDummy(-2.4,-4.3,0.35); makeDummy(0.3,-7.6,0);
+
+/* ================= 北極星 OTF 彈簧刀 =================
+   local 座標：+x 刀尖方向、y 刀背(+)/刀刃(-)、z 厚度。握把 x -0.66～0.04、y ±0.075、z ±0.026 */
+let mainEnv=null;
+function getEnv(){                                        // 夜景環境貼圖：金屬反射才會有「月光 + 極光」
+  if(mainEnv) return mainEnv;
+  const c=document.createElement('canvas'); c.width=512; c.height=256; const g=c.getContext('2d');
+  const sky=g.createLinearGradient(0,0,0,140); sky.addColorStop(0,'#0a1230'); sky.addColorStop(.8,'#1d3566'); sky.addColorStop(1,'#3b5a8c');
+  g.fillStyle=sky; g.fillRect(0,0,512,140);
+  const gnd=g.createLinearGradient(0,140,0,256); gnd.addColorStop(0,'#25302e'); gnd.addColorStop(1,'#0a0c10');
+  g.fillStyle=gnd; g.fillRect(0,140,512,116);
+  for(const b of [[70,40,60,'255,246,225','.95'],[300,62,130,'120,230,210','.5'],[430,48,46,'200,220,255','.8']]){   // 月亮 / 極光 / 補光
+    const rg=g.createRadialGradient(b[0],b[1],2,b[0],b[1],b[2]);
+    rg.addColorStop(0,'rgba('+b[3]+','+b[4]+')'); rg.addColorStop(1,'rgba('+b[3]+',0)');
+    g.fillStyle=rg; g.beginPath(); g.arc(b[0],b[1],b[2],0,7); g.fill(); }
+  const t=new TH.CanvasTexture(c); t.mapping=TH.EquirectangularReflectionMapping;
+  const p=new TH.PMREMGenerator(renderer); mainEnv=p.fromEquirectangular(t).texture; t.dispose(); p.dispose();
+  return mainEnv;
+}
+function tiTex(){                                         // 陽極氧化鈦：深藍漸層 + 星塵 + 十字光芒亮星
+  return makeTex((c,S)=>{
+    const gr=c.createLinearGradient(0,0,S,S); gr.addColorStop(0,'#14264a'); gr.addColorStop(.45,'#234a78'); gr.addColorStop(.72,'#0f1d38'); gr.addColorStop(1,'#2a5894');
+    c.fillStyle=gr; c.fillRect(0,0,S,S);
+    for(let i=0;i<260;i++){ c.fillStyle='rgba(196,228,255,'+(0.1+Math.random()*0.6)+')'; c.beginPath(); c.arc(Math.random()*S,Math.random()*S,Math.random()*1.9+0.3,0,7); c.fill(); }
+    for(let i=0;i<9;i++){ const x=Math.random()*S,y=Math.random()*S,L=6+Math.random()*14; c.strokeStyle='rgba(218,242,255,.75)'; c.lineWidth=1.2;
+      c.beginPath(); c.moveTo(x-L,y); c.lineTo(x+L,y); c.moveTo(x,y-L); c.lineTo(x,y+L); c.stroke(); }
+    grain(c,S,5);
+  });
+}
+function starfieldTex(){                                  // 握把「視窗」裡流動的星空（會捲動）
+  return makeTex((c,S)=>{
+    const gr=c.createLinearGradient(0,0,S,0); gr.addColorStop(0,'#061433'); gr.addColorStop(.5,'#0d2a66'); gr.addColorStop(1,'#061433');
+    c.fillStyle=gr; c.fillRect(0,0,S,S);
+    for(let i=0;i<14;i++){ const x=Math.random()*S,y=Math.random()*S,r=40+Math.random()*90;
+      const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'rgba(70,150,255,.4)'); g.addColorStop(1,'rgba(70,150,255,0)'); c.fillStyle=g; c.fillRect(x-r,y-r,2*r,2*r); }
+    for(let i=0;i<500;i++){ c.fillStyle='rgba(205,238,255,'+(0.3+Math.random()*0.7)+')'; c.beginPath(); c.arc(Math.random()*S,Math.random()*S,Math.random()*1.7+0.3,0,7); c.fill(); }
+    for(let i=0;i<16;i++){ const x=Math.random()*S,y=Math.random()*S,L=5+Math.random()*10; c.strokeStyle='rgba(235,250,255,.95)'; c.lineWidth=1.4;
+      c.beginPath(); c.moveTo(x-L,y); c.lineTo(x+L,y); c.moveTo(x,y-L); c.lineTo(x,y+L); c.stroke(); }
+  });
+}
+function starShape(R,r,n){                                // 四芒星外框
+  const s=new TH.Shape(); n=n||4;
+  for(let i=0;i<n*2;i++){ const a=Math.PI/2+i*Math.PI/n, rad=(i%2)?r:R; const x=Math.cos(a)*rad,y=Math.sin(a)*rad; i?s.lineTo(x,y):s.moveTo(x,y); }
+  s.closePath(); return s;
+}
+const KN={};                                              // 可動件與發光材質，動畫會用到
+function makePolaris(){
+  const g=new TH.Group(), env=getEnv();
+  const tT=tiTex(), sfT=starfieldTex(); KN.starTex=sfT;
+  const ti    =new TH.MeshStandardMaterial({map:tT,color:0xffffff,roughness:.42,metalness:.9,envMap:env,envMapIntensity:.6,emissive:0x0c2e6e,emissiveIntensity:.5});
+  const mirror=new TH.MeshStandardMaterial({color:0xd8e8ff,roughness:.08,metalness:.98,envMap:env,envMapIntensity:1.3});
+  const frame =new TH.MeshStandardMaterial({map:brushed(0xd9dee6),color:0xffffff,roughness:.26,metalness:.94,envMap:env,envMapIntensity:1.15});
+  const dark  =new TH.MeshStandardMaterial({color:0x20242c,roughness:.45,metalness:.8,envMap:env,envMapIntensity:.7});
+  const steel =new TH.MeshStandardMaterial({color:0xaab3c2,roughness:.3,metalness:.93,envMap:env});
+  const glow  =new TH.MeshStandardMaterial({color:0x7fe0ff,roughness:.3,metalness:.1,emissive:0x35b6ff,emissiveIntensity:4.0});
+  const glowW =new TH.MeshStandardMaterial({color:0xffffff,roughness:.3,metalness:.1,emissive:0x9fe8ff,emissiveIntensity:5.0});
+  const win   =new TH.MeshStandardMaterial({map:sfT,emissiveMap:sfT,emissive:0x6cc4ff,emissiveIntensity:2.2,color:0x1e3f80,roughness:.12,metalness:.35,envMap:env,envMapIntensity:.8});
+  KN.mats={glow:glow,glowW:glowW,win:win};
+  const bt=0.014, ht=0.038;                               // 刀身厚 / 握把厚
+  /* ── 刀身（矛尖雙刃，OTF 彈簧刀常見型）：整組可沿 x 滑進握把 ── */
+  const bG=new TH.Group(); g.add(bG); KN.bladeGrp=bG;
+  const bs=new TH.Shape();
+  bs.moveTo(0.0,-0.036); bs.lineTo(0.34,-0.038); bs.lineTo(0.56,-0.024); bs.lineTo(0.70,0.0);
+  bs.lineTo(0.56,0.024); bs.lineTo(0.34,0.038); bs.lineTo(0.0,0.036); bs.closePath();
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,{depth:bt,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1}),ti);
+  blade.position.z=-bt/2; bG.add(blade);
+  for(const s of [-1,1]){                                 // 雙面鏡面開刃斜面（上下兩刃）
+    const bv=new TH.Shape();
+    bv.moveTo(0.0,s*-0.036); bv.lineTo(0.34,s*-0.038); bv.lineTo(0.56,s*-0.024); bv.lineTo(0.70,0.0);
+    bv.lineTo(0.57,s*-0.009); bv.lineTo(0.34,s*-0.020); bv.lineTo(0.0,s*-0.020); bv.closePath();
+    const m=new TH.Mesh(new TH.ExtrudeGeometry(bv,{depth:bt+0.008,bevelEnabled:false}),mirror); m.position.z=-(bt+0.008)/2; bG.add(m);
+  }
+  // 小北斗七星刻紋：發光連線 + 星點（第 0 顆＝北極星，最大最亮）
+  const STARS=[[0.085,0.003,0.017],[0.175,-0.008,0.0095],[0.265,0.004,0.0095],[0.355,-0.004,0.0095],[0.445,0.009,0.0095],[0.525,-0.003,0.009],[0.435,-0.015,0.009]];
+  const LINKS=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]];
+  for(const zf of [bt/2+0.0045,-bt/2-0.0045]){
+    for(const L of LINKS){ const a=STARS[L[0]],b=STARS[L[1]]; const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);
+      const ln=new TH.Mesh(new TH.BoxGeometry(len,0.006,0.003),glow); ln.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,zf); ln.rotation.z=Math.atan2(dy,dx); bG.add(ln); }
+    STARS.forEach((s,i)=>{ const st=new TH.Mesh(new TH.ExtrudeGeometry(starShape(s[2],s[2]*0.32),{depth:0.004,bevelEnabled:false}),i?glow:glowW);
+      st.position.set(s[0],s[1],zf-0.002); bG.add(st); });
+  }
+  const core=new TH.Mesh(new TH.BoxGeometry(0.05,0.04,bt+0.012),glowW); core.position.set(0.012,0,0); bG.add(core);   // 刀根能量核心
+
+  /* ── 握把：銀白鈦合金骨架 + 兩側「流動星空」視窗 ── */
+  const hs=new TH.Shape();
+  hs.moveTo(0.04,0.054); hs.lineTo(-0.54,0.052); hs.lineTo(-0.62,0.038); hs.lineTo(-0.66,0.0);
+  hs.lineTo(-0.62,-0.038); hs.lineTo(-0.54,-0.052); hs.lineTo(0.04,-0.054); hs.closePath();
+  const grip=new TH.Mesh(new TH.ExtrudeGeometry(hs,{depth:ht,bevelEnabled:true,bevelThickness:0.007,bevelSize:0.007,bevelSegments:3}),frame);
+  grip.position.z=-ht/2; g.add(grip);
+  for(const s of [-1,1]){ const zf=s*(ht/2+0.007);
+    const bez=new TH.Mesh(new TH.BoxGeometry(0.42,0.052,0.006),dark); bez.position.set(-0.32,0,zf); g.add(bez);            // 深色內框
+    const w=new TH.Mesh(new TH.BoxGeometry(0.40,0.042,0.007),win); w.position.set(-0.32,0,zf+s*0.002); g.add(w);          // 星空視窗
+    const gl=new TH.Mesh(new TH.BoxGeometry(0.40,0.004,0.004),glow); gl.position.set(-0.32,0.024,zf+s*0.003); g.add(gl);   // 視窗上緣光條
+    for(const xy of [[-0.05,0.037],[-0.05,-0.037],[-0.57,0.030],[-0.57,-0.030]]){ const x=xy[0], y=xy[1];
+      const sc=new TH.Mesh(new TH.CylinderGeometry(0.011,0.011,0.006,12),steel); sc.rotation.x=Math.PI/2; sc.position.set(x,y,zf+s*0.002); g.add(sc);
+      const slot=new TH.Mesh(new TH.BoxGeometry(0.014,0.003,0.003),dark); slot.position.set(x,y,zf+s*0.006); slot.rotation.z=0.6; g.add(slot); }
+    const emb=new TH.Mesh(new TH.ExtrudeGeometry(starShape(0.016,0.006),{depth:0.005,bevelEnabled:false}),glowW);
+    emb.position.set(-0.605,0,zf+(s>0?0.002:-0.007)); g.add(emb);                                                             // 尾端星徽
+  }
+  const bol=new TH.Mesh(new TH.BoxGeometry(0.06,0.118,ht+0.016),dark); bol.position.set(0.015,0,0); g.add(bol);            // 前端刀口座
+  const bolF=new TH.Mesh(new TH.BoxGeometry(0.012,0.108,ht+0.010),steel); bolF.position.set(0.045,0,0); g.add(bolF);
+  const slit=new TH.Mesh(new TH.BoxGeometry(0.006,0.084,bt+0.006),glowW); slit.position.set(0.050,0,0); g.add(slit);        // 發光刀縫
+  const sl=new TH.Group(); sl.position.set(-0.16,0.062,0); g.add(sl); KN.slider=sl;                                          // 拇指推鈕（出刀時前滑）
+  sl.add(new TH.Mesh(new TH.BoxGeometry(0.085,0.026,0.034),steel));
+  for(let i=0;i<4;i++){ const r=new TH.Mesh(new TH.BoxGeometry(0.008,0.008,0.036),dark); r.position.set(-0.03+i*0.02,0.015,0); sl.add(r); }
+  const slG=new TH.Mesh(new TH.BoxGeometry(0.07,0.004,0.036),glow); slG.position.set(0,-0.012,0); sl.add(slG);
+  const spine=new TH.Mesh(new TH.BoxGeometry(0.30,0.005,0.022),glow); spine.position.set(-0.46,0.056,0); g.add(spine);             // 脊背光條
+  KN.stars=STARS;
+  for(let i=0;i<9;i++){ const j=new TH.Mesh(new TH.BoxGeometry(0.012,0.012,ht+0.006),dark); j.position.set(-0.13-i*0.05,-0.055,0); g.add(j); }   // 防滑刻紋
+  const clip=new TH.Mesh(new TH.BoxGeometry(0.32,0.026,0.010),steel); clip.position.set(-0.36,0.034,-ht/2-0.020); g.add(clip);                 // 口袋夾（掌心側）
+  const clipF=new TH.Mesh(new TH.BoxGeometry(0.028,0.026,0.024),steel); clipF.position.set(-0.52,0.034,-ht/2-0.013); g.add(clipF);
+  const gb=new TH.Mesh(new TH.ConeGeometry(0.02,0.05,6),steel); gb.rotation.z=-Math.PI/2; gb.position.set(-0.685,0,0); g.add(gb);              // 尾端破窗錐
+  const lan=new TH.Mesh(new TH.TorusGeometry(0.02,0.007,6,14),steel); lan.position.set(-0.63,-0.022,0); g.add(lan);                           // 吊繩孔
+  const pl=new TH.PointLight(0x4cc2ff,0.9,3.2,2); pl.position.set(0.2,0,0.1); g.add(pl); KN.light=pl;                                        // 刀自己的藍光
+  return g;
+}
+
+/* ================= 信條（三角洲）：大馬士革鋸齒獵刀 + 白骨指虔握把 + 紅寶石徽章 =================
+   local 座標與北極星相同：+x 刀尖、+y 刀背、-y 刀刃。刀身 x 0.10～0.87、握把 -0.62～0.10、y ±0.046、z ±0.022 */
+function damascusTex(){                                   // 大馬士革花紋鋼
+  return makeTex((g,S)=>{ g.fillStyle='#b9c0c8'; g.fillRect(0,0,S,S);
+    for(let i=0;i<72;i++){ const d=i%2; g.strokeStyle='rgba('+(d?30:240)+','+(d?34:243)+','+(d?42:248)+',0.42)'; g.lineWidth=2+Math.random()*3; g.beginPath();
+      const y0=i*(S/72); for(let x=0;x<=S;x+=8){ const y=y0+Math.sin(x/23+i*0.7)*9+Math.sin(x/61+i)*14; x?g.lineTo(x,y):g.moveTo(x,y); } g.stroke(); }
+    grain(g,S,10); wear(g,S,0.35); });
+}
+const CR={};
+function makeCreed(){
+  const g=new TH.Group(), env=getEnv();
+  const bTex=makeTex((c,S)=>{ c.fillStyle='#e7e0cf'; c.fillRect(0,0,S,S);                               // 骨質：紋理 + 斑 + 裂紋 + 做舊
+    for(let i=0;i<50;i++){ c.strokeStyle='rgba(150,136,110,'+(0.03+Math.random()*0.07)+')'; c.lineWidth=1+Math.random()*2;
+      c.beginPath(); const x=Math.random()*S; for(let y=0;y<=S;y+=12) c.lineTo(x+Math.sin(y/38+x)*4,y); c.stroke(); }
+    for(let i=0;i<8;i++){ c.fillStyle='rgba(128,110,82,'+(0.05+Math.random()*0.07)+')'; c.beginPath(); c.ellipse(Math.random()*S,Math.random()*S,14+Math.random()*30,8+Math.random()*16,Math.random()*6,0,7); c.fill(); }
+    for(let i=0;i<14;i++){ c.strokeStyle='rgba(90,70,50,'+(0.25+Math.random()*0.3)+')'; c.lineWidth=1; c.beginPath(); let x=Math.random()*S,y=Math.random()*S; c.moveTo(x,y);
+      for(let k=0;k<6;k++){ x+=(Math.random()-0.5)*40; y+=(Math.random()-0.5)*40; c.lineTo(x,y); } c.stroke(); }
+    wear(c,S,0.35); grain(c,S,8); });
+  const bladeMat=new TH.MeshStandardMaterial({map:damascusTex(),color:0xffffff,roughness:.38,metalness:.88,envMap:env,envMapIntensity:.75});
+  const bevelMat=new TH.MeshStandardMaterial({color:0xe9eef3,roughness:.11,metalness:.96,envMap:env,envMapIntensity:1.4});
+  const steel2  =new TH.MeshStandardMaterial({color:0xa6aeb8,roughness:.32,metalness:.9, envMap:env,envMapIntensity:.95});
+  const brass   =new TH.MeshStandardMaterial({color:0xc9a45a,roughness:.3, metalness:.95,envMap:env,envMapIntensity:1.1});
+  const trim    =new TH.MeshStandardMaterial({color:0xc7ccd5,roughness:.28,metalness:.93,envMap:env,envMapIntensity:1.05});
+  const engrave =new TH.MeshStandardMaterial({color:0x4a525c,roughness:.55,metalness:.7, envMap:env});
+  const bone    =new TH.MeshStandardMaterial({map:bTex,color:0xffffff,roughness:.55,metalness:.05});
+  const gem     =new TH.MeshStandardMaterial({color:0xff1a1a,roughness:.1, metalness:.35,envMap:env,envMapIntensity:.95,emissive:0x9a0a0a,emissiveIntensity:1.4});
+  const rivetM  =new TH.MeshStandardMaterial({color:0x9198a1,roughness:.32,metalness:.93,envMap:env});
+  CR.gem=gem;
+  const thick=0.014, ex={depth:thick,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.003,bevelSegments:1};
+  // 刀刃：clip-point 刀腹 + 火焰倒刺刀背（越靠護手越大、後掃）+ 血槽鏤空
+  const bs=new TH.Shape();
+  bs.moveTo(0.10,-0.029); bs.lineTo(0.34,-0.043); bs.lineTo(0.56,-0.041); bs.lineTo(0.70,-0.022); bs.lineTo(0.87,0.004);
+  bs.lineTo(0.69,0.030); bs.lineTo(0.60,0.032); bs.lineTo(0.575,0.034);
+  bs.lineTo(0.555,0.066); bs.lineTo(0.515,0.037); bs.lineTo(0.495,0.075); bs.lineTo(0.45,0.040);
+  bs.lineTo(0.43,0.083);  bs.lineTo(0.385,0.044); bs.lineTo(0.365,0.089); bs.lineTo(0.315,0.047);
+  bs.lineTo(0.295,0.090); bs.lineTo(0.24,0.050);  bs.lineTo(0.22,0.085);  bs.lineTo(0.165,0.051);
+  bs.lineTo(0.10,0.045); bs.closePath();
+  const hole=new TH.Path(); hole.moveTo(0.30,0.004); hole.lineTo(0.50,0.012); hole.lineTo(0.50,0.03); hole.lineTo(0.30,0.022); hole.closePath(); bs.holes.push(hole);
+  const blade=new TH.Mesh(new TH.ExtrudeGeometry(bs,ex),bladeMat); blade.position.z=-thick/2; g.add(blade);
+  const bev=new TH.Shape();                                                                               // 鏡面開刃斜面（雙面凸出）
+  bev.moveTo(0.10,-0.029); bev.lineTo(0.34,-0.043); bev.lineTo(0.56,-0.041); bev.lineTo(0.70,-0.022); bev.lineTo(0.87,0.004);
+  bev.lineTo(0.77,-0.009); bev.lineTo(0.58,-0.022); bev.lineTo(0.40,-0.024); bev.lineTo(0.16,-0.016); bev.lineTo(0.10,-0.019); bev.closePath();
+  const bevM=new TH.Mesh(new TH.ExtrudeGeometry(bev,{depth:thick+0.009,bevelEnabled:false}),bevelMat); bevM.position.z=-(thick+0.009)/2; g.add(bevM);
+  for(let i=0;i<6;i++){ const x=0.14+i*0.032, y=-0.029-(x-0.10)*0.0583-0.006;                           // 刃根鋸齒（6 顆尖牙）
+    const t=new TH.Mesh(new TH.BoxGeometry(0.013,0.013,thick+0.004),steel2); t.position.set(x,y,0); t.rotation.z=Math.PI/4; g.add(t); }
+  for(const zf of [thick/2+0.003,-thick/2-0.003]){                                                       // 刀根蝕刻：長短符文 + 菱形 + 製作者星標
+    for(let i=0;i<3;i++){ const w=[0.12,0.08,0.11][i]; const ln=new TH.Mesh(new TH.BoxGeometry(w,0.005,0.004),engrave); ln.position.set(0.19,(i-1)*0.019,zf); g.add(ln); }
+    const dm=new TH.Mesh(new TH.BoxGeometry(0.02,0.02,0.004),engrave); dm.position.set(0.115,0,zf); dm.rotation.z=Math.PI/4; g.add(dm);
+    const mk=new TH.Mesh(new TH.ExtrudeGeometry(starShape(0.012,0.005),{depth:0.004,bevelEnabled:false}),engrave); mk.position.set(0.60,-0.010,zf-0.002); g.add(mk);
+  }
+  // 握把：白骨指虎（z 方向加厚才握得住）+ 金屬飾條 + 黃銅護手/鉚釘
+  const gripZ=0.060, exG={depth:gripZ,bevelEnabled:true,bevelThickness:0.005,bevelSize:0.005,bevelSegments:2};
+  const HOLES=[-0.080,-0.175,-0.270,-0.362], HR=0.036;                                                     // 四個指孔（對齊四根手指）
+  const ks=new TH.Shape();
+  ks.moveTo(0.10,0.050); ks.lineTo(-0.06,0.062); ks.lineTo(-0.40,0.064); ks.lineTo(-0.56,0.048); ks.lineTo(-0.618,0.014); ks.lineTo(-0.618,-0.024);
+  ks.lineTo(-0.52,-0.056); ks.lineTo(-0.30,-0.066); ks.lineTo(-0.06,-0.062); ks.lineTo(0.10,-0.040); ks.closePath();
+  for(const hx of HOLES){ const hp=new TH.Path(); hp.absarc(hx,0,HR,0,Math.PI*2,true); ks.holes.push(hp); }
+  const knuck=new TH.Mesh(new TH.ExtrudeGeometry(ks,exG),bone); knuck.position.z=-gripZ/2; g.add(knuck);
+  for(const hx of HOLES) for(const zf of [gripZ/2+0.002,-gripZ/2-0.002]){ const rim=new TH.Mesh(new TH.TorusGeometry(HR+0.004,0.004,6,24),trim); rim.position.set(hx,0,zf); g.add(rim); }   // 指孔金屬包邊
+  const topTrim=new TH.Mesh(new TH.BoxGeometry(0.60,0.012,gripZ+0.010),trim); topTrim.position.set(-0.26,0.063,0); g.add(topTrim);
+  const botTrim=new TH.Mesh(new TH.BoxGeometry(0.56,0.012,gripZ+0.010),trim); botTrim.position.set(-0.28,-0.063,0); g.add(botTrim);
+  const frontTrim=new TH.Mesh(new TH.BoxGeometry(0.022,0.124,gripZ+0.014),brass); frontTrim.position.set(0.088,-0.002,0); g.add(frontTrim);   // 黃銅護手
+  for(const zf of [gripZ/2+0.008,-gripZ/2-0.008]) for(let i=0;i<3;i++){ const ln=new TH.Mesh(new TH.BoxGeometry(0.010,0.004,0.003),engrave); ln.position.set(0.088,-0.03+i*0.028,zf); g.add(ln); }
+  const fsp=new TH.Mesh(new TH.ConeGeometry(0.024,0.12,6),steel2); fsp.position.set(0.132,-0.040,0); fsp.rotation.z=-Math.PI/2-0.35; g.add(fsp);   // 護手前尖刺
+  for(const x of [-0.128,-0.222,-0.316,-0.41]){ const len=0.052; const sp=new TH.Mesh(new TH.ConeGeometry(0.014,len,6),steel2); sp.position.set(x,-0.066-len*0.5+0.012,0); sp.rotation.z=Math.PI; g.add(sp); }   // 指孔之間的下緣尖刺
+  for(const zf of [gripZ/2+0.002,-gripZ/2-0.006]) for(const x of [-0.128,-0.222,-0.316,-0.41]){
+    const rv=new TH.Mesh(new TH.CylinderGeometry(0.007,0.007,0.005,10),rivetM); rv.rotation.x=Math.PI/2; rv.position.set(x,-0.050,zf); g.add(rv); }   // 鉚釘（孔與孔之間）
+  const dia=new TH.Mesh(new TH.BoxGeometry(0.050,0.050,gripZ+0.020),brass); dia.rotation.z=Math.PI/4; dia.position.set(0.03,0,0); g.add(dia);   // 菱形寶石座（護手後方）
+  for(const zf of [gripZ/2+0.012,-gripZ/2-0.012]){ const set=new TH.Mesh(new TH.TorusGeometry(0.026,0.005,4,4),trim); set.position.set(0.03,0,zf); set.rotation.z=Math.PI/4; g.add(set);
+    for(let k=0;k<4;k++){ const a=k*Math.PI/2+Math.PI/4; const pr=new TH.Mesh(new TH.ConeGeometry(0.005,0.016,5),trim); pr.position.set(0.03+Math.cos(a)*0.020,Math.sin(a)*0.020,zf+(zf>0?0.006:-0.006)); pr.rotation.x=zf>0?-Math.PI/2:Math.PI/2; g.add(pr); } }   // 寶石爪座
+  const gA=new TH.Mesh(new TH.OctahedronGeometry(0.024),gem); gA.position.set(0.03,0,gripZ/2+0.014); gA.scale.set(1,1,0.6); g.add(gA);
+  const gB=gA.clone(); gB.position.z=-gripZ/2-0.014; g.add(gB);                                                                                   // 紅寶石（雙面）
+  for(const x of [-0.128,-0.222,-0.316]){ const rb=new TH.Mesh(new TH.BoxGeometry(0.026,0.010,gripZ+0.008),gem); rb.position.set(x,0.049,0); g.add(rb); }   // 小紅石（孔與孔之間）
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.026,0.008,6,16),brass); ring.position.set(-0.646,-0.004,0); g.add(ring);                             // 尾端吊環
+  for(let i=0;i<3;i++){ const lk=new TH.Mesh(new TH.TorusGeometry(0.015,0.0045,6,12),trim); lk.position.set(-0.646,-0.034-i*0.028,0); lk.rotation.y=(i%2)?Math.PI/2:0; g.add(lk); }   // 鏈條
+  const pl=new TH.PointLight(0xff5a3a,0.35,1.8,2); pl.position.set(0.03,0,0.12); g.add(pl); CR.light=pl;                                                // 紅寶石的紅光
+  return g;
+}
+
+/* ================= 右手（戰術手套）：四指環握、拇指壓在握把上緣 ================= */
+let _gloveTex=null;
+function gloveTex(){
+  if(_gloveTex) return _gloveTex;
+  _gloveTex=makeTex((g,S)=>{ g.fillStyle='#2c313a'; g.fillRect(0,0,S,S);
+    for(let y=0;y<S;y+=5){ g.strokeStyle='rgba(70,78,92,.35)'; g.lineWidth=1.5; g.beginPath(); for(let x=0;x<=S;x+=4) g.lineTo(x,y+Math.sin(x/4*Math.PI)*1.2); g.stroke(); }
+    for(let x=0;x<S;x+=9){ g.strokeStyle='rgba(14,16,22,.35)'; g.lineWidth=1; g.beginPath(); g.moveTo(x,0); g.lineTo(x,S); g.stroke(); }
+    grain(g,S,10); });
+  _gloveTex.repeat.set(4,4); return _gloveTex;
+}
+function gloveMats(){
+  return {
+    fab  :new TH.MeshStandardMaterial({map:gloveTex(),color:0xffffff,roughness:.86,metalness:.06}),   // 布面（針織紋）
+    pad  :new TH.MeshStandardMaterial({color:0x171a20,roughness:.45,metalness:.30}),   // 指節護甲
+    seam :new TH.MeshStandardMaterial({color:0x0e1014,roughness:.96,metalness:0}),     // 縫線
+    strap:new TH.MeshStandardMaterial({color:0x3a404b,roughness:.85,metalness:.14}),   // 腕帶
+  };
+}
+function limbSeg(parent,a,b,r,mat,r2){                    // 兩點間圓柱 + 兩端球（r128 沒有 CapsuleGeometry）
+  const A=new TH.Vector3(a[0],a[1],a[2]), B=new TH.Vector3(b[0],b[1],b[2]);
+  const d=new TH.Vector3().subVectors(B,A), len=d.length(), rB=(r2==null?r:r2);
+  const cyl=new TH.Mesh(new TH.CylinderGeometry(rB,r,len,12),mat);
+  cyl.position.copy(A).addScaledVector(d,0.5); cyl.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),d.clone().normalize()); parent.add(cyl);
+  for(const e of [[A,r],[B,rB]]){ const s=new TH.Mesh(new TH.SphereGeometry(e[1],12,10),mat); s.position.copy(e[0]); parent.add(s); }
+}
+function makeHand(mode){
+  const through=(mode!=='wrap'), rev=(mode==='reverse'), h=new TH.Group(), M=gloveMats(); h.userData.mode=mode;
+  const blob=(sx,sy,sz,x,y,z,seg)=>{ const m=new TH.Mesh(new TH.SphereGeometry(0.5,seg||16,12),M.fab); m.scale.set(sx,sy,sz); m.position.set(x,y,z); h.add(m); return m; };
+  if(rev){ blob(0.36,0.17,0.10,-0.285,-0.005,0.125,18); blob(0.30,0.16,0.10,-0.27,0.095,0.12,14); blob(0.34,0.15,0.07,-0.27,0.02,0.17,16); }   // 反手指虎：手掌在握把前面(+z)，手腕在 +y 側
+  else if(through){ blob(0.36,0.17,0.10,-0.285,-0.005,0.125,18); blob(0.17,0.16,0.10,-0.43,-0.02,0.125,14); blob(0.34,0.15,0.07,-0.27,0.03,0.17,16); }   // 正手指虎
+  else { blob(0.36,0.185,0.115,-0.285,-0.010,-0.078,18); blob(0.17,0.175,0.108,-0.430,-0.026,-0.070,14); blob(0.34,0.165,0.075,-0.278,0.030,0.052,16); }   // 一般握法：掌心 -z、手背 +z
+  /* 四根手指＝三節關節鏈（指根 J1 → 中節 J2 → 指尖 J3）。wrap：從指節往上、繞過握把；through：從手掌直直穿過指孔(-z)、在背面彎下去 */
+  const FL=[]; h.userData.fingerList=FL;
+  const FING=rev?[[-0.140,0.031,0.86],[-0.235,0.036,0.96],[-0.330,0.039,1.02],[-0.422,0.038,1.00]]   // 反手：小指在刀刃那端
+                :[[-0.140,0.038,1.00],[-0.235,0.039,1.02],[-0.330,0.036,0.96],[-0.422,0.031,0.86]];
+  for(const f of FING){ const fx=f[0], r=f[1], k=f[2], L=through?[0.165,0.085*k,0.070*k]:[0.075*k,0.090*k,0.080*k];
+    const J1=new TH.Group(); J1.position.set(fx,through?0.0:0.086,through?0.115:0.042); h.add(J1);
+    const J2=new TH.Group(); J2.position.set(0,L[0],0); J1.add(J2);
+    const J3=new TH.Group(); J3.position.set(0,L[1],0); J2.add(J3);
+    limbSeg(J1,[0,0,0],[0,L[0],0],r,M.fab,r*0.96);
+    limbSeg(J2,[0,0,0],[0,L[1],0],r*0.94,M.fab,r*0.88);
+    limbSeg(J3,[0,0,0],[0,L[2],0],r*0.84,M.fab,r*0.70);
+    const pz=through?r*0.45:-r*0.45;
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.7,r*1.0,r*0.9),M.pad); pad.position.set(0,0.016,pz); J1.add(pad);        // 指根護甲
+    const pad2=new TH.Mesh(new TH.BoxGeometry(r*1.5,r*0.9,r*0.8),M.pad); pad2.position.set(0,0.012,pz*0.9); J2.add(pad2);  // 中節護甲
+    FL.push(through?{j:[J1,J2,J3],base:[-Math.PI/2,0,0],q:[0,-1.35,-1.10]}:{j:[J1,J2,J3],base:[0,0,0],q:[2.27,1.05,1.31]}); }
+  // 拇指（基部關節，rotation.z>0 = 翹起）：壓在握把脊背靠鏡頭這側、指向刀尖
+  const tb=rev?[-0.46,0.08,0.125]:through?[-0.30,0.03,0.125]:[-0.292,-0.014,-0.070], tm=rev?[-0.53,0.01,0.08]:through?[-0.22,0.095,0.075]:[-0.232,0.074,0.016], tt=rev?[-0.55,-0.07,0.05]:through?[-0.05,0.11,0.045]:[-0.060,0.100,0.050];
+  const th=new TH.Group(); th.position.set(tb[0],tb[1],tb[2]); const ti=new TH.Group(); ti.position.set(-tb[0],-tb[1],-tb[2]); th.add(ti); h.add(th); h.userData.thumb=th;
+  limbSeg(ti,tb,tm,0.054,M.fab,0.048); limbSeg(ti,tm,tt,0.048,M.fab,0.040);
+  const nail=new TH.Mesh(new TH.BoxGeometry(rev?0.054:0.078,0.016,rev?0.078:0.054),M.pad); if(rev){ nail.position.set(tt[0]-0.004,tt[1]-0.004,tt[2]+0.028); nail.rotation.x=-0.3; } else { nail.position.set(tt[0]-0.024,tt[1]+0.026,tt[2]+0.002); nail.rotation.z=-0.16; } ti.add(nail);
+  // 前臂（組裝時拆出去固定，手腕轉它不轉）
+  const fa=new TH.Group(); h.add(fa); h.userData.forearm=fa; const fz=through?0.115:0;
+  if(rev){                                                                                 // 反手：前臂從手掌 +y 側（螢幕右下）接出去
+    const cuff=new TH.Mesh(new TH.CylinderGeometry(0.092,0.098,0.086,20),M.strap); cuff.position.set(-0.27,0.19,0.115); cuff.rotation.z=0.08; fa.add(cuff);
+    const tab=new TH.Mesh(new TH.BoxGeometry(0.096,0.046,0.024),M.pad); tab.position.set(-0.27,0.19,0.175); fa.add(tab);
+    limbSeg(fa,[-0.27,0.24,0.115],[-0.30,0.60,0.13],0.079,M.fab,0.058);
+  } else {
+    const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap); cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.560,-0.048,-0.046+fz); fa.add(cuff);
+    const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad); tab.position.set(-0.560,0.050,-0.046+fz); fa.add(tab);
+    limbSeg(fa,[-0.620,-0.054,-0.044+fz],[-0.960,-0.092,-0.036+fz],0.079,M.fab,0.058);
+  }
+  return h;
+}
+
+/* ================= 視角武器組裝 ================= */
+const HIP=new TH.Vector3(0.16,-0.16,-0.34);               // 持刀基準位（相對相機）
+const gunGroup=new TH.Group(); camera.add(gunGroup);
+const vmLight=new TH.PointLight(0xbcd0ff,0.6,2.5,2); vmLight.position.set(0.2,0.35,0.1); camera.add(vmLight);   // 視角武器補光
+const rig=new TH.Group(); rig.rotation.set(-0.06,1.90,0.70); rig.scale.set(0.38,0.38,0.38); rig.position.set(0.02,0.13,-0.01); gunGroup.add(rig);
+const PIV_W=new TH.Vector3(-0.50,-0.050,-0.040);         // 手腕關節（在腕帶處）：手＋刀繞它轉，前臂不動
+const wrist=new TH.Group(); wrist.position.copy(PIV_W); rig.add(wrist);
+const wIn=new TH.Group(); wIn.position.copy(PIV_W).negate(); wrist.add(wIn);
+const HAND_X=0.06, HANDS=[];
+for(const mode of ['wrap','reverse']){ const hd=makeHand(mode); hd.scale.set(1,0.86,0.88); hd.position.x=HAND_X; wIn.add(hd);   // 握緊瘦握把、握前面一點
+  const fa=hd.userData.forearm; hd.remove(fa); const faG=new TH.Group(); faG.scale.copy(hd.scale); faG.position.copy(hd.position); faG.add(fa); rig.add(faG);
+  HANDS.push({hand:hd,fa:faG}); }
+let hand=HANDS[0].hand, FL=hand.userData.fingerList, thumb=hand.userData.thumb; HANDS[1].hand.visible=false; HANDS[1].fa.visible=false;
+const fOpen=[0,0,0,0]; let thOpen=0, gripPulse=0, fidT=9, fidType=0, fidCd=1.2;   // 每根手指的張開量 / 拇指翹起量
+const PIV_T=new TH.Vector3(-0.10,0.07,0.0), PIV_F=new TH.Vector3(-0.20,-0.02,0.05);  // 拇指支點 / 食指中指間支點（刀繞著它們轉）
+const kspin=new TH.Group(); kspin.position.copy(PIV_T); wIn.add(kspin);
+const kIn=new TH.Group(); kIn.position.copy(PIV_T).negate(); kspin.add(kIn);
+const knife=makePolaris(); kIn.add(knife);
+const creed=makeCreed(); creed.visible=false; kIn.add(creed);
+
+/* ================= 音效（WebAudio 合成，沒有音檔） ================= */
+const SFX=(()=>{ let ac=null, noiseBuf=null;
+  function ctx(){ if(!ac){ ac=new (window.AudioContext||window.webkitAudioContext)(); const n=ac.sampleRate*1.5|0, b=ac.createBuffer(1,n,ac.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; noiseBuf=b; }
+    if(ac.state==='suspended') ac.resume(); return ac; }
+  function noise(dur,f0,f1,q,vol,type){ const c=ctx(), t=c.currentTime, src=c.createBufferSource(); src.buffer=noiseBuf;
+    const bp=c.createBiquadFilter(); bp.type=type||'bandpass'; bp.Q.value=q; bp.frequency.setValueAtTime(f0,t); bp.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t); src.stop(t+dur+0.05); }
+  function tone(f0,f1,dur,vol,type){ const c=ctx(), t=c.currentTime, o=c.createOscillator(); o.type=type||'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    const g=c.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02); }
+  return {
+    unlock(){ try{ ctx(); }catch(e){} },
+    swoosh(h){ try{ noise(h?0.30:0.22,h?600:900,h?1900:2800,1.2,h?0.6:0.5); }catch(e){} },
+    stab(h){ try{ noise(h?0.20:0.16,h?900:1400,h?350:500,1.5,0.5); }catch(e){} },
+    shing(){ try{ tone(2600,3400,0.18,0.18,'triangle'); tone(5200,4200,0.12,0.08,'sine'); noise(0.08,4000,7000,2,0.25,'highpass'); }catch(e){} },
+    hit(){ try{ noise(0.12,300,120,0.8,0.6,'lowpass'); tone(160,60,0.14,0.5,'sine'); tone(3200,2000,0.06,0.1,'square'); }catch(e){} },
+    click(){ try{ noise(0.05,2500,1500,2,0.2); }catch(e){} },
+    crit(){ try{ noise(0.16,260,90,0.7,0.8,'lowpass'); tone(120,40,0.22,0.7,'sine'); tone(2400,1200,0.12,0.15,'square'); }catch(e){} },
+    crash(){ try{ noise(0.45,1800,200,0.5,0.9,'lowpass'); noise(0.3,4000,800,1,0.4,'bandpass'); tone(90,30,0.4,0.8,'sine'); }catch(e){} },
+    ding(i){ try{ const f=880*Math.pow(1.25,i||0); tone(f,f*1.01,0.25,0.12,'sine'); tone(f*2,f*2,0.12,0.05,'triangle'); }catch(e){} },
+  }; })();
+
+/* ================= 特效：火花 / 刀光軌跡 / 命中斬痕 ================= */
+const SPN=320, spPos=new Float32Array(SPN*3), spCol=new Float32Array(SPN*3), spSize=new Float32Array(SPN), spLife=new Float32Array(SPN), spMax=new Float32Array(SPN), spGrav=new Float32Array(SPN), spBase=new Float32Array(SPN);
+const spVel=[]; for(let i=0;i<SPN;i++){ spVel.push(new TH.Vector3()); spPos[i*3+1]=-100; }
+const spGeo=new TH.BufferGeometry();
+spGeo.setAttribute('position',new TH.BufferAttribute(spPos,3)); spGeo.setAttribute('color',new TH.BufferAttribute(spCol,3)); spGeo.setAttribute('aSize',new TH.BufferAttribute(spSize,1));
+const spMat=new TH.ShaderMaterial({uniforms:{map:{value:DOT},pr:{value:renderer.getPixelRatio()}},transparent:true,depthWrite:false,blending:TH.AdditiveBlending,vertexColors:true,
+  vertexShader:'attribute float aSize; uniform float pr; varying vec3 vC;\n'+
+    'void main(){ vC=color; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=aSize*pr*(200.0/-mv.z); gl_Position=projectionMatrix*mv; }',
+  fragmentShader:'uniform sampler2D map; varying vec3 vC;\n'+
+    'void main(){ vec4 t=texture2D(map,gl_PointCoord); gl_FragColor=vec4(vC*t.a,t.a); }'});
+const sparks=new TH.Points(spGeo,spMat); sparks.frustumCulled=false; scene.add(sparks);
+let spNext=0;
+function spawnSparks(pos,n,dir,spread,speed,white,grav,size,life,col){
+  grav=grav==null?1:grav; size=size||0.035; life=life||0.3;
+  for(let k=0;k<n;k++){ const i=spNext; spNext=(spNext+1)%SPN;
+    spPos[i*3]=pos.x; spPos[i*3+1]=pos.y; spPos[i*3+2]=pos.z;
+    spVel[i].set((Math.random()-0.5)*spread,(Math.random()-0.5)*spread,(Math.random()-0.5)*spread);
+    if(dir) spVel[i].addScaledVector(dir,speed*(0.4+Math.random()*0.9));
+    spLife[i]=spMax[i]=life*(0.75+Math.random()*0.5); spBase[i]=size*(0.6+Math.random()*0.8); spSize[i]=spBase[i]; spGrav[i]=grav;
+    if(col){ const m=0.7+0.6*Math.random(); spCol[i*3]=col[0]*m; spCol[i*3+1]=col[1]*m; spCol[i*3+2]=col[2]*m; }
+    else { const w=white?1:Math.random(); spCol[i*3]=0.45+0.55*w; spCol[i*3+1]=0.8+0.2*w; spCol[i*3+2]=1.0; } }
+}
+function updateSparks(dt){
+  for(let i=0;i<SPN;i++){ if(spLife[i]<=0) continue;
+    spLife[i]-=dt; const v=spVel[i]; v.y-=6.5*dt*spGrav[i]; v.multiplyScalar(Math.exp(-dt*2.2));
+    spPos[i*3]+=v.x*dt; spPos[i*3+1]+=v.y*dt; spPos[i*3+2]+=v.z*dt;
+    const f=Math.max(0,spLife[i]/spMax[i]); spSize[i]=spBase[i]*Math.sin(f*Math.PI);
+    if(spLife[i]<=0){ spPos[i*3+1]=-100; spSize[i]=0; } }
+  spGeo.attributes.position.needsUpdate=true; spGeo.attributes.aSize.needsUpdate=true; spGeo.attributes.color.needsUpdate=true;
+}
+// 刀光：記錄刀尖/刀根的世界座標，拉成一條會淡出的發光絲帶
+const TRN=48, TR_LIFE=0.16, trPos=new Float32Array(TRN*2*3), trAge=new Float32Array(TRN*2), trV=new Float32Array(TRN*2);
+for(let i=0;i<TRN;i++){ trV[i*2]=0; trV[i*2+1]=1; }
+const trGeo=new TH.BufferGeometry(); trGeo.setAttribute('position',new TH.BufferAttribute(trPos,3)); trGeo.setAttribute('aAge',new TH.BufferAttribute(trAge,1)); trGeo.setAttribute('aV',new TH.BufferAttribute(trV,1));
+{ const idx=[]; for(let i=0;i<TRN-1;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,b,c,b,d,c); } trGeo.setIndex(idx); trGeo.setDrawRange(0,0); }
+const trMat=new TH.ShaderMaterial({uniforms:{cA:{value:new TH.Color(0.1,0.5,1.0)},cB:{value:new TH.Color(0.65,0.96,1.0)}},transparent:true,depthWrite:false,blending:TH.AdditiveBlending,side:TH.DoubleSide,
+  vertexShader:'attribute float aAge; attribute float aV; varying float vA; varying float vV; void main(){ vA=aAge; vV=aV; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader:'uniform vec3 cA; uniform vec3 cB; varying float vA; varying float vV; void main(){ float f=clamp(1.0-vA,0.0,1.0); float w=pow(vV,1.8); vec3 c=mix(cA,cB,f*w); float a=f*f*w; gl_FragColor=vec4(c*a*1.7,a*0.9); }'});
+const trail=new TH.Mesh(trGeo,trMat); trail.frustumCulled=false; scene.add(trail);
+const trS=[];
+function updateTrail(){
+  while(trS.length&&T-trS[0].time>TR_LIFE) trS.shift();
+  while(trS.length>TRN) trS.shift();
+  if(trS.length<2){ trGeo.setDrawRange(0,0); return; }
+  for(let i=0;i<trS.length;i++){ const s=trS[i], o=i*6;
+    trPos[o]=s.b.x; trPos[o+1]=s.b.y; trPos[o+2]=s.b.z; trPos[o+3]=s.t.x; trPos[o+4]=s.t.y; trPos[o+5]=s.t.z;
+    trAge[i*2]=trAge[i*2+1]=(T-s.time)/TR_LIFE; }
+  trGeo.attributes.position.needsUpdate=true; trGeo.attributes.aAge.needsUpdate=true;
+  trGeo.setDrawRange(0,(trS.length-1)*6);
+}
+// 命中斬痕：一道白藍色光痕，由短拉長再淡出
+const MARKS=[]; let mkNext=0;
+for(let i=0;i<8;i++){ const m=new TH.Mesh(new TH.PlaneGeometry(0.7,0.05),new TH.MeshBasicMaterial({color:0xbfefff,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false,side:TH.DoubleSide}));
+  m.visible=false; m.userData.life=0; scene.add(m); MARKS.push(m); }
+function addMark(pt){
+  const m=MARKS[mkNext]; mkNext=(mkNext+1)%MARKS.length;
+  m.position.copy(pt).addScaledVector(_dirCam.subVectors(camera.position,pt).normalize(),0.10);
+  m.lookAt(camera.position); m.rotateZ(Math.random()*Math.PI);
+  m.userData.life=0.3; m.visible=true; m.scale.set(0.25,1,1); m.material.opacity=1;
+}
+function updateMarks(dt){
+  for(const m of MARKS){ if(!m.visible) continue; m.userData.life-=dt; const p=1-Math.max(0,m.userData.life)/0.3;
+    m.scale.x=0.25+p*1.3; m.scale.y=1-p*0.6; m.material.opacity=1-p; if(m.userData.life<=0) m.visible=false; }
+}
+
+// 衝擊光環
+function ringTex(){ return makeTex((g,S)=>{ g.clearRect(0,0,S,S); const c=S/2; const r=g.createRadialGradient(c,c,S*0.30,c,c,S*0.48);
+  r.addColorStop(0,'rgba(255,255,255,0)'); r.addColorStop(0.55,'rgba(200,240,255,.9)'); r.addColorStop(1,'rgba(120,200,255,0)'); g.fillStyle=r; g.fillRect(0,0,S,S); },128); }
+const RINGS=[]; let ringNext=0;
+{ const rt=ringTex(); for(let i=0;i<4;i++){ const sp=new TH.Sprite(new TH.SpriteMaterial({map:rt,color:0x9fe8ff,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false}));
+  sp.visible=false; sp.userData.life=0; scene.add(sp); RINGS.push(sp); } }
+function addRing(pt,big){ const r=RINGS[ringNext]; ringNext=(ringNext+1)%RINGS.length;
+  r.position.copy(pt).addScaledVector(_dirCam.subVectors(camera.position,pt).normalize(),0.12); r.userData.life=0.3; r.userData.big=big?2.0:1.1; r.visible=true; }
+function updateRings(dt){ for(const r of RINGS){ if(!r.visible) continue; r.userData.life-=dt; const p=1-Math.max(0,r.userData.life)/0.3;
+  const sc=0.15+p*r.userData.big; r.scale.set(sc,sc,1); r.material.opacity=1-p; if(r.userData.life<=0) r.visible=false; } }
+// 靶子被打爆時飛出去的頭
+const HEADS=[]; for(let i=0;i<3;i++){ const m=new TH.Mesh(new TH.SphereGeometry(0.19,14,10),sackMat); m.visible=false; scene.add(m); HEADS.push({m:m,v:new TH.Vector3(),w:new TH.Vector3(),life:0}); }
+function launchHead(d,push){ const H=HEADS.find(h=>h.life<=0)||HEADS[0]; d.head.getWorldPosition(H.m.position);
+  H.v.set(push.x*2.5+(Math.random()-0.5),4.2+Math.random(),push.z*2.5+(Math.random()-0.5)); H.w.set(Math.random()*8-4,Math.random()*8-4,Math.random()*8-4); H.life=2.4; H.m.visible=true; }
+function updateHeads(dt){ for(const H of HEADS){ if(H.life<=0) continue; H.life-=dt; H.v.y-=12*dt; H.m.position.addScaledVector(H.v,dt);
+  if(H.m.position.y<0.19){ H.m.position.y=0.19; H.v.y*=-0.35; H.v.x*=0.7; H.v.z*=0.7; }
+  H.m.rotation.x+=H.w.x*dt; H.m.rotation.y+=H.w.y*dt; H.m.rotation.z+=H.w.z*dt; if(H.life<=0) H.m.visible=false; } }
+// 準心命中標記 / 飄字 / 大字
+function hitMarker(crit){ const c=$('cross'); c.classList.remove('hit','crit'); void c.offsetWidth; c.classList.add(crit?'crit':'hit'); setTimeout(()=>c.classList.remove('hit','crit'),320); }
+function dmgNumber(pt,val,crit){ const v=pt.clone().project(camera); if(v.z>1||!window.innerWidth) return;
+  const x=(v.x*0.5+0.5)*window.innerWidth, y=(-v.y*0.5+0.5)*window.innerHeight;
+  const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=val; d.style.left=(x+(Math.random()-0.5)*50)+'px'; d.style.top=(y-24)+'px';
+  $('dmgs').appendChild(d); setTimeout(()=>d.remove(),900); }
+function bigText(t){ const b=$('big'); b.textContent=t; b.style.transition='none'; b.style.opacity=1; b.style.transform='translateX(-50%) scale(1.35)';
+  setTimeout(()=>{ b.style.transition='opacity .7s, transform .3s'; b.style.opacity=0; b.style.transform='translateX(-50%) scale(1)'; },450); }
+
+/* ================= 玩家 / 動畫狀態 ================= */
+const player={pos:new TH.Vector3(0,1.6,0),vel:new TH.Vector3(0,0,0),yaw:0,pitch:0.02,onGround:true,bobT:0,height:1.6};
+const keys={};
+let locked=false, started=false, T=0;
+let swX=0, swY=0, camKick=0, flashOp=0, glowPulse=0;
+let bladeOut=0, deployTarget=0;                              // 刀身伸出程度 / 目標（OTF 出刀・收刀）
+let atkT=0, atkDur=0.30, atkType='slash', slashDir=-1, combo=0, comboTimer=0, queued=false, comboHits=0, hitThisSwing=false, swingChecked=false;
+let flPending=0, flDelay=0, flType=0, flT=0; const FL_DUR=0.85;   // 每段攻擊後的收刀小動作（三角洲：轉拇指 / 指間轉 / 拋刀）
+let camRoll=0, camYawK=0, camPitchK=0, lungeT=0, lungeDelay=0, shake=0, hitStop=0;
+// 關鍵姿勢：[gx,gy,gz, insX,insY,insZ]；t0 蓄力長度、t1 蓄力消退、t2 揮出長度、t3 開始回位、pw 揮出曲線、hit 命中判定時機（揮出進度）
+const ATK={
+  s1:  {dur:0.28,t0:0.16,t1:0.20,t2:0.36,t3:0.58,pw:0.6,hit:0.5, w:[0.11,0.07,0.03, 0.22,-0.22,-0.11], e:[-0.46,-0.16,-0.02, -0.26,0.46,0.42], m:[0,0.02,0.07], ww:[-0.30,0,0.22], wr:[0.75,0.18,-0.45]},
+  s2:  {dur:0.28,t0:0.16,t1:0.20,t2:0.36,t3:0.56,pw:0.6,hit:0.5, w:[-0.22,-0.13,0.02, -0.22,0.18,-0.18], e:[0.15,0.09,-0.03, 0.28,-0.28,-0.30], m:[0,0,0.07], ww:[0.30,0,-0.22], wr:[-0.75,-0.18,0.45]},
+  stab:{dur:0.34,t0:0.16,t1:0.16,t2:0.22,t3:0.52,pw:0.5,hit:0.55, w:[0.10,0.05,0.12], a:[-0.60,-0.20,0.0], e:[-0.22,-0.10,-0.30, -0.08,0.0,0.0]}
+};
+const ATK_C={                                                      // 信條（反手指虎）：① 指虎重拳 ② 反手橫掃 ③ 回掃
+  s1:  {dur:0.36,t0:0.20,t1:0.20,t2:0.34,t3:0.60,pw:0.55,hit:0.55, crit:true, noTrail:true, w:[0.10,0.06,0.10, 0.10,-0.10,0.05], e:[-0.22,-0.06,-0.40, -0.20,0.12,0.0], m:[0,0,-0.03], ww:[-0.2,0,0.1], wr:[0.3,0,-0.2]},
+  s2:  {dur:0.32,t0:0.16,t1:0.20,t2:0.36,t3:0.58,pw:0.6,hit:0.5, w:[0.16,0.08,0.03, 0.15,-0.25,-0.10], e:[-0.50,-0.10,-0.04, -0.15,0.55,0.40], m:[0,0.02,0.08], ww:[-0.3,0,0.2], wr:[0.6,0.15,-0.4]},
+  stab:{dur:0.32,t0:0.16,t1:0.20,t2:0.36,t3:0.58,pw:0.6,hit:0.5, generic:true, w:[-0.24,-0.10,0.02, -0.15,0.25,0.20], e:[0.22,0.08,-0.04, 0.20,-0.45,-0.40], m:[0,0,0.08], ww:[0.3,0,-0.2], wr:[-0.6,-0.15,0.4]}
+};
+const WEAPONS=[
+  {key:'polaris',name:'北極星',sub:'POLARIS · OTF TACTICAL',model:knife,otf:true, scale:0.38,pos:[0.02,0.13,-0.01],rot:[-0.06,1.90,0.70],atk:ATK,  dmg:[30,30,42],tip:0.80,trb:0.44,
+   trail:[[0.1,0.5,1.0],[0.65,0.96,1.0]],spark:null,mark:0xbfefff,ring:0x9fe8ff,fl:'spin',heavy:false,hand:0},
+  {key:'creed',  name:'信條',  sub:'CREED · SERRATED BOWIE', model:creed,otf:false,scale:0.30,pos:[-0.02,0.09,-0.05],rot:[-3.0,-3.1,0.6],atk:ATK_C,dmg:[50,35,35],tip:0.92,trb:0.52,
+   trail:[[1.0,0.35,0.15],[1.0,0.85,0.6]],spark:[1.0,0.5,0.25],mark:0xffc8a8,ring:0xffa070,fl:'heavy',heavy:true,hand:1,wpiv:[-0.21,0.163,0.101]}
+];
+let wi=0, cur=WEAPONS[0], swapT=0, swapTo=0, swapped=true; const SWAP_DUR=0.62;
+function applyWeapon(i){
+  cur.model.visible=false; wi=i; cur=WEAPONS[i]; cur.model.visible=true;
+  rig.scale.setScalar(cur.scale); rig.position.set(cur.pos[0],cur.pos[1],cur.pos[2]); rig.rotation.set(cur.rot[0],cur.rot[1],cur.rot[2]);
+  const H=HANDS[cur.hand||0]; for(const X of HANDS){ X.hand.visible=(X===H); X.fa.visible=(X===H); } hand=H.hand; FL=hand.userData.fingerList; thumb=hand.userData.thumb;
+  const wp=cur.wpiv||[PIV_W.x,PIV_W.y,PIV_W.z]; wrist.position.set(wp[0],wp[1],wp[2]); wIn.position.set(-wp[0],-wp[1],-wp[2]);
+  trMat.uniforms.cA.value.setRGB(cur.trail[0][0],cur.trail[0][1],cur.trail[0][2]); trMat.uniforms.cB.value.setRGB(cur.trail[1][0],cur.trail[1][1],cur.trail[1][2]);
+  for(const m of MARKS) m.material.color.setHex(cur.mark); for(const r of RINGS) r.material.color.setHex(cur.ring);
+  $('name').querySelector('.big').textContent=cur.name; $('name').querySelector('.sub').textContent=cur.sub; document.body.classList.toggle('creed',cur.key==='creed');
+  if(cur.otf){ bladeOut=0; deployTarget=0; } else { bladeOut=1; deployTarget=1; }
+}
+function switchTo(i){ if(i===wi||i<0||i>=WEAPONS.length||swapT>0||atkT>0||insT>0||introT>0) return; swapTo=i; swapT=SWAP_DUR; swapped=false; flT=0; flPending=0; fidT=9; SFX.click(); }
+let insT=0; const INS_DUR=2.6;                               // 耍刀
+let introT=0; const INTRO_DUR=0.95;                          // 開場舉刀
+let hits=0, dustT=0;
+const EASE=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+const SM=(a,b,x)=>{ const t=Math.max(0,Math.min(1,(x-a)/(b-a))); return t*t*(3-2*t); };
+// 手指依序張開（食指先）/ 依序收攏：openStart、closeStart 為時間，delay 是每根指的間隔
+function setRipple(t,openStart,closeStart,delay,amt){
+  for(let i=0;i<4;i++){ const o=openStart+i*delay, c=closeStart+i*delay;
+    fOpen[i]=Math.max(fOpen[i],SM(o,o+0.08,t)*(1-SM(c,c+0.08,t))*amt); }
+}
+const moonDir=moonPos.clone().normalize().multiplyScalar(70);
+const _v=new TH.Vector3(), _v2=new TH.Vector3(), _v3=new TH.Vector3(), _dirCam=new TH.Vector3(), _mid=new TH.Vector3(); let prevTip=null;
+
+function startAttack(){
+  combo=(combo%3)+1; comboTimer=0.9; queued=false; hitThisSwing=false; swingChecked=false;
+  atkType=(combo===3)?'stab':'slash'; slashDir=(combo===2)?-1:1;
+  atkDur=cur.atk[atkType==='stab'?'stab':(slashDir>0?'s1':'s2')].dur; atkT=atkDur; camKick=Math.max(camKick,0.7); glowPulse=Math.max(glowPulse,0.5);
+  if(cur.otf) deployTarget=1; flT=0; flPending=0; fidT=9;
+  { const K0=cur.atk[atkType==='stab'?'stab':(slashDir>0?'s1':'s2')];
+    if(K0.noTrail||(atkType==='stab'&&!K0.generic)){ SFX.stab(cur.heavy); camPitchK=-0.02; } else { SFX.swoosh(cur.heavy); camRoll=-0.018*slashDir; camYawK=0.014*slashDir; } }
+}
+function attack(){
+  if(insT>0||introT>0||swapT>0) return;
+  if(atkT>0){ if(atkT<atkDur*0.6) queued=true; return; }
+  startAttack();
+}
+function inspect(){ if(atkT>0||insT>0||introT>0||swapT>0) return; flT=0; flPending=0; fidT=9; insT=INS_DUR; SFX.click(); }
+function toggleDeploy(){ if(!cur.otf||atkT>0||insT>0||introT>0||swapT>0) return; flT=0; flPending=0; deployTarget=deployTarget>0.5?0:1; if(!deployTarget) SFX.click(); }
+function onDeploy(){                                         // 刀身彈出的瞬間：閃光 + 火花 + 光脈衝
+  glowPulse=1.3; camKick=Math.max(camKick,0.5); gripPulse=1; if(started){ flashOp=0.85; SFX.shing(); }
+  const p=knife.localToWorld(_v3.set(0.08,0,0)); const d=knife.localToWorld(_v.set(1,0,0)).sub(p).normalize();
+  spawnSparks(p,18,d,1.4,3.0,true);
+}
+function hitDummy(d,pt){
+  const K0=cur.atk[atkType==='stab'?'stab':(slashDir>0?'s1':'s2')], crit=!!K0.crit||(atkType==='stab'&&!K0.generic), dmg=cur.dmg[Math.max(0,combo-1)];   // 北極星 30/30/42、信條 50/35/35
+  hits++; $('hitN').textContent=hits; comboHits++; hitThisSwing=true; d.cd=0.25;
+  const push=_v3.set(d.x-player.pos.x,0,d.z-player.pos.z).normalize(); const str=crit?13:8;
+  d.vx+=push.z*str; d.vz-=push.x*str;
+  spawnSparks(pt,crit?40:28,push,2.6,2.4,false,1,null,null,cur.spark); spawnSparks(pt,10,null,1.2,0,false,1,0.05,0.4,[0.95,0.75,0.35]);
+  addMark(pt); if(crit) addMark(pt); addRing(pt,crit);
+  glowPulse=Math.max(glowPulse,1.2); camKick=Math.max(camKick,crit?1.6:1.0); shake=Math.max(shake,crit?1.6:0.9); hitStop=crit?0.07:0.045;
+  hitMarker(crit); dmgNumber(pt,dmg,crit); if(crit) SFX.crit(); else SFX.hit(); SFX.ding(Math.min(comboHits,3)-1);
+  d.hp-=dmg; if(d.hp<=0) breakDummy(d,push);
+  if(comboHits>=2){ const c=$('combo'); c.textContent='COMBO ×'+comboHits; c.style.opacity=1; c.style.transition='none'; c.style.transform='translateX(-50%) scale(1.25)';
+    setTimeout(()=>{ c.style.transition='opacity .6s, transform .25s'; c.style.opacity=0; c.style.transform='translateX(-50%) scale(1)'; },260); }
+}
+function breakDummy(d,push){                                                   // 靶子粉碎：麻布碎片 + 稻草 + 頭飛出去，2.6 秒後重生
+  d.dead=true; d.hp=0; d.respawnT=2.6; d.sway.visible=false;
+  const c=_v.set(d.x,1.25,d.z);
+  spawnSparks(c,60,push,3.2,1.6,false,1,0.08,0.9,[0.62,0.48,0.28]); spawnSparks(c,30,null,2.4,0,false,1,0.05,0.7,[0.9,0.8,0.45]); spawnSparks(c,24,null,2.0,0,true);
+  launchHead(d,push); shake=2.4; hitStop=0.09; bigText('BREAK!'); SFX.crash(); addRing(c,true);
+}
+function checkHits(){
+  const fwd=_v3.set(0,0,-1).applyQuaternion(camera.quaternion), range=(atkType==='stab')?2.4:2.0;
+  for(const d of DUM){ if(d.cd>0||d.dead) continue;
+    _mid.set(d.x-camera.position.x,1.2-camera.position.y,d.z-camera.position.z); const dist=_mid.length(); if(dist>range) continue;
+    if(_mid.divideScalar(dist).dot(fwd)<0.86) continue;                                         // 約 30° 內
+    const pt=_v.set(d.x,0,d.z).addScaledVector(_v2.set(camera.position.x-d.x,0,camera.position.z-d.z).normalize(),0.3);
+    pt.y=Math.max(0.7,Math.min(1.85,1.25+player.pitch*0.9));
+    hitDummy(d,pt); return; }
+}
+function updateDummies(dt){
+  for(const d of DUM){ d.cd-=dt;
+    if(d.dead){ d.respawnT-=dt; if(d.respawnT<=0){ d.dead=false; d.hp=100; d.sway.visible=true; d.pop=0.4; d.ax=d.az=d.vx=d.vz=0;
+        spawnSparks(_v.set(d.x,1.2,d.z),20,null,1.5,0,true,0.2,0.04,0.6); } continue; }
+    if(d.pop>0){ d.pop-=dt; const k=1-Math.max(0,d.pop)/0.4, e=1-Math.pow(1-k,3), sc=0.25+0.75*e+Math.sin(k*Math.PI)*0.15; d.sway.scale.set(sc,sc,sc); if(d.pop<=0) d.sway.scale.set(1,1,1); }
+    d.vx+=(-70*d.ax-7*d.vx)*dt; d.vz+=(-70*d.az-7*d.vz)*dt; d.ax+=d.vx*dt; d.az+=d.vz*dt;
+    d.ax=Math.max(-0.55,Math.min(0.55,d.ax)); d.az=Math.max(-0.55,Math.min(0.55,d.az));
+    d.sway.rotation.x=d.ax; d.sway.rotation.z=d.az; }
+}
+
+/* ================= 每幀更新 ================= */
+function step(dt){
+  T+=dt; grassTime.value=T; auroraMat.uniforms.t.value=T;
+  KN.starTex.offset.x-=dt*0.045; KN.starTex.offset.y+=dt*0.012;             // 握把視窗裡的星空流動
+  polaris.material.opacity=0.86+0.14*Math.sin(T*2.1);
+  lanternLight.intensity=1.0+0.22*Math.sin(T*13)+0.14*Math.sin(T*29+1);                                   // 油燈閃爍
+  for(const m of MIST){ m.position.x+=m.userData.v*dt; if(m.position.x>42) m.position.x=-42; }                 // 薄霧漂移
+  // ── 移動 ──
+  let ix=0,iz=0; if(keys.KeyW) iz-=1; if(keys.KeyS) iz+=1; if(keys.KeyA) ix-=1; if(keys.KeyD) ix+=1;
+  const mv=locked?1:0, sprint=(keys.ShiftLeft||keys.ShiftRight)&&iz<0, spd=sprint?7.2:4.4;
+  const len=Math.hypot(ix,iz); if(len>0){ ix/=len; iz/=len; }
+  const cy=Math.cos(player.yaw), sy=Math.sin(player.yaw), fx=-sy, fz=-cy, rx=cy, rz=-sy;
+  player.pos.x+=(fx*-iz+rx*ix)*spd*dt*mv; player.pos.z+=(fz*-iz+rz*ix)*spd*dt*mv;
+  if(lungeDelay>0) lungeDelay-=dt; else if(lungeT>0){ lungeT-=dt; player.pos.x+=fx*2.6*dt; player.pos.z+=fz*2.6*dt; }
+  if(player.onGround&&keys.Space&&locked){ player.vel.y=5.6; player.onGround=false; }
+  player.vel.y-=17*dt; player.pos.y+=player.vel.y*dt;
+  if(player.pos.y<=player.height){ player.pos.y=player.height; player.vel.y=0; player.onGround=true; }
+  for(const d of DUM){ const dx=player.pos.x-d.x, dz=player.pos.z-d.z, dd=Math.hypot(dx,dz); if(dd<0.75&&dd>1e-4){ player.pos.x=d.x+dx/dd*0.75; player.pos.z=d.z+dz/dd*0.75; } }
+  if(player.pos.x>12.4) player.pos.x=12.4;
+  { const R=58, pr=Math.hypot(player.pos.x,player.pos.z); if(pr>R){ player.pos.x*=R/pr; player.pos.z*=R/pr; } }
+  const moving=len>0.1&&player.onGround&&mv; player.bobT+=dt*(sprint?15:10.5)*(moving?1:0);
+  const bob=moving?Math.sin(player.bobT)*0.03*(sprint?1.4:1):0, bobX=moving?Math.cos(player.bobT*0.5)*0.018:0;
+  camera.position.copy(player.pos); camera.position.y+=bob;
+  { const kd=Math.exp(-dt*7); camRoll*=kd; camYawK*=kd; camPitchK*=kd; }
+  camera.rotation.set(player.pitch+camPitchK,player.yaw+camYawK,camRoll);
+  if(shake>0.002){ camera.rotation.x+=Math.sin(T*71)*0.014*shake; camera.rotation.y+=Math.sin(T*57+1.3)*0.014*shake; camera.rotation.z+=Math.sin(T*83+0.7)*0.010*shake; shake*=Math.exp(-dt*8); }
+  moonLight.target.position.set(player.pos.x,0,player.pos.z); moonLight.position.copy(moonLight.target.position).add(moonDir);
+  // ── 滑鼠慣性 / 呼吸 / 衰減 ──
+  const k=Math.exp(-dt*8); swX*=k; swY*=k; swX=Math.max(-0.3,Math.min(0.3,swX)); swY=Math.max(-0.3,Math.min(0.3,swY));
+  camKick*=Math.exp(-dt*9); flashOp=Math.max(0,flashOp-dt*3.2); glowPulse*=Math.exp(-dt*5);
+  let gx=HIP.x+bobX, gy=HIP.y+bob*0.5+Math.sin(T*1.4)*0.004, gz=HIP.z, insX=0, insY=0, insZ=0;
+  insY+=swX*0.55; gx-=swX*0.06; insX+=swY*0.45; gy+=swY*0.04;
+  wrist.rotation.set(Math.sin(T*1.1)*0.03,0,Math.sin(T*0.8+1)*0.02); kspin.rotation.set(0,0,0); kspin.position.copy(PIV_T); kIn.position.copy(PIV_T).negate();
+  gripPulse*=Math.exp(-dt*12);
+  for(let i=0;i<4;i++) fOpen[i]=0.02*(1+Math.sin(T*1.3+i*0.9))-0.06*gripPulse; thOpen=0;   // 待機：手指微微呼吸
+  hand.position.set(HAND_X,0,0); hand.rotation.set(0,0,0);
+  // 待機小動作（手一直是活的）：① 小指→食指依序敲握把 ② 拇指搓推鈕 ③ 放鬆再重新握緊
+  { const idle=atkT===0&&flT===0&&insT===0&&introT===0&&!flPending;
+    if(idle){ fidCd-=dt; if(fidCd<=0){ fidType=(fidType+1+Math.floor(Math.random()*2))%3; fidT=0; fidCd=1.6+Math.random()*1.6; } }
+    if(fidT<1){ fidT+=dt;
+      if(fidType===0){ for(let i=0;i<4;i++){ const o=(fidT-(3-i)*0.09)/0.28; fOpen[i]+=0.6*Math.sin(Math.max(0,Math.min(1,o))*Math.PI); } }
+      else if(fidType===1){ const u=Math.max(0,Math.min(1,fidT/0.55)); thOpen+=0.6*Math.sin(u*Math.PI); hand.rotation.z+=0.05*Math.sin(fidT*14)*(1-u); }
+      else { for(let i=0;i<4;i++){ const o=(fidT-i*0.05)/0.35; fOpen[i]+=0.45*Math.sin(Math.max(0,Math.min(1,o))*Math.PI); }
+        const u=Math.max(0,Math.min(1,fidT/0.45)); thOpen+=0.35*Math.sin(u*Math.PI); wrist.rotation.x+=0.12*Math.sin(u*Math.PI); } } }
+  // ── 開場：手從下面舉起來，然後「喀」出刀 ──
+  if(introT>0){ introT-=dt; const p=1-Math.max(0,introT)/INTRO_DUR, e=1-Math.pow(1-p,3);
+    gy-=(1-e)*0.5; insX-=(1-e)*0.9; insZ+=(1-e)*0.4; gx+=(1-e)*0.15;
+    if(p>0.55&&deployTarget<1) deployTarget=1; if(introT<=0) introT=0; }
+  // ── 換刀：放下 → 換模型 → 舉起（北極星舉起時「鏘」出刀） ──
+  if(swapT>0){ swapT-=dt; const t=SWAP_DUR-Math.max(0,swapT);
+    if(t<0.22){ const k=SM(0,0.22,t); gy-=0.55*k; insX-=0.9*k; gx+=0.1*k; }
+    else { if(!swapped){ swapped=true; applyWeapon(swapTo); } const k=Math.min(1,(t-0.22)/0.40), e=1-Math.pow(1-k,3); gy-=0.55*(1-e); insX-=0.9*(1-e); gx+=0.1*(1-e); if(cur.otf&&k>0.55) deployTarget=1; }
+    if(swapT<=0){ swapT=0; if(cur.otf) deployTarget=1; }
+  }
+  // ── 攻擊：砍・砍・刺（關鍵姿勢混合） ──
+  let trailOn=false;
+  if(atkT>0){ atkT-=dt; const p=1-Math.max(0,atkT)/atkDur;
+    const KK=cur.atk[atkType==='stab'?'stab':(slashDir>0?'s1':'s2')];
+    if(atkType==='stab'&&!KK.generic){                                        // 刺：先對準正前方往後收 → 沿刀的方向直直捅出去 → 抽回
+      const K=KK;
+      const back=p<K.t0?Math.sin(p/K.t0*Math.PI*0.5):Math.max(0,1-(p-K.t0)/K.t1);
+      const u=Math.max(0,Math.min(1,(p-K.t0)/K.t2)), th=Math.pow(u,K.pw);
+      const rec=p>K.t3?SM(K.t3,1,p):0, wT=th*(1-rec);
+      const aim=(SM(0,K.t0,p)*0.7+0.3*SM(K.t0,K.t0+K.t2*0.5,p))*(1-rec);
+      gx+=K.w[0]*back+K.e[0]*wT; gy+=K.w[1]*back+K.e[1]*wT; gz+=K.w[2]*back+K.e[2]*wT;
+      insX+=K.a[0]*aim+K.e[3]*wT; insY+=K.a[1]*aim+K.e[4]*wT; insZ+=K.a[2]*aim+K.e[5]*wT;
+      wrist.rotation.x+=0.40*wT-0.18*back; wrist.rotation.z+=-0.28*back+0.16*wT;
+      for(let i=0;i<4;i++) fOpen[i]+=0.45*back*(0.4+0.2*i)-0.15*wT+0.30*Math.sin(Math.max(0,Math.min(1,(p-K.t3-i*0.04)/0.25))*Math.PI);
+      thOpen+=0.5*back;
+      trailOn=u>0.02&&p<K.t3+0.05; if(u>0.05&&u<0.9) glowPulse=Math.max(glowPulse,0.7);
+      if(!swingChecked&&u>=K.hit){ swingChecked=true; checkHits(); }
+    } else {
+    const K=KK;
+    const wW=p<K.t0?Math.sin(p/K.t0*Math.PI*0.5):Math.max(0,1-(p-K.t0)/K.t1);      // 蓄力
+    const u=Math.max(0,Math.min(1,(p-K.t0)/K.t2)), sw=Math.pow(u,K.pw);            // 揮出進度
+    const rec=p>K.t3?SM(K.t3,1,p):0, wE=sw*(1-rec), wM=Math.sin(u*Math.PI)*(1-rec); // 回位
+    gx+=K.w[0]*wW+K.e[0]*wE+K.m[0]*wM; gy+=K.w[1]*wW+K.e[1]*wE+K.m[1]*wM; gz+=K.w[2]*wW+K.e[2]*wE+K.m[2]*wM;
+    insX+=K.w[3]*wW+K.e[3]*wE; insY+=K.w[4]*wW+K.e[4]*wE; insZ+=K.w[5]*wW+K.e[5]*wE;
+    wrist.rotation.x+=K.ww[0]*wW+K.wr[0]*wE; wrist.rotation.y+=K.ww[1]*wW+K.wr[1]*wE; wrist.rotation.z+=K.ww[2]*wW+K.wr[2]*wE;
+    for(let i=0;i<4;i++) fOpen[i]+=0.55*wW*(0.45+0.18*i)-0.15*wE+0.30*Math.sin(Math.max(0,Math.min(1,(p-K.t3-i*0.04)/0.25))*Math.PI);
+    thOpen+=0.5*wW;
+    trailOn=!K.noTrail&&p>K.t0+0.02&&p<K.t3+0.08;
+    if(!swingChecked&&u>=K.hit){ swingChecked=true; checkHits(); }
+    }
+    if(atkT<=0){ atkT=0; if(queued) startAttack(); else { flPending=combo; flDelay=0.10; } }
+  }
+  // ── 攻擊後的收刀小動作（三角洲）：① 手指張開、刀繞拇指轉一圈 ② 刀在食指中指間轉 ③ 小拋刀接住，最後都「鏘」出刀 ──
+  if(flPending&&flDelay>0){ flDelay-=dt; if(flDelay<=0){ flType=flPending; flPending=0; flT=FL_DUR; SFX.click(); } }
+  if(flT>0){ flT-=dt; const t=FL_DUR-Math.max(0,flT);
+    const lift=SM(0,0.15,t)*(1-SM(0.62,0.85,t));
+    gx+=(0.06-gx)*lift*0.5; gy+=(0.0-gy)*lift*0.5; gz+=(-0.36-gz)*lift*0.5; insX+=0.2*lift;
+    if(cur.otf){ if(t>0.04&&t<0.62) deployTarget=0; else if(t>=0.62) deployTarget=1; }
+    const sp=SM(0.06,0.60,t), open=SM(0.04,0.14,t)*(1-SM(0.56,0.66,t));
+    const wig=i=>0.28*open*Math.max(0,Math.sin(sp*Math.PI*4+i*1.3));                  // 手指輪流撥刀
+    if(cur.fl==='heavy'){                                                                                   // 信條（重刀）：① 整隻手翻轉一圈 ② 翻面亮寶石 ③ 繞拇指快翻一圈
+      if(flType===1){ wrist.rotation.x+=sp*Math.PI*2; hand.rotation.z=Math.sin(sp*Math.PI*2)*0.12; setRipple(t,0.04,0.56,0.05,0.5); }
+      else if(flType===2){ wrist.rotation.y+=Math.sin(sp*Math.PI)*0.9; hand.rotation.z+=Math.sin(sp*Math.PI)*0.25; thOpen=open*0.6; setRipple(t,0.04,0.56,0.05,0.4); }
+      else { const jb=Math.sin(sp*Math.PI); gz-=0.16*jb; gx-=0.10*jb; insX-=0.15*jb; wrist.rotation.z+=0.2*jb; }                      // 指虎直拳
+    } else if(flType===1){ kspin.rotation.z=-sp*Math.PI*2; kspin.position.z=PIV_T.z+0.06*Math.sin(sp*Math.PI); setRipple(t,0.04,0.56,0.05,1.2); for(let i=0;i<4;i++) fOpen[i]+=wig(i);
+      hand.rotation.z=Math.sin(sp*Math.PI*2)*0.18; wrist.rotation.x+=Math.sin(sp*Math.PI)*0.45; gx+=Math.sin(sp*Math.PI*2)*0.03; }      // 手跟著刀轉晃
+    else if(flType===2){ kspin.position.copy(PIV_F); kIn.position.copy(PIV_F).negate(); kspin.rotation.z=sp*Math.PI*2;
+      setRipple(t,0.04,0.56,0.05,0.9); fOpen[2]*=0.55; fOpen[3]*=0.4; thOpen=open*0.7; for(let i=0;i<2;i++) fOpen[i]+=wig(i);
+      wrist.rotation.y+=Math.sin(sp*Math.PI)*0.35; hand.rotation.z=-Math.sin(sp*Math.PI*2)*0.08; }
+    else { const h=Math.sin(sp*Math.PI); kspin.position.y=PIV_T.y+h*0.26; kspin.rotation.y=sp*Math.PI*2; setRipple(t,0.04,0.56,0.04,1.2); thOpen=open;
+      hand.position.y+=0.12*Math.sin(Math.min(1,sp*3)*Math.PI)-0.02*h; wrist.rotation.z+=0.22*Math.sin(Math.min(1,sp*3)*Math.PI);     // 手往上甩
+      gy+=0.08*SM(0.7,0.88,sp)*(1-SM(0.88,1,sp)); }                                                                                     // 再抬手接
+    if(flT<=0){ flT=0; if(cur.otf) deployTarget=1; }
+  }
+  if(comboTimer>0){ comboTimer-=dt; if(comboTimer<=0){ combo=0; comboHits=0; } }
+  // ── 耍刀（F，三角洲式）：收刀 → 手指張開、刀繞拇指轉兩圈 → 拋刀翻兩圈接住 → 手腕一甩「鏘」出刀 → 放下 ──
+  if(insT>0){ insT-=dt; const t=INS_DUR-Math.max(0,insT);
+    const lift=SM(0,0.25,t)*(1-SM(2.15,2.6,t));
+    gx+=(0.02-gx)*lift; gy+=(-0.02-gy)*lift; gz+=(-0.36-gz)*lift; insX+=0.30*lift; insY+=0.20*lift;
+    if(cur.otf){ if(t>0.05&&t<1.85) deployTarget=0; else if(t>=1.85) deployTarget=1; }
+    let open=0;
+    if(cur.fl==='heavy'){                                                                                   // 信條：舉到眼前慢慢翻面看紅寶石 → 翻回 → 繞拇指快翻一圈接住
+      if(t>0.25&&t<1.55){ const u=(t-0.25)/1.30; wrist.rotation.x+=Math.sin(u*Math.PI)*Math.PI*0.9; insY+=Math.sin(u*Math.PI)*0.3; glowPulse=Math.max(glowPulse,0.5*Math.sin(u*Math.PI)); }   // 翻面：看得到手指從指孔穿出來
+      else if(t>=1.55&&t<2.15){ const u=(t-1.55)/0.60, jb=Math.sin(u*Math.PI); gz-=0.22*jb; gx-=0.12*jb; gy-=0.04*jb; insX-=0.2*jb; wrist.rotation.z+=0.25*jb; camKick=Math.max(camKick,jb*0.5); }   // 指虎直拳
+    } else if(t>0.22&&t<1.00){ const u=(t-0.22)/0.78, sp=EASE(u); kspin.rotation.z=-sp*Math.PI*4; kspin.position.z=PIV_T.z+0.06*Math.sin(u*Math.PI); open=SM(0.22,0.34,t)*(1-SM(0.92,1.02,t));
+      setRipple(t,0.22,0.92,0.05,1.2); for(let i=0;i<4;i++) fOpen[i]+=0.25*open*Math.max(0,Math.sin(sp*Math.PI*8+i*1.3));
+      hand.rotation.z=Math.sin(sp*Math.PI*4)*0.16; wrist.rotation.x+=Math.sin(u*Math.PI)*0.45; gx+=Math.sin(u*Math.PI*2)*0.04; gy+=Math.cos(u*Math.PI*2)*0.025; }   // 手跟著轉晃
+    else if(t>=1.00&&t<1.85){ const sp=Math.max(0,Math.min(1,(t-1.05)/0.70)), h=Math.sin(sp*Math.PI), fl=Math.sin(Math.min(1,sp*2.5)*Math.PI);
+      kspin.position.y=PIV_T.y+h*0.36; kspin.position.x=PIV_T.x+h*0.04; kspin.rotation.y=EASE(sp)*Math.PI*4; kspin.rotation.z=-h*0.2;
+      open=SM(1.00,1.10,t)*(1-SM(1.70,1.80,t)); setRipple(t,1.00,1.70,0.04,1.2); thOpen=open; gy-=h*0.02; insX-=h*0.10;
+      hand.position.y+=0.14*fl-0.03*h; wrist.rotation.z+=0.28*fl; gy+=0.10*SM(0.72,0.9,sp)*(1-SM(0.9,1,sp)); }                    // 甩上去、再抬手接
+    else if(t>=1.85&&t<2.15){ const sp=(t-1.85)/0.30; wrist.rotation.z+=Math.sin(sp*Math.PI)*0.35; gy-=Math.sin(sp*Math.PI)*0.03; }
+    if(insT<=0){ insT=0; if(cur.otf) deployTarget=1; }
+  }
+  // ── OTF 出刀 / 收刀 ──
+  const prevOut=bladeOut;
+  if(deployTarget>bladeOut) bladeOut=Math.min(1,bladeOut+dt/0.07); else if(deployTarget<bladeOut) bladeOut=Math.max(0,bladeOut-dt/0.12);
+  const eo=1-Math.pow(1-bladeOut,3);
+  KN.bladeGrp.position.x=-0.68*(1-eo); KN.slider.position.x=-0.16+0.09*eo;
+  const gi=(0.55+0.45*eo)*(1+glowPulse*2.0);
+  KN.mats.glow.emissiveIntensity=4.0*gi; KN.mats.glowW.emissiveIntensity=5.0*gi; KN.mats.win.emissiveIntensity=2.2*(0.8+0.2*eo)*(1+glowPulse);
+  KN.light.intensity=(0.35+0.65*eo)*(1+glowPulse*3);
+  CR.gem.emissiveIntensity=1.4*(0.85+0.15*Math.sin(T*3))*(1+glowPulse*2.5); CR.light.intensity=0.35*(1+glowPulse*3);
+  // ── 套用姿勢 ──
+  for(let i=0;i<4;i++){ let fo=Math.max(-0.15,Math.min(1.3,fOpen[i])); if(hand.userData.mode!=='wrap') fo=Math.min(fo,0.35);   // 套在指孔裡張不開
+    const c=Math.max(0,Math.min(1.12,1-fo*0.85)), F=FL[i];                                                                             // fOpen → 三節關節一起伸直/彎曲
+    F.j[0].rotation.x=F.base[0]+F.q[0]*c; F.j[1].rotation.x=F.base[1]+F.q[1]*Math.min(1.12,c*1.08); F.j[2].rotation.x=F.base[2]+F.q[2]*Math.min(1.12,c*1.15); }
+  thumb.rotation.z=Math.min(1,thOpen)*0.5;
+  gunGroup.position.set(gx,gy,gz); gunGroup.rotation.set(insX,insY,insZ);
+  const fov=76+camKick*4; if(Math.abs(camera.fov-fov)>0.02){ camera.fov=fov; camera.updateProjectionMatrix(); }
+  camera.updateMatrixWorld(true);
+  if(prevOut<1&&bladeOut>=1) onDeploy();
+  // ── 刀光 + 命中 ──
+  const KM=cur.model, tipW=KM.localToWorld(_v.set(cur.tip,0,0)).clone(), baseW=KM.localToWorld(_v2.set(0.16,0,0)).clone(), trB=KM.localToWorld(_v3.set(cur.trb,0,0)).clone();
+  if(trailOn) trS.push({b:trB,t:tipW,time:T});
+  updateTrail(); prevTip=tipW;
+  if(cur.otf&&bladeOut>0.9&&atkT===0&&insT===0){ dustT-=dt; if(dustT<=0){ dustT=0.06; const st=KN.stars[Math.random()*KN.stars.length|0];
+    const pw=knife.localToWorld(_v.set(st[0],st[1],(Math.random()<.5?1:-1)*0.014)); spawnSparks(pw,1,null,0.10,0,true,0.0,0.014,0.7); } }
+  updateSparks(dt); updateMarks(dt); updateRings(dt); updateHeads(dt); updateDummies(dt);
+  $('flash').style.opacity=flashOp;
+}
+
+/* ================= 輸入 ================= */
+const overlay=$('overlay');
+overlay.addEventListener('click',()=>{ SFX.unlock(); canvas.requestPointerLock(); });
+document.addEventListener('pointerlockchange',()=>{
+  locked=(document.pointerLockElement===canvas);
+  overlay.classList.toggle('hide',locked);
+  if(locked&&!started){ started=true; introT=INTRO_DUR; }
+});
+document.addEventListener('mousemove',e=>{
+  if(!locked) return; const dx=e.movementX||0, dy=e.movementY||0;
+  player.yaw-=dx*0.0022; player.pitch=Math.max(-1.45,Math.min(1.45,player.pitch-dy*0.0022));
+  swX+=dx*0.0025; swY+=dy*0.0025;
+});
+document.addEventListener('mousedown',e=>{ if(!locked) return; if(e.button===0) attack(); else if(e.button===2) inspect(); });
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{
+  keys[e.code]=true; if(e.code==='Space') e.preventDefault(); if(!locked) return;
+  if(e.code==='KeyF') inspect(); else if(e.code==='KeyR') toggleDeploy(); else if(e.code==='Digit1') switchTo(0); else if(e.code==='Digit2') switchTo(1); else if(e.code==='KeyQ') switchTo(1-wi);
+});
+document.addEventListener('keyup',e=>{ keys[e.code]=false; });
+window.addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
+
+/* ================= 主迴圈 ================= */
+let last=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  let dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(hitStop>0){ hitStop-=dt; dt*=0.12; }              // 命中瞬間的定格感
+  step(dt); composer.render();
+}
+requestAnimationFrame(loop);
+
+/* ================= 除錯把手（Browser 窗格隱藏時 rAF 不跑，用這組手動步進 + 存圖） ================= */
+window.__px={
+  setup(w,h){ resize(w||1280,h||720); },
+  step(n,dt){ n=n||1; dt=dt||1/60; for(let i=0;i<n;i++) step(dt); },
+  render(){ composer.render(); },
+  start(){ started=true; locked=true; introT=0; deployTarget=1; bladeOut=1; overlay.classList.add('hide'); },
+  intro(){ started=true; locked=true; introT=INTRO_DUR; bladeOut=0; deployTarget=0; overlay.classList.add('hide'); },
+  attack(type){ combo=(type==='stab')?2:(combo%3===2?0:combo); startAttack(); return atkDur; },
+  inspect(){ insT=INS_DUR; }, deploy(v){ deployTarget=v?1:0; }, weapon(i){ applyWeapon(i); swapT=0; if(cur.otf){ bladeOut=1; deployTarget=1; } }, swap(i){ switchTo(i); },
+  look(yaw,pitch){ player.yaw=yaw; player.pitch=pitch; }, move(x,z){ player.pos.x=x; player.pos.z=z; },
+  pose(rx,ry,rz,px,py,pz,s){ rig.rotation.set(rx,ry,rz); rig.position.set(px,py,pz); if(s) rig.scale.setScalar(s); },
+  bloom(s,r,t){ if(s!=null) bloom.strength=s; if(r!=null) bloom.radius=r; if(t!=null) bloom.threshold=t; },
+  async save(name,q){ composer.render(); const d=canvas.toDataURL('image/jpeg',q||0.9);
+    const r=await fetch('/save?name='+encodeURIComponent(name||'cap'),{method:'POST',body:d}); return r.text(); },
+  get state(){ return {T:T,atkT:atkT,atkDur:atkDur,flT:flT,insT:insT,hitStop:hitStop,shake:shake,hp:DUM.map(d=>d.hp),bladeOut:bladeOut,combo:combo,hits:hits,pos:player.pos.toArray(),trail:trS.length}; },
+  objs:{scene:scene,camera:camera,renderer:renderer,composer:composer,knife:knife,creed:creed,WEAPONS:WEAPONS,CR:CR,HANDS:HANDS,rig:rig,get hand(){return hand;},get fingerList(){return FL;},get thumb(){return thumb;},kspin:kspin,wrist:wrist,KN:KN,DUM:DUM,ATK:ATK,gunGroup:gunGroup,breakDummy:breakDummy}
+};
+</script>
+</body>
+</html>
