@@ -238,6 +238,9 @@
   .op .t{position:absolute;left:0;right:0;top:8px;font-size:20px;font-weight:800;color:#fff}
   .op.flash{box-shadow:0 0 18px #ffd76b;border-color:#fff}
   #opBoost{font-size:11px;color:#7fe0ff;letter-spacing:2px;opacity:0;transition:opacity .2s;margin-left:6px;padding-bottom:26px;text-shadow:0 0 8px #4cc2ff} #opBoost.on{opacity:1}
+  .opBtn{width:46%;text-align:left;line-height:1.5} .opBtn em{display:block;font-style:normal;font-size:10px;color:#8f9ab0;font-weight:600;margin-top:2px} .opBtn.sel em{color:#d9c27a}
+  #healFx{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(127,224,160,0) 40%,rgba(127,224,160,.45) 100%);z-index:5}
+  #healFx.on{animation:healPop .5s ease-out} @keyframes healPop{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
   #killT{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);font-size:40px;font-weight:900;letter-spacing:8px;color:#7fe0ff;text-shadow:0 0 16px currentColor,0 0 2px #000;opacity:0;pointer-events:none;white-space:nowrap;z-index:2}
   #killT.pop{animation:killPop .9s ease-out forwards}
   @keyframes killPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}30%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
@@ -257,7 +260,7 @@
 <div id="hud">
   <div id="scope"><div class="ring"></div><div class="h"></div><div class="v"></div><div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div><div class="dot"></div></div>
   <div id="killT"></div>
-  <div id="ops"><div id="opName">威龍<small>VYRON · 突擊</small></div><div class="op" id="opCannon"><i></i><b>C</b><span>虎蹲炮</span></div><div class="op" id="opDash"><i></i><b>V</b><span>動力推進</span></div><div class="op" id="opBomb"><i></i><b>G</b><span>磁吸炸彈</span></div><div id="opBoost">⚡ 動力輔助</div></div>
+  <div id="ops"><div id="opName">威龍<small>VYRON · 突擊</small></div><div class="op" id="op0"><i></i><b>C</b><span>虎蹲炮</span></div><div class="op" id="op1"><i></i><b>V</b><span>動力推進</span></div><div class="op" id="op2"><i></i><b>G</b><span>磁吸炸彈</span></div><div id="opBoost">⚡ 動力輔助</div></div>
   <div id="cross">
     <div id="cL" class="ch"></div><div id="cR" class="ch"></div>
     <div id="cT" class="cv"></div><div id="cB" class="cv"></div>
@@ -288,7 +291,7 @@
   </div>
 
   <div id="center"><div id="centerT"></div><div id="centerS"></div></div>
-  <div id="vig"></div><div id="flash"></div>
+  <div id="vig"></div><div id="flash"></div><div id="healFx"></div>
   <div id="dmgDir"><i></i></div>
 </div>
 
@@ -316,6 +319,7 @@
     <button id="bArmory" class="lobBtn skin">🎨 武器庫 · 槍枝皮膚</button>
   </div>
   <div class="lobbyRow"><div id="knifeSel"></div></div>
+  <div class="lobbyRow"><div id="opSel"></div></div>
 
   <div class="lobbyRow">
     <button id="bSolo" class="lobBtn">單人開打</button>
@@ -334,7 +338,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員 威龍</b> C 虎蹲炮／V 動力推進／G 磁吸炸彈（用技能或高處落地會加速）<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -2234,9 +2238,9 @@ addEventListener('keydown',e=>{
   keys[e.code]=true;
   if(e.code==='KeyR') reload();
   if(e.code==='ControlLeft'&&!e.repeat) trySlide();
-  if(e.code==='KeyV') opDash();
-  if(e.code==='KeyC') opCannon();
-  if(e.code==='KeyG') opBomb();
+  if(e.code==='KeyC'&&!e.repeat){ if(curOp==='stinger') hormDown(); else useSkill(0); }
+  if(e.code==='KeyV') useSkill(1);
+  if(e.code==='KeyG') useSkill(2);
   if(e.code==='Digit1') swap('rifle');
   if(e.code==='Digit2') swap('sniper');
   if(e.code==='Digit3'&&loadoutKnife) swap(loadoutKnife);
@@ -2245,7 +2249,7 @@ addEventListener('keydown',e=>{
   if(e.code==='Escape'&&armoryOpen) closeArmory();
   if(['Space','ControlLeft'].includes(e.code)) e.preventDefault();
 });
-addEventListener('keyup',e=>{ keys[e.code]=false; });
+addEventListener('keyup',e=>{ keys[e.code]=false; if(e.code==='KeyC'&&curOp==='stinger') hormUp(); });
 addEventListener('wheel',e=>{ if(running&&!menuOpen) cycle(e.deltaY>0?1:-1); },{passive:true});
 
 let firing=false, adsHold=false, adsToggle=false;
@@ -2320,7 +2324,28 @@ let slideT=0, slideCd=0; const slideDir=new TH.Vector3();                       
 let dashT=0, dashCd=0, cannonCd=0, bombCd=0, boostT=0; const dashDir=new TH.Vector3();     // 威龍：動力推進 / 虎蹲炮 / 磁吸炸彈 / 被動加速
 const DASH_CD=15, CANNON_CD=20, BOMB_CD=12;
 let streakN=0, streakT=0;                 // 連殺
-const shells=[];                          // 威龍投射物（氣彈 / 磁吸炸彈）
+const shells=[];                          // 幹員投射物（氣彈 / 磁吸炸彈 / 激素彈 / 煙霧彈）
+let curOp='vyron'; try{ const o=localStorage.getItem('sz_op'); if(o==='stinger'||o==='vyron') curOp=o; }catch(e){}
+let hormCd=0, droneCd=0, smokeCd=0, hormHoldT=-1, selfHealT=0, healAcc=0; const HORM_CD=6, DRONE_CD=18, SMOKE_CD=14;   // 蜂醫
+const smokes=[]; let droneObj=null;
+const OPS={
+  vyron:{name:'威龍',sub:'VYRON · 突擊',passive:'動力輔助系統：用技能或高處落地後加速',boost:'⚡ 動力輔助',skills:[
+    {key:'C',name:'虎蹲炮',cd:()=>cannonCd,max:CANNON_CD,use:()=>opCannon()},
+    {key:'V',name:'動力推進',cd:()=>dashCd,max:DASH_CD,use:()=>opDash()},
+    {key:'G',name:'磁吸炸彈',cd:()=>bombCd,max:BOMB_CD,use:()=>opBomb()}]},
+  stinger:{name:'蜂醫',sub:'STINGER · 支援',passive:'高效救援：血量低於 30% 自動回血、治療量 +30%',boost:'💚 高效救援',skills:[
+    {key:'C',name:'激素槍',cd:()=>hormCd,max:HORM_CD,use:()=>opHormone()},
+    {key:'V',name:'煙幕無人機',cd:()=>droneCd,max:DRONE_CD,use:()=>opDrone()},
+    {key:'G',name:'蜂巢煙霧彈',cd:()=>smokeCd,max:SMOKE_CD,use:()=>opSmoke()}]}
+};
+function setOp(k){ if(!OPS[k]) return; curOp=k; try{ localStorage.setItem('sz_op',k); }catch(e){} renderOpSel(); renderOps(); }
+function useSkill(i){ const d=OPS[curOp]; if(d&&d.skills[i]) d.skills[i].use(); }
+function renderOpSel(){ const el=$('opSel'); if(!el) return;
+  let h='<div id="knifeLbl">🎖 這局用哪個幹員（只能選一個）</div>';
+  for(const k in OPS){ const d=OPS[k]; h+='<button class="kBtn opBtn'+(k===curOp?' sel':'')+'" data-k="'+k+'">'+(k===curOp?'✔ ':'')+d.name+'<small> '+d.sub+'</small><em>'+d.skills.map(x=>x.key+' '+x.name).join('　')+'<br>'+d.passive+'</em></button>'; }
+  el.innerHTML=h; for(const b of el.querySelectorAll('.opBtn')) b.onclick=()=>setOp(b.dataset.k); }
+function renderOps(){ const d=OPS[curOp]; const nm=$('opName'); if(nm) nm.innerHTML=d.name+'<small>'+d.sub+'</small>';
+  d.skills.forEach((sk,i)=>{ const el=$('op'+i); if(!el) return; el.querySelector('b').textContent=sk.key; el.querySelector('span').textContent=sk.name; }); const ob=$('opBoost'); if(ob) ob.textContent=d.boost; }
 let inspectDur=INSPECT_DUR;               // 這一次檢視的長度（北極星 2.6）
 let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.30;   // 近戰橫斬/重戳連段
 let atkDur=SLASH_DUR;                     // 這一擊實際長度（每把近戰武器不同）
@@ -2620,14 +2645,14 @@ function opDash(){                                             // 威龍：動�
   let dx=0,dz=0; if(keys.KeyW) dz-=1; if(keys.KeyS) dz+=1; if(keys.KeyA) dx-=1; if(keys.KeyD) dx+=1; if(!dx&&!dz) dz=-1;
   const l=Math.hypot(dx,dz); dx/=l; dz/=l; const cy=Math.cos(player.yaw), sy=Math.sin(player.yaw);
   dashDir.set((-sy)*-dz + cy*dx, 0, (-cy)*-dz + (-sy)*dx).normalize();
-  dashT=0.35; dashCd=DASH_CD; boostT=3; shakeA=Math.max(shakeA,0.5); PX.SFX.swoosh(true); blip(90,0.25,0.35,'sawtooth'); opFlash('opDash');
+  dashT=0.35; dashCd=DASH_CD; boostT=3; shakeA=Math.max(shakeA,0.5); PX.SFX.swoosh(true); blip(90,0.25,0.35,'sawtooth'); opFlash('op1');
 }
 function opCannon(){                                           // 威龍：虎蹲炮（壓縮空氣彈，5 m 內敵人倒地 5 秒）
   if(!running||menuOpen||cannonCd>0) return; cannonCd=CANNON_CD; boostT=3;
   const o=camera.getWorldPosition(new TH.Vector3()), d=camera.getWorldDirection(new TH.Vector3());
   const m=new TH.Mesh(new TH.SphereGeometry(0.22,12,10),new TH.MeshBasicMaterial({color:0xbfefff,transparent:true,opacity:.55,blending:TH.AdditiveBlending,depthWrite:false})); m.raycast=function(){};
   m.position.copy(o).addScaledVector(d,0.8); scene.add(m); shells.push({kind:'air',m:m,v:d.clone().multiplyScalar(30),life:1.4});
-  recoilKick=Math.min(recoilKick+0.08,0.16); shakeA=Math.max(shakeA,0.6); blip(60,0.3,0.5,'sine'); PX.SFX.stab(true); opFlash('opCannon');
+  recoilKick=Math.min(recoilKick+0.08,0.16); shakeA=Math.max(shakeA,0.6); blip(60,0.3,0.5,'sine'); PX.SFX.stab(true); opFlash('op0');
 }
 function opBomb(){                                             // 威龍：磁吸炸彈（黏在牆/地/敵人身上，倒數後爆炸）
   if(!running||menuOpen||bombCd>0) return; bombCd=BOMB_CD; boostT=3;
@@ -2637,12 +2662,78 @@ function opBomb(){                                             // 威龍：磁�
   const ring=new TH.Mesh(new TH.TorusGeometry(0.09,0.012,6,18),new TH.MeshStandardMaterial({color:0xd9b44a,metalness:.9,roughness:.3})); ring.rotation.x=Math.PI/2; g.add(ring);
   g.traverse(x=>{ x.raycast=function(){}; }); g.position.copy(o).addScaledVector(d,0.6); scene.add(g);
   shells.push({kind:'bomb',m:g,v:d.clone().multiplyScalar(13).add(new TH.Vector3(0,3,0)),life:2.6,stuck:false,host:null,beep:0});
-  blip(520,0.05,0.12,'square'); opFlash('opBomb');
+  blip(520,0.05,0.12,'square'); opFlash('op2');
 }
+function healPlayer(n){ if(!player.alive||player.hp>=100) return; const k=(curOp==='stinger')?1.3:1; const before=player.hp; player.hp=Math.min(100,player.hp+n*k); healAcc+=player.hp-before;
+  if(healAcc>=10){ killText('+'+Math.round(healAcc)+' 治療','#7fe0a0'); healAcc=0; const hf=$('healFx'); if(hf){ hf.classList.remove('on'); void hf.offsetWidth; hf.classList.add('on'); } } updHUD(); }
+function hormDown(){ if(!running||menuOpen||hormCd>0) return; hormHoldT=performance.now(); }
+function hormUp(){ if(hormHoldT<0) return; const held=(performance.now()-hormHoldT)/1000; hormHoldT=-1; if(hormCd>0) return;
+  if(held>=0.35){ hormCd=HORM_CD; selfHealT=3; blip(660,0.12,0.14,'sine'); killText('激素槍 · 自我治療','#7fe0a0'); opFlash('op0'); } else opHormone(); }
+function opHormone(){                                          // 蜂醫：激素槍（自動鎖定 30° 內最近的隊友優先，不然鎖敵人；穿過煙會把煙變治療煙）
+  if(!running||menuOpen||hormCd>0) return; hormCd=HORM_CD;
+  const o=camera.getWorldPosition(new TH.Vector3()), d=camera.getWorldDirection(new TH.Vector3());
+  const m=new TH.Mesh(new TH.SphereGeometry(0.09,10,8),new TH.MeshBasicMaterial({color:0x7fe0a0,transparent:true,opacity:.9,blending:TH.AdditiveBlending,depthWrite:false})); m.raycast=function(){};
+  m.position.copy(o).addScaledVector(d,0.7); scene.add(m);
+  let tgt=null,best=1e9,kind=null;
+  for(const pid in players){ if(pid===NET.id) continue; const pp=players[pid]; if(!pp.grp||!pp.al) continue; const v=pp.grp.position.clone().add(new TH.Vector3(0,1.2,0)).sub(o); const dist=v.length();
+    if(dist<30&&v.normalize().dot(d)>0.87&&dist<best){ best=dist; tgt=pp.grp; kind='ally'; tgt.userData.pid=pid; } }
+  if(!tgt) for(const e of enemies){ if(e.dead) continue; const v=e.grp.position.clone().add(new TH.Vector3(0,1.1,0)).sub(o); const dist=v.length();
+    if(dist<30&&v.normalize().dot(d)>0.85&&dist<best){ best=dist; tgt=e.grp; kind='enemy'; tgt.userData.enemy=e; } }
+  shells.push({kind:'horm',m:m,v:d.clone().multiplyScalar(24),life:1.6,tgt:tgt,tk:kind,fx:0});
+  blip(880,0.06,0.12,'triangle'); opFlash('op0');
+}
+function opDrone(){                                            // 蜂醫：煙幕無人機（往你看的方向飛，邊飛邊噴煙，轉頭可以改方向）
+  if(!running||menuOpen||droneCd>0) return; droneCd=DRONE_CD;
+  const g=new TH.Group(); g.add(new TH.Mesh(new TH.BoxGeometry(0.26,0.08,0.26),new TH.MeshStandardMaterial({color:0xe8e4d8,roughness:.5,metalness:.4})));
+  for(const sx of [-1,1]) for(const sz of [-1,1]){ const r=new TH.Mesh(new TH.CylinderGeometry(0.11,0.11,0.01,10),new TH.MeshBasicMaterial({color:0x444a55,transparent:true,opacity:.5})); r.position.set(sx*0.17,0.06,sz*0.17); g.add(r); }
+  const led=new TH.Mesh(new TH.SphereGeometry(0.03,8,8),new TH.MeshBasicMaterial({color:0x7fe0a0})); led.position.y=-0.05; g.add(led);
+  g.traverse(x=>{ x.raycast=function(){}; }); g.position.copy(player.pos).add(new TH.Vector3(0,0.3,0)); scene.add(g);
+  droneObj={m:g,life:3.2,puff:0}; blip(1200,0.08,0.1,'sawtooth'); opFlash('op1');
+}
+function opSmoke(){                                            // 蜂醫：蜂巢科技煙霧彈（灰煙擋視線；被激素彈打到變治療煙）
+  if(!running||menuOpen||smokeCd>0) return; smokeCd=SMOKE_CD;
+  const o=camera.getWorldPosition(new TH.Vector3()), d=camera.getWorldDirection(new TH.Vector3());
+  const m=new TH.Mesh(new TH.CylinderGeometry(0.05,0.05,0.14,10),new TH.MeshStandardMaterial({color:0x6b7280,metalness:.7,roughness:.4})); m.raycast=function(){};
+  m.position.copy(o).addScaledVector(d,0.6); scene.add(m);
+  shells.push({kind:'smoke',m:m,v:d.clone().multiplyScalar(12).add(new TH.Vector3(0,3.5,0)),life:3});
+  blip(520,0.05,0.12,'square'); opFlash('op2');
+}
+let smokeTex=null;
+function makeSmoke(pos,healing,r,life){
+  if(!smokeTex){ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); const rg=g.createRadialGradient(64,64,4,64,64,62); rg.addColorStop(0,'rgba(255,255,255,.9)'); rg.addColorStop(.5,'rgba(255,255,255,.45)'); rg.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=rg; g.fillRect(0,0,128,128); smokeTex=new TH.CanvasTexture(c); }
+  const cl={pos:pos.clone(),r:r||3,life:life||10,max:life||10,healing:!!healing,spr:[]};
+  for(let i=0;i<7;i++){ const sp=new TH.Sprite(new TH.SpriteMaterial({map:smokeTex,color:healing?0x8fe8a8:0xd6dae0,transparent:true,opacity:0,depthWrite:false})); sp.raycast=function(){};
+    sp.position.copy(pos).add(new TH.Vector3((Math.random()-0.5)*cl.r*1.1,0.4+Math.random()*1.4,(Math.random()-0.5)*cl.r*1.1)); const sc=cl.r*(0.9+Math.random()*0.7); sp.scale.set(sc,sc,1); sp.userData.drift=0.15+Math.random()*0.2; scene.add(sp); cl.spr.push(sp); }
+  smokes.push(cl); return cl;
+}
+function smokeToHealing(cl){ if(cl.healing) return; cl.healing=true; for(const sp of cl.spr) sp.material.color.setHex(0x8fe8a8); killText('蜂巢煙霧 · 變成治療煙','#7fe0a0'); blip(990,0.12,0.14,'sine'); }
+function stepSmokes(dt){
+  for(let i=smokes.length-1;i>=0;i--){ const cl=smokes[i]; cl.life-=dt; const a=0.58*Math.min(1,cl.life/2)*Math.min(1,(cl.max-cl.life)/0.4+0.15);
+    for(const sp of cl.spr){ sp.material.opacity=a; sp.position.y+=sp.userData.drift*dt; sp.scale.x+=dt*0.25; sp.scale.y+=dt*0.25; }
+    if(cl.healing&&player.alive&&player.pos.distanceTo(cl.pos)<cl.r) healPlayer(10*dt);
+    if(cl.life<=0){ for(const sp of cl.spr) scene.remove(sp); smokes.splice(i,1); } }
+  if(droneObj){ const dr=droneObj; dr.life-=dt; const d=camera.getWorldDirection(new TH.Vector3()); d.y=0; d.normalize();
+    dr.m.position.addScaledVector(d,6*dt); dr.m.position.y=Math.min(dr.m.position.y+dt*0.8,1.9); dr.m.rotation.y+=dt*0.6; dr.m.rotation.z=Math.sin(performance.now()*0.02)*0.05;
+    dr.puff-=dt; if(dr.puff<=0){ dr.puff=0.24; makeSmoke(dr.m.position.clone().addScaledVector(d,-0.4).setY(0.2),false,1.7,8); }
+    if(dr.life<=0||Math.abs(dr.m.position.x)>WALL-0.6||Math.abs(dr.m.position.z)>WALL-0.6){ scene.remove(dr.m); droneObj=null; } }
+}
+function inSmoke(p){ for(const cl of smokes) if(cl.pos.distanceTo(p)<cl.r+0.3) return true; return false; }
 function inBox(p,c,pad){ pad=pad||0; return p.x>c.min.x-pad&&p.x<c.max.x+pad&&p.z>c.min.z-pad&&p.z<c.max.z+pad&&p.y<c.h; }
 function stepShells(dt){
   for(let i=shells.length-1;i>=0;i--){ const sh=shells[i], pos=sh.m.position;
-    if(sh.kind==='air'){ pos.addScaledVector(sh.v,dt); sh.life-=dt; sh.m.scale.setScalar(1+(1.4-sh.life)*0.6);
+    if(sh.kind==='horm'){ sh.life-=dt; sh.fx++;
+      if(sh.tgt){ const c=sh.tgt.position.clone().add(new TH.Vector3(0,1.1,0)); const want=c.sub(pos).normalize().multiplyScalar(24); sh.v.lerp(want,Math.min(1,dt*6)); }
+      pos.addScaledVector(sh.v,dt); if(sh.fx%3===0) PX.burst(pos,0x7fe0a0,true);
+      for(const cl of smokes){ if(!cl.healing&&cl.pos.distanceTo(pos)<cl.r) smokeToHealing(cl); }
+      let done=false;
+      if(sh.tgt){ const c=sh.tgt.position.clone().add(new TH.Vector3(0,1.1,0)); if(c.distanceTo(pos)<0.9){ done=true;
+          if(sh.tk==='ally'){ const pid=sh.tgt.userData.pid; if(isHost()) sendTo(pid,{t:'heal',amt:30}); else toHost({t:'heal',amt:30,to:pid}); killText('激素槍 · 治療隊友','#7fe0a0'); }
+          else { const e=sh.tgt.userData.enemy; if(e&&!e.dead&&isHost()) damageEnemy(e,18,false,NET.id,'rifle'); PX.burst(pos,0x7fe0a0); } } }
+      if(!done&&(sh.life<=0||Math.abs(pos.x)>WALL-0.4||Math.abs(pos.z)>WALL-0.4||pos.y<0.05||colliders.some(c=>inBox(pos,c,0)))) done=true;
+      if(done){ scene.remove(sh.m); shells.splice(i,1); }
+    } else if(sh.kind==='smoke'){ sh.v.y-=14*dt; pos.addScaledVector(sh.v,dt); sh.m.rotation.x+=dt*5; sh.life-=dt;
+      if(pos.y<=0.1||colliders.some(c=>inBox(pos,c,0.1))||Math.abs(pos.x)>WALL-0.5||Math.abs(pos.z)>WALL-0.5||sh.life<=0){ pos.y=Math.max(0.1,pos.y); makeSmoke(pos.clone().setY(0.2),false,3.2,10); blip(300,0.2,0.25,'sawtooth'); scene.remove(sh.m); shells.splice(i,1); }
+    } else if(sh.kind==='air'){ pos.addScaledVector(sh.v,dt); sh.life-=dt; sh.m.scale.setScalar(1+(1.4-sh.life)*0.6);
       let hit=false; for(const e of enemies){ if(e.dead) continue; const cx=e.grp.position.x-pos.x, cz=e.grp.position.z-pos.z; if(Math.hypot(cx,cz)<1.3&&pos.y>-0.2&&pos.y<e.grp.position.y+2.4){ hit=true; break; } }
       const wall=Math.abs(pos.x)>WALL-0.5||Math.abs(pos.z)>WALL-0.5||pos.y<0.1||colliders.some(c=>inBox(pos,c,0));
       if(hit||wall||sh.life<=0){ airBlast(pos.clone()); scene.remove(sh.m); shells.splice(i,1); }
@@ -2674,7 +2765,7 @@ function bombBlast(p){ PX.burst(p,0xff8a30); PX.burst(p,0xffd27a); sparkBurst(p,
 function updOps(){
   const set=(id,cd,max)=>{ const el=$(id); if(!el) return; const f=Math.max(0,cd)/max; el.classList.toggle('cd',cd>0); el.querySelector('i').style.height=(f*100)+'%';
     let t=el.querySelector('.t'); if(cd>0){ if(!t){ t=document.createElement('div'); t.className='t'; el.appendChild(t); } t.textContent=Math.ceil(cd); } else if(t) t.remove(); };
-  set('opCannon',cannonCd,CANNON_CD); set('opDash',dashCd,DASH_CD); set('opBomb',bombCd,BOMB_CD); const ob=$('opBoost'); if(ob) ob.classList.toggle('on',boostT>0);
+  OPS[curOp].skills.forEach((sk,i)=>set('op'+i,sk.cd(),sk.max)); const ob=$('opBoost'); if(ob) ob.classList.toggle('on',curOp==='stinger'?(selfHealT>0||(player.hp>0&&player.hp<30)):boostT>0);
 }
 const KILLFX={                                                 // 每把武器自己的擊殺爽感
   rifle:   {hex:0xffd27a,col:'#ffd76b',text:'擊殺',          stop:0.05,shake:0.9,kb:2.5},
@@ -2852,7 +2943,9 @@ function step(dt){
   /* --- 武器計時 --- */
   if(reloading){ reloadT-=dt; $('reloadHint').textContent='換彈中… '+reloadT.toFixed(1)+'s';
     if(reloadT<=0) doReload(); }
-  fireTimer-=dt; atkGap+=dt; slideCd-=dt; dashCd-=dt; cannonCd-=dt; bombCd-=dt; boostT-=dt;
+  fireTimer-=dt; atkGap+=dt; slideCd-=dt; dashCd-=dt; cannonCd-=dt; bombCd-=dt; boostT-=dt; hormCd-=dt; droneCd-=dt; smokeCd-=dt;
+  if(selfHealT>0){ selfHealT-=dt; healPlayer(12*dt); }                                   // 激素槍自療
+  if(curOp==='stinger'&&player.alive&&player.hp>0&&player.hp<30) healPlayer(3*dt);     // 蜂醫被動：高效救援
   const w=W(), a=ammo[curKey];
   const wantFire = firing && (w.auto || fireTimer<=-9990);
   if(firing && !reloading && fireTimer<=0 && a.mag>0){
@@ -3077,7 +3170,7 @@ function step(dt){
   PX.post(dt,PX.has(curKey));
 
   stepKunais(dt);                          // 苦無投擲物
-  stepShells(dt); updOps();                // 威龍投射物 / 技能冷卻 HUD
+  stepShells(dt); stepSmokes(dt); updOps();   // 幹員投射物 / 煙霧 / 技能冷卻 HUD
   /* --- 敵人 --- */
   aliveCount = 0;
   for(let i=enemies.length-1;i>=0;i--){
@@ -3113,6 +3206,7 @@ function step(dt){
     if(e.knocked>0){ e.knocked-=dt; g.rotation.x+=(1.35-g.rotation.x)*Math.min(1,dt*10); g.position.y+=(-0.35-g.position.y)*Math.min(1,dt*10);   // 被虎蹲炮打倒：躺著不能動
       if(g.userData.kbv){ g.position.addScaledVector(g.userData.kbv,dt); g.userData.kbv.multiplyScalar(Math.exp(-dt*4)); } enemyCollide(g); continue; }
     else if(g.rotation.x>0.01){ g.rotation.x+=(0-g.rotation.x)*Math.min(1,dt*6); g.position.y+=(0-g.position.y)*Math.min(1,dt*6); }
+    if(dist>3&&inSmoke(tgtPos)){ enemyCollide(g); continue; }   // 煙幕：看不到你就不追不打
     if(g.userData.kbv){ g.position.addScaledVector(g.userData.kbv,dt); g.userData.kbv.multiplyScalar(Math.exp(-dt*5)); }
 
     // ===== 近戰怪物：衝向你，靠近就揮拳（不開槍） =====
@@ -3407,12 +3501,14 @@ function onHostMsg(c,m){
     if(p.grp) p.grp.visible=m.al; }
   else if(m.t==='shot'){ bcast({t:'fx',a:m.a,b:m.b,g:m.g,o:pid});
     spawnFx(m.a,m.b); }
+  else if(m.t==='heal'){ if(m.to&&m.to!==NET.id) sendTo(m.to,{t:'heal',amt:m.amt}); else { healPlayer(m.amt||25); killText('蜂醫治療 +'+(m.amt||25),'#7fe0a0'); } }
   else if(m.t==='ehit' && NET.mode==='coop'){ const e=enemyById[m.id];
     if(e&&!e.dead) damageEnemy(e,m.d,m.h,pid); }
   else if(m.t==='phit' && NET.mode==='pvp'){ applyPvp(m.vid,m.d,pid); }
 }
 function onClientMsg(m){
-  if(m.t==='wel'){ NET.id=m.pid; NET.mode=m.mode; ensureP(NET.id,NET.name);
+  if(m.t==='heal'){ healPlayer(m.amt||25); killText('蜂醫治療 +'+(m.amt||25),'#7fe0a0'); }
+  else if(m.t==='wel'){ NET.id=m.pid; NET.mode=m.mode; ensureP(NET.id,NET.name);
     selMode=m.mode; reflectMode(); setStat('已加入，等待房主開始'); }
   else if(m.t==='roster'){ applyRoster(m.list); }
   else if(m.t==='start'){ NET.mode=m.mode; doBegin(); }
@@ -3778,7 +3874,7 @@ function doBegin(){
   if(NET.started) return; NET.started=true;
   $('menu').style.display='none'; $('roomBox').classList.add('hide');
   menuOpen=false; running=true;
-  validLoadout(); curKey='rifle'; showGun(); updHUD();
+  validLoadout(); curKey='rifle'; showGun(); updHUD(); renderOps();
   audio(); if(AC.state==='suspended') AC.resume();
   if(!isTouch) cv.requestPointerLock();
   ensureP(NET.id,NET.name);
@@ -3801,7 +3897,7 @@ $('bStart').onclick=()=>{ NET.mode=selMode;
   bcast({t:'start',mode:NET.mode}); doBegin(); };
 
 reflectMode();
-updHUD(); renderKnifeSel();
+updHUD(); renderKnifeSel(); renderOpSel(); renderOps();
 requestAnimationFrame(loop);
 
 /* ========= 開發用把手（Browser 窗格隱藏時也能驗證：手動 step + render + 存圖） ========= */
@@ -3812,7 +3908,7 @@ window.__sz = {
   pxAttack(){ if(atkGap>1.2) atkCount=0; atkGap=0; atkCount++; atkType=(atkCount%3===0)?'stab':'slash'; atkDur=PX.dur(atkCount); atkT=atkDur; return atkCount; },
   pxInspect(){ inspectT=PX.INS_DUR; inspectDur=inspectT; },
   get enemies(){ return enemies; },
-  get loadout(){ return loadoutKnife; }, setLoadout(k){ return setLoadout(k); }, activeOrder(){ return activeOrder(); },
+  get loadout(){ return loadoutKnife; }, get op(){ return curOp; }, setOp(k){ setOp(k); return curOp; }, get smokes(){ return smokes; }, heal(n){ healPlayer(n); return player.hp; }, hurt(n){ player.hp=Math.max(1,player.hp-n); return player.hp; }, setLoadout(k){ return setLoadout(k); }, activeOrder(){ return activeOrder(); },
   testKill(){ let best=null,bd=1e9; for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(player.pos); if(d<bd){ bd=d; best=e; } } if(!best) return 'no enemy'; damageEnemy(best,9999,false,NET.id); return 'killed '+best.id+' with '+curKey; },
   get knife(){ return gunMeshes.knife; },
   get hand(){ return gunMeshes.knife.userData.hand; },
