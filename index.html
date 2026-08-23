@@ -62,6 +62,10 @@
   .buyBtn:hover{filter:brightness(1.12);}
   .buyBtn.no{background:#3a4049;color:#8894a5;cursor:not-allowed;box-shadow:none;}
   .ownTag{margin-top:14px;color:#7fe0a0;font:700 15px "Segoe UI";letter-spacing:2px;}
+  #knifeSel{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%}
+  #knifeLbl{width:100%;text-align:center;font-size:12px;color:#9aa7bd;margin-bottom:2px;letter-spacing:1px}
+  .kBtn{padding:6px 10px;border-radius:8px;border:1px solid #3a4150;background:#151a24;color:#cfd3d8;font:700 12px "Segoe UI";cursor:pointer}
+  .kBtn small{color:#7f8da6;font-weight:600} .kBtn.sel{border-color:#ffd76b;color:#ffd76b;background:#2a2415;box-shadow:0 0 10px rgba(255,215,107,.35)} .kBtn.lock{opacity:.5}
   .lockTag{color:#ff9a5a;}
 
   /* 擊殺訊息 */
@@ -311,6 +315,7 @@
   <div class="lobbyRow">
     <button id="bArmory" class="lobBtn skin">🎨 武器庫 · 槍枝皮膚</button>
   </div>
+  <div class="lobbyRow"><div id="knifeSel"></div></div>
 
   <div class="lobbyRow">
     <button id="bSolo" class="lobBtn">單人開打</button>
@@ -329,7 +334,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~7 或滾輪／Q　<b>白金步槍</b>1　<b>白金狙擊</b>2　🔒<b>信條</b>3（1000）　🔒<b>北極星</b>4（2000）　🔒<b>爪刀</b>5（1500）　🔒<b>蝴蝶刀</b>6（2000）　🔒<b>苦無·無限投擲</b>7（5000）　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員 威龍</b> C 虎蹲炮／V 動力推進／G 磁吸炸彈（用技能或高處落地會加速）<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員 威龍</b> C 虎蹲炮／V 動力推進／G 磁吸炸彈（用技能或高處落地會加速）<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -1738,6 +1743,20 @@ try{ const wv=JSON.parse(localStorage.getItem('sz_wallet')||'{}');
   if(typeof wv.drawCount==='number' && isFinite(wv.drawCount)) drawCount=Math.max(0,Math.floor(wv.drawCount));
   if(wv.ownedSkins && typeof wv.ownedSkins==='object') ownedSkins=wv.ownedSkins;
 }catch(e){}
+/* ========= 一局只能帶一把刀：在大廳選（買到/抽到的照舊，只是出場要選一把） ========= */
+const KNIFE_OPTS=['knife','polaris','karambit','butterfly','kunai'];
+let loadoutKnife=null; try{ const lk=localStorage.getItem('sz_knife'); if(lk&&WEAPONS[lk]) loadoutKnife=lk; }catch(e){}
+function validLoadout(){ if(!loadoutKnife||!owned[loadoutKnife]) loadoutKnife=KNIFE_OPTS.find(k=>owned[k])||null; return loadoutKnife; }
+function setLoadout(k){ if(!owned[k]) return false; loadoutKnife=k; try{ localStorage.setItem('sz_knife',k); }catch(e){} renderKnifeSel(); return true; }
+function activeOrder(){ validLoadout(); return ['rifle','sniper'].concat(loadoutKnife?[loadoutKnife]:[]); }
+function renderKnifeSel(){
+  const el=$('knifeSel'); if(!el) return; validLoadout();
+  let h='<div id="knifeLbl">🗡 這局帶哪把刀（只能帶一把）</div>';
+  for(const k of KNIFE_OPTS){ const w=WEAPONS[k], have=!!owned[k];
+    h+='<button class="kBtn'+(have?(k===loadoutKnife?' sel':''):' lock')+'" data-k="'+k+'">'+(have?(k===loadoutKnife?'✔ ':''):'🔒 ')+w.name+(have?'':'<small> '+w.price.toLocaleString()+'</small>')+'</button>'; }
+  el.innerHTML=h;
+  for(const b of el.querySelectorAll('.kBtn')){ b.onclick=()=>{ const k=b.dataset.k; if(owned[k]) setLoadout(k); else { armWeap=k; openArmory(); } }; }
+}
 function saveWallet(){ try{localStorage.setItem('sz_wallet',
   JSON.stringify({credits:credits,owned:owned,drawCount:drawCount,ownedSkins:ownedSkins}));}catch(e){} }
 
@@ -2220,11 +2239,7 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyG') opBomb();
   if(e.code==='Digit1') swap('rifle');
   if(e.code==='Digit2') swap('sniper');
-  if(e.code==='Digit3') swap('knife');
-  if(e.code==='Digit4') swap('polaris');
-  if(e.code==='Digit5') swap('karambit');
-  if(e.code==='Digit6') swap('butterfly');
-  if(e.code==='Digit7') swap('kunai');
+  if(e.code==='Digit3'&&loadoutKnife) swap(loadoutKnife);
   if(e.code==='KeyQ') cycle();
   if(e.code==='KeyF') inspect();
   if(e.code==='Escape'&&armoryOpen) closeArmory();
@@ -2319,6 +2334,7 @@ function inspect(){
 }
 function swap(k){
   if(k===curKey||reloading)return;
+  if(isSpecial(k)&&k!==loadoutKnife){ addFeed('這局只帶了 <b>'+(loadoutKnife?WEAPONS[loadoutKnife].name:'沒有刀')+'</b>，換刀要回大廳選'); return; }
   if(WEAPONS[k].price && !owned[k]){                       // 未解鎖：不給拿，提示去武器庫買
     addFeed('<b class="lockTag">🔒 '+WEAPONS[k].name+'</b> 未解鎖 — 需要 '+WEAPONS[k].price.toLocaleString()+' 點券');
     return;
@@ -2328,11 +2344,11 @@ function swap(k){
 }
 function isLocked(k){ return !!(WEAPONS[k].price && !owned[k]); }
 function cycle(dir){
-  const step=(dir>0?1:dir<0?-1:1);
-  let i=order.indexOf(curKey);
-  for(let n=0;n<order.length;n++){                          // 跳過還沒買的武器
-    i=(i+step+order.length)%order.length;
-    if(!isLocked(order[i])){ swap(order[i]); return; }
+  const step=(dir>0?1:dir<0?-1:1), ao=activeOrder();        // 兩把槍 + 這局帶的那把刀
+  let i=Math.max(0,ao.indexOf(curKey));
+  for(let n=0;n<ao.length;n++){
+    i=(i+step+ao.length)%ao.length;
+    if(!isLocked(ao[i])){ swap(ao[i]); return; }
   }
 }
 function reload(){
@@ -3689,8 +3705,8 @@ function renderSkinGrid(){
     const w=WEAPONS[armWeap], have=!!owned[armWeap], can=credits>=w.price;
     const kindTxt=w.thrown?'投擲武器':'近戰武器', kindIcon=w.thrown?'🗡':'🗡️';
     const foot = have
-      ? '<div class="ownTag">✓ 已擁有</div><small style="color:#7f8da6">遊戲中按 <b style="color:#cfd3d8">'
-        +(order.indexOf(armWeap)+1)+'</b> 拿出　<b style="color:#cfd3d8">左鍵</b> '+(w.thrown?'投擲（無限）':'揮砍')+'　<b style="color:#cfd3d8">F</b> 旋轉檢視</small>'
+      ? '<div class="ownTag">✓ 已擁有</div><button id="loadBtn" class="buyBtn'+(loadoutKnife===armWeap?' no':'')+'">'+(loadoutKnife===armWeap?'✔ 這局帶這把':'帶入對局')+'</button>'
+        +'<br><small style="color:#7f8da6">一局只能帶一把刀 · 遊戲中按 <b style="color:#cfd3d8">3</b> 拿出　<b style="color:#cfd3d8">左鍵</b> '+(w.thrown?'投擲（無限）':'揮砍')+'　<b style="color:#cfd3d8">F</b> 旋轉檢視</small>'
       : ((GACHA_KNIVES.indexOf(armWeap)>=0)
         ? '<small style="color:#7f8da6">擊殺敵人賺點券：<b style="color:#66c04a">綠兵 10</b> · <b style="color:#e8483d">紅兵 25</b> · <b style="color:#9a5cff">紫兵 50</b></small>'
           +'<br><div style="margin-top:12px;padding:12px;border-radius:12px;border:1px solid #ffd76b55;background:#ffd76b14">'
@@ -3704,6 +3720,7 @@ function renderSkinGrid(){
     $('armSkins').innerHTML='<div style="grid-column:1/-1;padding:22px 16px;text-align:center;color:#9aa7bd;line-height:1.8">'
       +kindIcon+' <b style="color:#e9e3d3">'+w.name+'</b> 是<b>'+kindTxt+'</b><br>無塗裝可換，這裡供你 360° 檢視<br>'
       +foot+'</div>';
+    const lb=$('loadBtn'); if(lb) lb.onclick=()=>{ setLoadout(armWeap); refreshArmory(); };
     const bb=$('buyBtn');
     if(bb) bb.onclick=()=>{
       const ww=WEAPONS[armWeap];
@@ -3733,7 +3750,7 @@ function renderSkinGrid(){
     refreshArmory(); updHUD();
   };
 }
-function refreshArmory(){
+function refreshArmory(){ renderKnifeSel();
   renderArmTabs(); renderSkinGrid();
   if(armWeap!=='__gacha') pvShow(armWeap,equipped[armWeap]);
 }
@@ -3761,6 +3778,7 @@ function doBegin(){
   if(NET.started) return; NET.started=true;
   $('menu').style.display='none'; $('roomBox').classList.add('hide');
   menuOpen=false; running=true;
+  validLoadout(); curKey='rifle'; showGun(); updHUD();
   audio(); if(AC.state==='suspended') AC.resume();
   if(!isTouch) cv.requestPointerLock();
   ensureP(NET.id,NET.name);
@@ -3783,7 +3801,7 @@ $('bStart').onclick=()=>{ NET.mode=selMode;
   bcast({t:'start',mode:NET.mode}); doBegin(); };
 
 reflectMode();
-updHUD();
+updHUD(); renderKnifeSel();
 requestAnimationFrame(loop);
 
 /* ========= 開發用把手（Browser 窗格隱藏時也能驗證：手動 step + render + 存圖） ========= */
@@ -3794,6 +3812,7 @@ window.__sz = {
   pxAttack(){ if(atkGap>1.2) atkCount=0; atkGap=0; atkCount++; atkType=(atkCount%3===0)?'stab':'slash'; atkDur=PX.dur(atkCount); atkT=atkDur; return atkCount; },
   pxInspect(){ inspectT=PX.INS_DUR; inspectDur=inspectT; },
   get enemies(){ return enemies; },
+  get loadout(){ return loadoutKnife; }, setLoadout(k){ return setLoadout(k); }, activeOrder(){ return activeOrder(); },
   testKill(){ let best=null,bd=1e9; for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(player.pos); if(d<bd){ bd=d; best=e; } } if(!best) return 'no enemy'; damageEnemy(best,9999,false,NET.id); return 'killed '+best.id+' with '+curKey; },
   get knife(){ return gunMeshes.knife; },
   get hand(){ return gunMeshes.knife.userData.hand; },
