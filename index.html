@@ -241,6 +241,8 @@
   .opBtn{width:46%;text-align:left;line-height:1.5} .opBtn em{display:block;font-style:normal;font-size:10px;color:#8f9ab0;font-weight:600;margin-top:2px} .opBtn.sel em{color:#d9c27a}
   #healFx{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(127,224,160,0) 40%,rgba(127,224,160,.45) 100%);z-index:5}
   #healFx.on{animation:healPop .5s ease-out} @keyframes healPop{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+  #headT{position:fixed;left:50%;top:50%;transform:translate(-50%,-220%);font:900 16px "Segoe UI";letter-spacing:3px;color:#ff6a5a;text-shadow:0 0 10px #ff4a3a,0 0 2px #000;opacity:0;pointer-events:none;white-space:nowrap;z-index:2}
+  #headT.pop{animation:headPop .6s ease-out forwards} @keyframes headPop{0%{opacity:0;transform:translate(-50%,-160%) scale(.7)}15%{opacity:1;transform:translate(-50%,-220%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-300%) scale(1)}}
   #killT{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);font-size:40px;font-weight:900;letter-spacing:8px;color:#7fe0ff;text-shadow:0 0 16px currentColor,0 0 2px #000;opacity:0;pointer-events:none;white-space:nowrap;z-index:2}
   #killT.pop{animation:killPop .9s ease-out forwards}
   @keyframes killPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}30%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
@@ -259,7 +261,7 @@
 <body>
 <div id="hud">
   <div id="scope"><div class="ring"></div><div class="h"></div><div class="v"></div><div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div><div class="dot"></div></div>
-  <div id="killT"></div>
+  <div id="killT"></div><div id="headT">爆頭 ×2.4</div>
   <div id="ops"><div id="opName">威龍<small>VYRON · 突擊</small></div><div class="op" id="op0"><i></i><b>C</b><span>虎蹲炮</span></div><div class="op" id="op1"><i></i><b>V</b><span>動力推進</span></div><div class="op" id="op2"><i></i><b>G</b><span>磁吸炸彈</span></div><div id="opBoost">⚡ 動力輔助</div></div>
   <div id="cross">
     <div id="cL" class="ch"></div><div id="cR" class="ch"></div>
@@ -338,7 +340,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；每一刀 <b>50% 機率爆頭</b>（爆頭 2.4 倍傷害，沒爆頭就普通傷害）；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -2475,13 +2477,15 @@ function fire(){
     }
     const a0=origin.clone().add(dir.clone().multiplyScalar(0.6));
     if(pBest && bestD<=envD){                 // PvP：打到其他玩家
-      const dmg=w.dmg*(pBestHead?2.0:1);
+      if(w.melee){ pBestHead=knifeHead(); if(pBestHead) headPop(); }   // 刀：50% 機率爆頭
+      const dmg=w.dmg*(pBestHead?2.0:1)*atkMul;
       if(isHost()) applyPvp(pBest,dmg,NET.id);
       else { toHost({t:'phit',vid:pBest,d:dmg}); showHit(false,pBestHead);
         sHitEnemy(); }
       tracer(a0,pBestPt); sparkBurst(pBestPt,0xff5050);
       if(p===0) shotFx(a0,pBestPt);
     } else if(best && bestD<=envD){           // 合作：打到 AI 敵人
+      if(w.melee){ bestHead=knifeHead(); if(bestHead) headPop(); }     // 刀：50% 機率爆頭（不看瞄哪裡）
       const dmg=w.dmg*(bestHead?2.4:1)*atkMul;
       hitFx(bestPt,w);
       if(isHost()) damageEnemy(best,dmg,bestHead,NET.id);
@@ -2613,7 +2617,7 @@ function stepKunais(dt){
       for(const e of enemies){ if(e.dead) continue;
         const hit=ray.intersectObject(e.grp,true);
         if(hit.length){
-          const head=hit[0].object.userData.head===true;
+          const head=knifeHead(); if(head) headPop();   // 苦無也是刀：50% 機率爆頭
           const dmg=WEAPONS.kunai.dmg*(head?2.4:1);
           if(isHost()) damageEnemy(e,dmg,head,NET.id,'kunai');
           else { toHost({t:'ehit',id:e.id,d:dmg,h:head}); showHit(false,head); }
@@ -2777,6 +2781,9 @@ const KILLFX={                                                 // 每把武器�
   kunai:   {hex:0xff7a30,col:'#ffb070',text:'苦無 · 命中要害',slow:0.25,shake:1.2,kb:4.0,spin:5},
   bomb:    {hex:0xff8a30,col:'#ffb070',text:'磁吸炸彈 · 炸飛',stop:0.06,shake:1.4,kb:5,  spin:4}
 };
+const KNIFE_HEAD=0.5;                                          // 所有刀（含苦無）：每一下 50% 機率爆頭，爆頭 2.4 倍傷害、沒爆頭就普通傷害
+function knifeHead(){ return Math.random()<KNIFE_HEAD; }
+function headPop(){ const h=$('headT'); if(h){ h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop'); } flashCross('#ff5a5a'); blip(1500,0.05,0.12,'square'); }
 function hitFx(pt,w){ if(!pt) return; const F=KILLFX[curKey]||KILLFX.rifle; PX.burst(pt,F.hex,true);
   if(w.melee){ hitStop=Math.max(hitStop,0.035); shakeA=Math.max(shakeA,0.35); } else if(curKey==='sniper'){ shakeA=Math.max(shakeA,0.3); } }
 function killText(t,c){ const k=$('killT'); k.textContent=t; k.style.color=c; k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
@@ -2791,7 +2798,7 @@ function killJuice(e,key,head){                                  // 每一把槍
   if(F.stop) hitStop=Math.max(hitStop,F.stop); if(F.slow) slowMo=Math.max(slowMo,F.slow); shakeA=Math.max(shakeA,F.shake+streakN*0.15);
   PX.burst(pos,F.hex);
   if(F.tracer){ const gm=gunMeshes.sniper, mz=new TH.Vector3(); if(gm&&gm.userData.flash) gm.userData.flash.getWorldPosition(mz); else mz.copy(camera.position); PX.tracer(mz,pos); }
-  killText((head&&(key==='rifle'||key==='sniper'||key==='kunai')?'爆頭 · ':'')+F.text+suf,F.col); flashCross(F.col);
+  killText((head?'爆頭 · ':'')+F.text+suf,F.col); flashCross(F.col);
   if(F.shing) PX.SFX.shing(); blip(70,0.3,0.5,'sine'); blip(600+streakN*140,0.08,0.14,'triangle');
   e.grp.userData.kb=dir.multiplyScalar(F.kb); if(F.spin) e.grp.userData.spin=F.spin;
 }
@@ -3908,7 +3915,7 @@ window.__sz = {
   pxAttack(){ if(atkGap>1.2) atkCount=0; atkGap=0; atkCount++; atkType=(atkCount%3===0)?'stab':'slash'; atkDur=PX.dur(atkCount); atkT=atkDur; return atkCount; },
   pxInspect(){ inspectT=PX.INS_DUR; inspectDur=inspectT; },
   get enemies(){ return enemies; },
-  get loadout(){ return loadoutKnife; }, get op(){ return curOp; }, setOp(k){ setOp(k); return curOp; }, get smokes(){ return smokes; }, heal(n){ healPlayer(n); return player.hp; }, hurt(n){ player.hp=Math.max(1,player.hp-n); return player.hp; }, setLoadout(k){ return setLoadout(k); }, activeOrder(){ return activeOrder(); },
+  get loadout(){ return loadoutKnife; }, doFire(){ fire(); }, knifeHead(){ return knifeHead(); }, get op(){ return curOp; }, setOp(k){ setOp(k); return curOp; }, get smokes(){ return smokes; }, heal(n){ healPlayer(n); return player.hp; }, hurt(n){ player.hp=Math.max(1,player.hp-n); return player.hp; }, setLoadout(k){ return setLoadout(k); }, activeOrder(){ return activeOrder(); },
   testKill(){ let best=null,bd=1e9; for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(player.pos); if(d<bd){ bd=d; best=e; } } if(!best) return 'no enemy'; damageEnemy(best,9999,false,NET.id); return 'killed '+best.id+' with '+curKey; },
   get knife(){ return gunMeshes.knife; },
   get hand(){ return gunMeshes.knife.userData.hand; },
