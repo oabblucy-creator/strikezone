@@ -225,6 +225,9 @@
   body.istouch .touch{display:flex;}
   body.istouch #moveStick{display:block;}
   @media (hover:hover) and (pointer:fine){ .touch{display:none!important;} }
+  #killT{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);font-size:40px;font-weight:900;letter-spacing:8px;color:#7fe0ff;text-shadow:0 0 16px currentColor,0 0 2px #000;opacity:0;pointer-events:none;white-space:nowrap;z-index:2}
+  #killT.pop{animation:killPop .9s ease-out forwards}
+  @keyframes killPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}30%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
   #scope{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .08s;z-index:0;
     background:radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 0,rgba(0,0,0,0) 36vmin,rgba(0,0,0,.45) 37.5vmin,rgba(0,0,0,.985) 40vmin)}
   #scope .ring{position:absolute;left:50%;top:50%;width:76vmin;height:76vmin;margin:-38vmin 0 0 -38vmin;border-radius:50%;border:1.4vmin solid #111;
@@ -240,6 +243,7 @@
 <body>
 <div id="hud">
   <div id="scope"><div class="ring"></div><div class="h"></div><div class="v"></div><div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div><div class="dot"></div></div>
+  <div id="killT"></div>
   <div id="cross">
     <div id="cL" class="ch"></div><div id="cR" class="ch"></div>
     <div id="cT" class="cv"></div><div id="cB" class="cv"></div>
@@ -1141,41 +1145,49 @@ function ornateKit(g,env){
     const st=new TH.Mesh(new TH.ExtrudeGeometry(starShape(0.016,0.006),{depth:0.004,bevelEnabled:false}),goldD); st.rotation.y=Math.PI/2; st.position.set(x+0.003,y,z); g.add(st); };
   return {pearl,gold,goldD,ruby,sapph,dark,glass,lens,RB,B,C,TRIM,GEM,SCROLL,SLOTS,EMBLEM};
 }
-/* ── 白金突擊步槍：平頂機匣 + 全像瞄具（紅色光圈準星）+ 開槽護木 + 金色槍管 ── */
+/* ── 側面輪廓擠出：整把槍身是「一整塊」連續的白瓷（受器+護木+握把+槍托一筆畫），倒角讓邊緣圓潤 ──
+   pts 用 (L,y)：L＝往槍口的距離（正＝前），y＝高度；4 個數的點＝quadraticCurveTo(cpL,cpy,L,y) */
+function profileMesh(g,pts,width,mat,part,uvs,holes){
+  const sh=new TH.Shape();
+  pts.forEach((p,i)=>{ if(p.length===4) sh.quadraticCurveTo(p[0],p[1],p[2],p[3]); else if(i) sh.lineTo(p[0],p[1]); else sh.moveTo(p[0],p[1]); });
+  sh.closePath();
+  if(holes) for(const h of holes){ const hp=new TH.Path(); hp.absellipse(h[0],h[1],h[2],h[3],0,Math.PI*2,true,0); sh.holes.push(hp); }
+  const geo=new TH.ExtrudeGeometry(sh,{depth:width,bevelEnabled:true,bevelThickness:0.012,bevelSize:0.010,bevelSegments:3}); geo.translate(0,0,-width/2);
+  const uv=geo.attributes.uv; const k=uvs||2.2; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*k,uv.getY(i)*k);
+  const m=new TH.Mesh(geo,mat); m.rotation.y=Math.PI/2; if(part) m.userData.part=part; g.add(m); return m;
+}
+/* ── 白金突擊步槍：一體成形白瓷槍身 + 全像瞄具（紅色光圈準星）+ 金色槍管 ── */
 function makeOrnateAR(){
   const g=new TH.Group(), env=getMainEnv(), K=ornateKit(g,env);
-  const pearl=K.pearl, gold=K.gold, goldD=K.goldD, ruby=K.ruby, sapph=K.sapph, dark=K.dark, glass=K.glass, RB=K.RB, B=K.B, C=K.C, TRIM=K.TRIM, GEM=K.GEM, SCROLL=K.SCROLL, SLOTS=K.SLOTS;
+  const pearl=K.pearl, gold=K.gold, goldD=K.goldD, ruby=K.ruby, sapph=K.sapph, dark=K.dark, glass=K.glass, B=K.B, C=K.C, TRIM=K.TRIM, GEM=K.GEM, SCROLL=K.SCROLL, SLOTS=K.SLOTS;
   g.userData.ornate=true;
-  RB(0.120,0.105,0.42, 0,0.035,-0.26,'body',0,pearl);                                   // 上機匣（平頂）
-  RB(0.110,0.095,0.30, 0,-0.055,-0.19,'body',0,pearl);                                  // 下機匣
-  TRIM(0.124,0.010,0.42, 0,0.088,-0.26); TRIM(0.124,0.010,0.30, 0,-0.005,-0.19); TRIM(0.114,0.010,0.30, 0,-0.100,-0.19);
-  B(0.052,0.014,0.44, 0,0.098,-0.30,null,0,gold); for(let i=0;i<10;i++) B(0.046,0.016,0.018, 0,0.110,-0.10-i*0.044,null,0,gold);   // 金導軌
-  for(const s of [-1,1]){ B(0.004,0.004,0.38, s*0.040,0.089,-0.26,null,0,gold); B(0.004,0.004,0.40, s*0.036,0.074,-0.69,null,0,gold); }   // 頂面金線雕刻
-  for(let i=0;i<3;i++) GEM(0,0.076,-0.56-i*0.12,0.007,i%2?sapph:ruby,false);                                                          // 護木頂面寶石
-  { const gl=new TH.Mesh(new TH.TorusGeometry(0.026,0.0012,6,24),new TH.MeshBasicMaterial({color:0xff5a5a,transparent:true,opacity:.35,blending:TH.AdditiveBlending,depthWrite:false})); gl.position.set(0,0.172,-0.094); g.add(gl); }   // 準星外圈光暈
-  B(0.006,0.034,0.10, 0.061,0.035,-0.22,null,0,goldD); B(0.010,0.040,0.11, 0.060,0.035,-0.22,null,0,gold);                      // 拋殼口
-  B(0.030,0.020,0.07, 0.074,0.060,-0.06,null,0,gold); B(0.012,0.012,0.16, 0.050,0.060,-0.10,null,0,goldD);                      // 拉柄
-  for(const s of [-1,1]){ GEM(s*0.063,0.03,-0.14,0.012,ruby,true); GEM(s*0.063,0.03,-0.30,0.012,ruby,true); GEM(s*0.063,0.03,-0.40,0.010,sapph,true);
-    SCROLL(s*0.062,0.075,-0.26,0.36,8,0.016); SCROLL(s*0.057,-0.078,-0.19,0.24,6,0.013); }
-  RB(0.104,0.100,0.44, 0,0.022,-0.69,'body',0,pearl);                                   // 護木
-  TRIM(0.108,0.010,0.44, 0,0.074,-0.69); TRIM(0.108,0.010,0.44, 0,-0.030,-0.69);
-  SLOTS(0.108,0,0.052,-0.52,7,0.052);
-  for(const s of [-1,1]){ for(let i=0;i<7;i++) B(0.006,0.040,0.030,s*0.053,0.022,-0.52-i*0.052,null,0,goldD); SCROLL(s*0.054,0.040,-0.69,0.40,9,0.015); GEM(s*0.054,0.022,-0.86,0.010,sapph,true); }
-  C(0.020,0.022,0.30, 0,0.022,-1.00,null,gold);                                          // 槍管
-  B(0.040,0.050,0.05, 0,0.050,-0.93,null,0,gold); B(0.010,0.060,0.010, 0,0.100,-0.93,null,0,gold);                              // 導氣座 + 準星
-  { const hood=new TH.Mesh(new TH.TorusGeometry(0.024,0.004,8,16,Math.PI),gold); hood.position.set(0,0.105,-0.93); g.add(hood); }
-  C(0.030,0.030,0.10, 0,0.022,-1.14,null,gold); for(let i=0;i<3;i++) B(0.066,0.010,0.016,0,0.022,-1.10-i*0.025,null,0,dark);   // 制退器
-  C(0.012,0.014,0.03, 0,0.022,-1.20,null,goldD);
-  RB(0.068,0.21,0.11, 0,-0.21,-0.27,'body',-0.16,pearl); TRIM(0.072,0.018,0.114,0,-0.19,-0.273,-0.16); TRIM(0.072,0.018,0.114,0,-0.26,-0.262,-0.16); B(0.074,0.022,0.12, 0,-0.315,-0.245,null,-0.16,gold);   // 彈匣
-  RB(0.074,0.16,0.085, 0,-0.16,-0.05,'body',0.25,pearl); B(0.078,0.016,0.09,0,-0.235,-0.03,null,0.25,gold);                     // 握把
-  { const gd=new TH.Mesh(new TH.TorusGeometry(0.052,0.007,8,16,Math.PI*1.15),gold); gd.rotation.y=Math.PI/2; gd.rotation.z=-0.5; gd.position.set(0,-0.120,-0.12); g.add(gd); }
-  { const tr=new TH.Mesh(new TH.BoxGeometry(0.012,0.050,0.014),gold); tr.rotation.x=0.22; tr.position.set(0,-0.090,-0.115); g.add(tr); }
-  C(0.028,0.028,0.22, 0,0.035,0.11,null,gold);                                           // 緩衝管
-  RB(0.088,0.12,0.20, 0,-0.01,0.27,'body',0,pearl); TRIM(0.092,0.010,0.20,0,0.05,0.27); TRIM(0.092,0.010,0.20,0,-0.07,0.27);    // 槍托
-  B(0.094,0.13,0.022, 0,-0.01,0.375,null,0,gold); for(const s of [-1,1]) GEM(s*0.046,-0.01,0.27,0.011,ruby,true);
-  K.EMBLEM(0.047,0.0,0.22);
+  // 主槍身（槍托 → 機匣 → 護木 → 握把，一筆畫）
+  profileMesh(g,[[-0.40,-0.095],[-0.40,0.035],[-0.34,0.045],[-0.16,0.062],[-0.14,0.092],[0.30,0.092],[0.33,0.070],[0.92,0.062],[0.95,0.030],[0.95,-0.030],[0.92,-0.052],[0.33,-0.060],[0.31,-0.090],[0.13,-0.090],
+    [0.10,-0.090],[0.04,-0.235],[0.02,-0.252,-0.03,-0.248],[-0.02,-0.110],[-0.07,-0.085],[-0.16,-0.065],[-0.32,-0.105],[-0.40,-0.095]],0.10,pearl,'body',2.2);
+  // 彎彈匣（也是一整塊）
+  profileMesh(g,[[0.20,-0.08],[0.31,-0.08],[0.38,-0.24,0.31,-0.33],[0.22,-0.33],[0.27,-0.22,0.20,-0.12]],0.062,pearl,'body',3);
+  B(0.068,0.016,0.11, 0,-0.20,-0.275,null,-0.14,gold); B(0.070,0.020,0.10, 0,-0.325,-0.265,null,-0.14,gold);                       // 彈匣金環 + 底板
+  // 金邊：沿槍身上下緣
+  TRIM(0.104,0.009,0.44, 0,0.094,-0.08); TRIM(0.104,0.009,0.58, 0,0.066,-0.62); TRIM(0.104,0.009,0.58, 0,-0.058,-0.62); TRIM(0.104,0.009,0.18, 0,-0.094,-0.22);
+  B(0.052,0.014,0.44, 0,0.104,-0.08,null,0,gold); for(let i=0;i<10;i++) B(0.046,0.016,0.018, 0,0.116,0.10-i*0.042,null,0,gold);     // 金導軌
+  for(const s of [-1,1]){ B(0.004,0.004,0.40, s*0.040,0.098,-0.08,null,0,gold); B(0.004,0.004,0.52, s*0.036,0.070,-0.62,null,0,gold); }   // 頂面金線雕刻
+  for(let i=0;i<3;i++) GEM(0,0.072,-0.46-i*0.14,0.007,i%2?sapph:ruby,false);                                                          // 護木頂面寶石
+  SLOTS(0.104,0,0.058,-0.40,7,0.062); for(const s of [-1,1]) for(let i=0;i<7;i++) B(0.006,0.036,0.034,s*0.051,0.004,-0.40-i*0.062,null,0,goldD);   // 散熱槽（頂+側）
+  for(const s of [-1,1]){ GEM(s*0.056,0.032,-0.02,0.012,ruby,true); GEM(s*0.056,0.032,-0.18,0.012,ruby,true); GEM(s*0.056,0.028,-0.30,0.010,sapph,true);   // 機匣側寶石
+    SCROLL(s*0.052,0.086,-0.08,0.40,9,0.015); SCROLL(s*0.052,0.056,-0.62,0.52,11,0.014); SCROLL(s*0.049,-0.086,-0.22,0.16,4,0.012);              // 金雕捲草
+    GEM(s*0.054,0.010,-0.80,0.010,sapph,true); GEM(s*0.048,-0.03,0.26,0.011,ruby,true); }
+  B(0.006,0.034,0.10, 0.053,0.035,-0.16,null,0,goldD); B(0.010,0.040,0.11, 0.052,0.035,-0.16,null,0,gold);                             // 拋殼口
+  B(0.030,0.020,0.06, 0.062,0.075,0.12,null,0,gold); B(0.012,0.012,0.14, 0.040,0.075,0.06,null,0,goldD);                               // 拉柄
+  C(0.020,0.022,0.26, 0,0.022,-1.08,null,gold); B(0.040,0.050,0.05, 0,0.050,-0.99,null,0,gold); B(0.010,0.060,0.010, 0,0.100,-0.99,null,0,gold);   // 槍管 + 導氣座 + 準星
+  { const hood=new TH.Mesh(new TH.TorusGeometry(0.024,0.004,8,16,Math.PI),gold); hood.position.set(0,0.105,-0.99); g.add(hood); }
+  C(0.030,0.030,0.10, 0,0.022,-1.24,null,gold); for(let i=0;i<3;i++) B(0.066,0.010,0.016,0,0.022,-1.20-i*0.025,null,0,dark); C(0.012,0.014,0.03, 0,0.022,-1.30,null,goldD);   // 制退器
+  { const gd=new TH.Mesh(new TH.TorusGeometry(0.052,0.007,8,16,Math.PI*1.15),gold); gd.rotation.y=Math.PI/2; gd.rotation.z=-0.5; gd.position.set(0,-0.125,-0.14); g.add(gd); }   // 護弓
+  { const tr=new TH.Mesh(new TH.BoxGeometry(0.012,0.050,0.014),gold); tr.rotation.x=0.22; tr.position.set(0,-0.095,-0.135); g.add(tr); }
+  B(0.084,0.014,0.08, 0,-0.252,0.0,null,-0.2,gold);                                                                                     // 握把金帽
+  B(0.106,0.140,0.022, 0,-0.03,0.405,null,0,gold); B(0.060,0.008,0.20, 0,0.058,0.25,null,-0.08,gold);                                  // 托底金板 + 托頂金線
+  K.EMBLEM(0.052,-0.01,0.22);
   // 全像瞄具：金座 + 金框 + 藍玻璃 + 紅色光圈準星（ADS 時對到準心）
-  B(0.060,0.028,0.09, 0,0.122,-0.12,null,0,gold); GEM(0,0.138,-0.08,0.008,ruby,false);
+  B(0.060,0.028,0.09, 0,0.126,-0.12,null,0,gold); GEM(0,0.142,-0.08,0.008,ruby,false);
   const sightY=0.172;
   for(const s of [-1,1]) B(0.008,0.056,0.012, s*0.034,sightY,-0.09,null,0,gold);
   B(0.076,0.008,0.012, 0,sightY+0.028,-0.09,null,0,gold); B(0.076,0.008,0.012, 0,sightY-0.028,-0.09,null,0,gold);
@@ -1184,55 +1196,58 @@ function makeOrnateAR(){
     const rm=new TH.MeshBasicMaterial({color:0xff3a3a,transparent:true,opacity:.95,blending:TH.AdditiveBlending,depthWrite:false});
     ret.add(new TH.Mesh(new TH.TorusGeometry(0.011,0.0016,8,24),rm)); ret.add(new TH.Mesh(new TH.SphereGeometry(0.0022,8,8),rm));
     for(let i=0;i<4;i++){ const tk=new TH.Mesh(new TH.BoxGeometry(0.0014,0.005,0.001),rm); const a=i*Math.PI/2; tk.position.set(Math.cos(a)*0.0155,Math.sin(a)*0.0155,0); tk.rotation.z=a+Math.PI/2; ret.add(tk); }
+    const halo=new TH.Mesh(new TH.TorusGeometry(0.026,0.0012,6,24),new TH.MeshBasicMaterial({color:0xff5a5a,transparent:true,opacity:.35,blending:TH.AdditiveBlending,depthWrite:false})); halo.position.set(0,0,-0.002); ret.add(halo);
     g.add(ret); g.userData.reticle=ret; g.userData.reticleMat=rm; }
   const fl=new TH.Mesh(new TH.ConeGeometry(0.12,0.3,8),new TH.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:0}));
-  fl.rotation.x=-Math.PI/2; fl.position.set(0,0.022,-1.30); g.add(fl); g.userData.flash=fl;
+  fl.rotation.x=-Math.PI/2; fl.position.set(0,0.022,-1.40); g.add(fl); g.userData.flash=fl;
   g.userData.flashLight=new TH.PointLight(0xffcf80,0,9); g.userData.flashLight.position.copy(fl.position); g.add(g.userData.flashLight);
   return g;
 }
-/* ── 白金狙擊槍：金色刻槽長槍管 + 大物鏡瞄準鏡（金環、藍鏡片）+ 可動拉機柄 + 鏤空槍托 + 側面雷射盒 ── */
+/* ── 白金狙擊槍：一體成形鏤空槍托白瓷槍身 + 金色刻槽長槍管 + 金環大物鏡瞄準鏡 + 可動拉機柄 ── */
 function makeOrnateSniper(){
   const g=new TH.Group(), env=getMainEnv(), K=ornateKit(g,env);
-  const pearl=K.pearl, gold=K.gold, goldD=K.goldD, ruby=K.ruby, sapph=K.sapph, dark=K.dark, lens=K.lens, RB=K.RB, B=K.B, C=K.C, TRIM=K.TRIM, GEM=K.GEM, SCROLL=K.SCROLL, SLOTS=K.SLOTS;
+  const pearl=K.pearl, gold=K.gold, goldD=K.goldD, ruby=K.ruby, sapph=K.sapph, dark=K.dark, lens=K.lens, B=K.B, C=K.C, TRIM=K.TRIM, GEM=K.GEM, SCROLL=K.SCROLL, SLOTS=K.SLOTS;
   g.userData.ornate=true;
-  RB(0.100,0.115,0.42, 0,0.0,-0.21,'body',0,pearl); TRIM(0.104,0.010,0.42,0,0.058,-0.21); TRIM(0.104,0.010,0.42,0,-0.058,-0.21);   // 機匣
-  for(const s of [-1,1]){ GEM(s*0.052,0.0,-0.12,0.012,ruby,true); GEM(s*0.052,0.0,-0.30,0.012,sapph,true); SCROLL(s*0.052,0.046,-0.21,0.38,9,0.015); }
-  B(0.006,0.030,0.10, 0.051,0.018,-0.12,null,0,goldD);                                    // 拋殼口
-  { const bolt=new TH.Group(); bolt.position.set(0.045,0.035,-0.05); g.add(bolt);          // 拉機柄（開槍後會拉一下）
+  // 主槍身（槍托含拇指孔 → 機匣 → 前護木 → 握把，一筆畫）
+  profileMesh(g,[[-0.44,-0.105],[-0.44,0.055],[-0.38,0.065],[-0.30,0.088],[-0.12,0.088],[-0.10,0.062],[0.28,0.062],[0.31,0.040],[0.86,0.036],[0.89,0.0],[0.89,-0.040],[0.86,-0.052],[0.31,-0.062],[0.22,-0.075],
+    [0.08,-0.075],[0.02,-0.225],[0.0,-0.242,-0.05,-0.236],[-0.03,-0.105],[-0.10,-0.085],[-0.22,-0.095],[-0.44,-0.105]],0.09,pearl,'body',2.2,[[-0.20,-0.02,0.055,0.030]]);
+  profileMesh(g,[[0.22,-0.07],[0.32,-0.07],[0.33,-0.20],[0.21,-0.20]],0.058,pearl,'body',3); B(0.064,0.018,0.12, 0,-0.205,-0.27,null,0,gold);   // 彈匣 + 金底板
+  TRIM(0.094,0.009,0.38, 0,0.064,-0.09); TRIM(0.094,0.009,0.55, 0,0.040,-0.60); TRIM(0.094,0.009,0.55, 0,-0.056,-0.60); TRIM(0.094,0.009,0.30, 0,-0.100,0.30);   // 金邊
+  for(const s of [-1,1]){ B(0.004,0.004,0.36, s*0.034,0.068,-0.09,null,0,gold); B(0.004,0.004,0.50, s*0.032,0.044,-0.60,null,0,gold); }   // 頂面金線雕刻
+  for(let i=0;i<3;i++) GEM(0,0.046,-0.50-i*0.12,0.007,i%2?ruby:sapph,false);
+  SLOTS(0.094,0,0.030,-0.44,6,0.062); for(const s of [-1,1]) for(let i=0;i<6;i++) B(0.006,0.030,0.034,s*0.046,-0.008,-0.44-i*0.062,null,0,goldD);   // 散熱槽
+  for(const s of [-1,1]){ GEM(s*0.050,0.0,-0.02,0.012,ruby,true); GEM(s*0.050,0.0,-0.22,0.012,sapph,true); SCROLL(s*0.047,0.056,-0.09,0.36,9,0.014); SCROLL(s*0.047,0.032,-0.60,0.50,11,0.013);
+    GEM(s*0.048,-0.016,-0.80,0.009,ruby,true); GEM(s*0.046,0.03,0.33,0.010,sapph,true); SCROLL(s*0.046,-0.092,0.30,0.24,6,0.012); }
+  B(0.006,0.030,0.10, 0.046,0.018,-0.12,null,0,goldD);                                                                                   // 拋殼口
+  { const bolt=new TH.Group(); bolt.position.set(0.042,0.030,0.02); g.add(bolt);                                                        // 拉機柄（開槍後會拉一下）
     const shaft=new TH.Mesh(new TH.CylinderGeometry(0.011,0.011,0.07,12),gold); shaft.rotation.z=Math.PI/2; shaft.position.set(0.035,0,0); bolt.add(shaft);
     const arm=new TH.Mesh(new TH.CylinderGeometry(0.008,0.008,0.06,10),gold); arm.position.set(0.07,-0.025,0); arm.rotation.z=0.3; bolt.add(arm);
     const ball=new TH.Mesh(new TH.SphereGeometry(0.020,14,10),gold); ball.position.set(0.078,-0.052,0); bolt.add(ball); g.userData.bolt=bolt; }
-  C(0.022,0.022,0.16, 0,0.035,0.00,null,gold);                                            // 槍機體
-  B(0.05,0.014,0.30, 0,0.070,-0.26,null,0,gold); for(let i=0;i<7;i++) B(0.044,0.014,0.016,0,0.082,-0.14-i*0.042,null,0,gold);   // 鏡座導軌
-  for(const s of [-1,1]){ B(0.004,0.004,0.38, s*0.034,0.059,-0.21,null,0,gold); B(0.004,0.004,0.40, s*0.032,0.043,-0.63,null,0,gold); }   // 頂面金線雕刻
-  for(let i=0;i<3;i++) GEM(0,0.046,-0.50-i*0.12,0.007,i%2?ruby:sapph,false);                                                          // 護木頂面寶石
-  for(const z of [-0.16,-0.36]){ const rg=new TH.Mesh(new TH.TorusGeometry(0.036,0.009,10,20),gold); rg.position.set(0,0.165,z); g.add(rg); B(0.030,0.070,0.03,0,0.125,z,null,0,gold); }   // 鏡環
-  C(0.031,0.031,0.38, 0,0.165,-0.26,null,gold);                                           // 主鏡筒
-  C(0.047,0.033,0.11, 0,0.165,-0.505,null,gold); C(0.049,0.049,0.05, 0,0.165,-0.58,null,goldD);                                   // 物鏡喇叭 + 遮光罩
-  { const ob=new TH.Mesh(new TH.CircleGeometry(0.044,24),lens); ob.position.set(0,0.165,-0.606); ob.rotation.y=Math.PI; g.add(ob);
-    const gl=new TH.Mesh(new TH.CircleGeometry(0.040,24),new TH.MeshStandardMaterial({color:0x3a7cff,roughness:.05,metalness:.2,transparent:true,opacity:.35,envMap:env,envMapIntensity:2})); gl.position.set(0,0.165,-0.604); gl.rotation.y=Math.PI; g.add(gl); }
-  C(0.036,0.031,0.09, 0,0.165,-0.02,null,gold);                                           // 目鏡
-  { const ep=new TH.Mesh(new TH.CircleGeometry(0.031,24),new TH.MeshStandardMaterial({color:0x9fd4ff,roughness:.05,metalness:.3,envMap:env,envMapIntensity:1.5})); ep.position.set(0,0.165,0.026); g.add(ep); }
-  C(0.018,0.018,0.05, 0,0.208,-0.26,null,gold); { const tu=new TH.Mesh(new TH.CylinderGeometry(0.018,0.018,0.045,12),gold); tu.rotation.z=Math.PI/2; tu.position.set(0.050,0.165,-0.26); g.add(tu); }   // 調節鈕
-  GEM(0,0.238,-0.26,0.007,ruby,false);
-  B(0.036,0.036,0.10, 0.075,0.120,-0.42,null,0,pearl); TRIM(0.040,0.006,0.104,0.075,0.140,-0.42);                                // 側面雷射盒
-  { const led=new TH.Mesh(new TH.SphereGeometry(0.008,10,8),new TH.MeshStandardMaterial({color:0x66c8ff,emissive:0x2e9cff,emissiveIntensity:2.5})); led.position.set(0.075,0.120,-0.474); g.add(led); }
-  RB(0.092,0.088,0.42, 0,-0.004,-0.63,'body',0,pearl); TRIM(0.096,0.010,0.42,0,0.042,-0.63); TRIM(0.096,0.010,0.42,0,-0.050,-0.63);   // 前護木
-  SLOTS(0.096,0,0.024,-0.46,6,0.056); for(const s of [-1,1]){ SCROLL(s*0.048,0.018,-0.63,0.38,9,0.014); GEM(s*0.048,-0.016,-0.80,0.009,ruby,true); }
-  C(0.021,0.024,0.72, 0,0.02,-1.04,null,gold);                                            // 長槍管（刻槽）
-  for(let i=0;i<6;i++){ const a=i*Math.PI/3; const fl=new TH.Mesh(new TH.BoxGeometry(0.006,0.006,0.60),goldD); fl.position.set(Math.cos(a)*0.021,0.02+Math.sin(a)*0.021,-1.02); g.add(fl); }
-  C(0.034,0.034,0.13, 0,0.02,-1.43,null,gold); for(let i=0;i<4;i++){ B(0.074,0.010,0.014,0,0.02,-1.39-i*0.024,null,0,dark); B(0.010,0.074,0.014,0,0.02,-1.39-i*0.024,null,0,dark); }   // 制退器
-  RB(0.060,0.12,0.095, 0,-0.125,-0.30,'body',-0.10,pearl); B(0.064,0.018,0.10,0,-0.188,-0.294,null,-0.10,gold);                 // 彈匣
-  RB(0.070,0.15,0.085, 0,-0.145,-0.06,'body',0.28,pearl); B(0.074,0.014,0.09,0,-0.215,-0.04,null,0.28,gold);                    // 握把
-  { const gd=new TH.Mesh(new TH.TorusGeometry(0.050,0.007,8,16,Math.PI*1.15),gold); gd.rotation.y=Math.PI/2; gd.rotation.z=-0.5; gd.position.set(0,-0.108,-0.13); g.add(gd); }
-  { const tr=new TH.Mesh(new TH.BoxGeometry(0.012,0.048,0.014),gold); tr.rotation.x=0.22; tr.position.set(0,-0.080,-0.125); g.add(tr); }
-  RB(0.082,0.135,0.34, 0,-0.02,0.23,'body',0,pearl); B(0.086,0.050,0.14, 0,-0.04,0.22,null,0,dark);                             // 鏤空槍托
-  TRIM(0.086,0.010,0.34,0,0.050,0.23); TRIM(0.086,0.010,0.34,0,-0.088,0.23);
-  B(0.060,0.026,0.16, 0,0.072,0.21,null,0,gold); B(0.088,0.14,0.024, 0,-0.02,0.41,null,0,gold);                                 // 貼腮 + 托底
-  for(const s of [-1,1]) GEM(s*0.043,0.01,0.32,0.010,sapph,true);
-  K.EMBLEM(0.044,0.0,0.30);
+  C(0.022,0.022,0.14, 0,0.035,0.08,null,gold);                                                                                            // 槍機體
+  B(0.05,0.014,0.36, 0,0.074,-0.09,null,0,gold); for(let i=0;i<8;i++) B(0.044,0.014,0.016,0,0.086,0.06-i*0.042,null,0,gold);             // 鏡座導軌
+  for(const z of [-0.02,-0.24]){ const rg=new TH.Mesh(new TH.TorusGeometry(0.036,0.009,10,20),gold); rg.position.set(0,0.165,z); g.add(rg); B(0.030,0.070,0.03,0,0.128,z,null,0,gold); }   // 鏡環
+  C(0.031,0.031,0.38, 0,0.165,-0.14,null,gold);                                                                                           // 主鏡筒
+  C(0.047,0.033,0.11, 0,0.165,-0.385,null,gold); C(0.049,0.049,0.05, 0,0.165,-0.46,null,goldD);                                           // 物鏡喇叭 + 遮光罩
+  { const ob=new TH.Mesh(new TH.CircleGeometry(0.044,24),lens); ob.position.set(0,0.165,-0.486); ob.rotation.y=Math.PI; g.add(ob);
+    const gl=new TH.Mesh(new TH.CircleGeometry(0.040,24),new TH.MeshStandardMaterial({color:0x3a7cff,roughness:.05,metalness:.2,transparent:true,opacity:.35,envMap:env,envMapIntensity:2})); gl.position.set(0,0.165,-0.484); gl.rotation.y=Math.PI; g.add(gl); }
+  C(0.036,0.031,0.09, 0,0.165,0.10,null,gold);                                                                                            // 目鏡
+  { const ep=new TH.Mesh(new TH.CircleGeometry(0.031,24),new TH.MeshStandardMaterial({color:0x9fd4ff,roughness:.05,metalness:.3,envMap:env,envMapIntensity:1.5})); ep.position.set(0,0.165,0.146); g.add(ep); }
+  C(0.018,0.018,0.05, 0,0.208,-0.14,null,gold); { const tu=new TH.Mesh(new TH.CylinderGeometry(0.018,0.018,0.045,12),gold); tu.rotation.z=Math.PI/2; tu.position.set(0.050,0.165,-0.14); g.add(tu); }   // 調節鈕
+  GEM(0,0.238,-0.14,0.007,ruby,false);
+  B(0.036,0.036,0.10, 0.072,0.110,-0.40,null,0,pearl); TRIM(0.040,0.006,0.104,0.072,0.130,-0.40);                                        // 側面雷射盒
+  { const led=new TH.Mesh(new TH.SphereGeometry(0.008,10,8),new TH.MeshStandardMaterial({color:0x66c8ff,emissive:0x2e9cff,emissiveIntensity:2.5})); led.position.set(0.072,0.110,-0.454); g.add(led); }
+  C(0.021,0.024,0.62, 0,0.02,-1.20,null,gold);                                                                                            // 長槍管（刻槽）
+  for(let i=0;i<6;i++){ const a=i*Math.PI/3; const fl=new TH.Mesh(new TH.BoxGeometry(0.006,0.006,0.52),goldD); fl.position.set(Math.cos(a)*0.021,0.02+Math.sin(a)*0.021,-1.18); g.add(fl); }
+  C(0.034,0.034,0.13, 0,0.02,-1.56,null,gold); for(let i=0;i<4;i++){ B(0.074,0.010,0.014,0,0.02,-1.52-i*0.024,null,0,dark); B(0.010,0.074,0.014,0,0.02,-1.52-i*0.024,null,0,dark); }   // 制退器
+  { const gd=new TH.Mesh(new TH.TorusGeometry(0.050,0.007,8,16,Math.PI*1.15),gold); gd.rotation.y=Math.PI/2; gd.rotation.z=-0.5; gd.position.set(0,-0.108,-0.14); g.add(gd); }   // 護弓
+  { const tr=new TH.Mesh(new TH.BoxGeometry(0.012,0.048,0.014),gold); tr.rotation.x=0.22; tr.position.set(0,-0.080,-0.13); g.add(tr); }
+  B(0.078,0.014,0.08, 0,-0.240,0.02,null,-0.2,gold);                                                                                     // 握把金帽
+  B(0.058,0.024,0.18, 0,0.098,0.21,null,0,gold); B(0.096,0.16,0.024, 0,-0.025,0.45,null,0,gold);                                         // 貼腮 + 托底金板
+  { const ring=new TH.Mesh(new TH.TorusGeometry(0.058,0.006,8,24),gold); ring.scale.set(1,0.55,1); ring.position.set(0.046,-0.02,0.20); ring.rotation.y=Math.PI/2; g.add(ring);
+    const ring2=ring.clone(); ring2.position.x=-0.046; g.add(ring2); }                                                                  // 拇指孔金包邊
+  K.EMBLEM(0.047,0.0,0.33);
   const fl=new TH.Mesh(new TH.ConeGeometry(0.16,0.4,8),new TH.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:0}));
-  fl.rotation.x=-Math.PI/2; fl.position.set(0,0.02,-1.60); g.add(fl); g.userData.flash=fl;
+  fl.rotation.x=-Math.PI/2; fl.position.set(0,0.02,-1.72); g.add(fl); g.userData.flash=fl;
   g.userData.flashLight=new TH.PointLight(0xffcf80,0,12); g.userData.flashLight.position.copy(fl.position); g.add(g.userData.flashLight);
   return g;
 }
@@ -1816,13 +1831,14 @@ const PX=(()=>{
     vertexShader:'attribute float aSize; uniform float pr; varying vec3 vC; void main(){ vC=color; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=aSize*pr*(200.0/-mv.z); gl_Position=projectionMatrix*mv; }',
     fragmentShader:'uniform sampler2D map; varying vec3 vC; void main(){ vec4 t=texture2D(map,gl_PointCoord); gl_FragColor=vec4(vC*t.a,t.a); }'});
   const sparks=new TH.Points(spGeo,spMat); sparks.frustumCulled=false; scene.add(sparks); let spNext=0;
-  function spawnSparks(pos,n,dir,spread,speed,white,grav,size,life){
+  function spawnSparks(pos,n,dir,spread,speed,white,grav,size,life,col){
     grav=grav==null?1:grav; size=size||0.035; life=life||0.3;
     for(let k=0;k<n;k++){ const i=spNext; spNext=(spNext+1)%SPN;
       spPos[i*3]=pos.x; spPos[i*3+1]=pos.y; spPos[i*3+2]=pos.z;
       spVel[i].set((Math.random()-0.5)*spread,(Math.random()-0.5)*spread,(Math.random()-0.5)*spread); if(dir) spVel[i].addScaledVector(dir,speed*(0.4+Math.random()*0.9));
       spLife[i]=spMax[i]=life*(0.75+Math.random()*0.5); spBase[i]=size*(0.6+Math.random()*0.8); spSize[i]=spBase[i]; spGrav[i]=grav;
-      const w=white?1:Math.random(); spCol[i*3]=0.45+0.55*w; spCol[i*3+1]=0.8+0.2*w; spCol[i*3+2]=1.0; }
+      if(col){ const m=0.7+0.6*Math.random(); spCol[i*3]=col[0]*m; spCol[i*3+1]=col[1]*m; spCol[i*3+2]=col[2]*m; }
+      else { const w=white?1:Math.random(); spCol[i*3]=0.45+0.55*w; spCol[i*3+1]=0.8+0.2*w; spCol[i*3+2]=1.0; } }
   }
   function updateSparks(dt){
     for(let i=0;i<SPN;i++){ if(spLife[i]<=0) continue; spLife[i]-=dt; const v=spVel[i]; v.y-=6.5*dt*spGrav[i]; v.multiplyScalar(Math.exp(-dt*2.2));
@@ -1846,6 +1862,15 @@ const PX=(()=>{
     trGeo.attributes.position.needsUpdate=true; trGeo.attributes.aAge.needsUpdate=true; trGeo.setDrawRange(0,(trS.length-1)*6);
   }
   const _v=new TH.Vector3(), _v2=new TH.Vector3(), _v3=new TH.Vector3();
+  /* ── 擊殺爆光 / 狙擊彈道光線（擊殺爽感） ── */
+  const FXS=[]; for(let i=0;i<4;i++){ const sp=new TH.Sprite(new TH.SpriteMaterial({map:dotTex,color:0xffffff,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false})); sp.visible=false; sp.userData.life=0; scene.add(sp); FXS.push(sp); }
+  function burst(pos,hex){ const c=new TH.Color(hex); spawnSparks(pos,46,null,4.5,0,false,1,0.06,0.6,[c.r,c.g,c.b]); spawnSparks(pos,16,null,2.0,0,true,0.3,0.04,0.5);
+    const sp=FXS.find(s=>!s.visible)||FXS[0]; sp.position.copy(pos); sp.material.color.setHex(hex); sp.userData.life=0.35; sp.visible=true; }
+  const TRC=[]; for(let i=0;i<3;i++){ const geo=new TH.BufferGeometry(); geo.setAttribute('position',new TH.BufferAttribute(new Float32Array(6),3));
+    const ln=new TH.Line(geo,new TH.LineBasicMaterial({color:0xffe2a0,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false})); ln.frustumCulled=false; ln.visible=false; ln.userData.life=0; scene.add(ln); TRC.push(ln); }
+  function tracer(a,b){ const ln=TRC.find(l=>!l.visible)||TRC[0]; const pa=ln.geometry.attributes.position; pa.setXYZ(0,a.x,a.y,a.z); pa.setXYZ(1,b.x,b.y,b.z); pa.needsUpdate=true; ln.userData.life=0.35; ln.visible=true; }
+  function updateFx(dt){ for(const sp of FXS){ if(!sp.visible) continue; sp.userData.life-=dt; const pp=1-Math.max(0,sp.userData.life)/0.35; const sc=0.6+pp*3.2; sp.scale.set(sc,sc,1); sp.material.opacity=(1-pp)*0.9; if(sp.userData.life<=0) sp.visible=false; }
+    for(const ln of TRC){ if(!ln.visible) continue; ln.userData.life-=dt; ln.material.opacity=Math.max(0,ln.userData.life/0.35); if(ln.userData.life<=0) ln.visible=false; } }
   /* ── rig 組裝：rig → wrist(關節) → wIn → { hand, kspin(拇指支點) → kIn → model }，前臂固定在 rig ── */
   function buildRig(k,model,handMode,P){
     gunGroup.remove(model); model.visible=true;
@@ -1979,9 +2004,9 @@ const PX=(()=>{
       if(cfg.otf&&R.kn&&S.bladeOut>0.9&&S.prevAtkT===0&&S.flT===0){ S.dustT-=dt; if(S.dustT<=0){ S.dustT=0.06; const st=R.kn.stars[Math.random()*R.kn.stars.length|0];
         spawnSparks(R.model.localToWorld(_v.set(st[0],st[1],(Math.random()<.5?1:-1)*0.014)).clone(),1,null,0.10,0,true,0.0,0.014,0.7); } }
     }
-    updateTrail(); updateSparks(dt);
+    updateTrail(); updateSparks(dt); updateFx(dt);
   }
-  return {S:S,CFG:CFG,INS_DUR:INS_DUR,buildRig:buildRig,has:has,onSwapIn:onSwapIn,dur:dur,sound:sound,step:step,post:post,SFX:SFX,get key(){return key;}};
+  return {S:S,CFG:CFG,burst:burst,tracer:tracer,INS_DUR:INS_DUR,buildRig:buildRig,has:has,onSwapIn:onSwapIn,dur:dur,sound:sound,step:step,post:post,SFX:SFX,get key(){return key;}};
 })();
 
 for(const k in WEAPONS){ gunMeshes[k]=buildGun(k); applySkin(gunMeshes[k],k,equipped[k],getMainEnv()); }
@@ -2260,6 +2285,7 @@ let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
 let boltT=0;                              // 狙擊槍拉機柄動畫
+let hitStop=0, slowMo=0, shakeA=0;        // 擊殺爽感：定格 / 慢動作 / 鏡頭震動
 let inspectDur=INSPECT_DUR;               // 這一次檢視的長度（北極星 2.6）
 let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.30;   // 近戰橫斬/重戳連段
 let atkDur=SLASH_DUR;                     // 這一擊實際長度（每把近戰武器不同）
@@ -2546,6 +2572,22 @@ function stepKunais(dt){
     }
   }
 }
+function killText(t,c){ const k=$('killT'); k.textContent=t; k.style.color=c; k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
+function flashCross(c){ const ds=document.querySelectorAll('#cross div'); ds.forEach(d=>{ d.style.background=c; d.style.boxShadow='0 0 10px '+c; d.style.transform='scale(1.6)'; });
+  setTimeout(()=>ds.forEach(d=>{ d.style.background=''; d.style.boxShadow=''; d.style.transform=''; }),220); }
+function killJuice(e,key,head){                                  // 北極星 / 信條 / 狙擊 擊殺的爽感
+  const pos=e.grp.position.clone(); pos.y+=1.1;
+  const dir=new TH.Vector3().subVectors(pos,camera.position); dir.y=0; dir.normalize();
+  if(key==='polaris'||key==='knife'){
+    hitStop=0.09; shakeA=1.2; PX.burst(pos,key==='polaris'?0x4cc2ff:0xff5a3a);
+    killText(key==='polaris'?'北極星 · 處決':'信條 · 處決',key==='polaris'?'#7fe0ff':'#ffb29a'); flashCross(key==='polaris'?'#7fe0ff':'#ffb29a');
+    PX.SFX.shing(); blip(70,0.3,0.5,'sine'); e.grp.userData.kb=dir.multiplyScalar(3.5);
+  } else if(key==='sniper'){
+    slowMo=0.4; shakeA=1.6; const gm=gunMeshes.sniper; const mz=new TH.Vector3(); if(gm&&gm.userData.flash) gm.userData.flash.getWorldPosition(mz); else mz.copy(camera.position);
+    PX.tracer(mz,pos); PX.burst(pos,0xffd27a); killText(head?'爆頭 · 一槍斃命':'一槍斃命','#ffd76b'); flashCross('#ffd76b');
+    blip(48,0.45,0.6,'sine'); setTimeout(()=>blip(1800,0.12,0.12,'sine'),60); e.grp.userData.kb=dir.multiplyScalar(6); e.grp.userData.spin=6;
+  }
+}
 function damageEnemy(e,dmg,head,by){
   by = by || NET.id;
   e.hp-=dmg;
@@ -2555,7 +2597,7 @@ function damageEnemy(e,dmg,head,by){
     e.dead=true; e.grp.userData.t=0;
     const pts = e.tier===2?60:(e.tier===1?30:18);
     const cr  = CREDIT_BY_TIER[e.tier]||CREDIT_BY_TIER[0];
-    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); }
+    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); killJuice(e,curKey,head); }
     else if(players[by]){ players[by].sc=(players[by].sc||0)+pts;
       players[by].k=(players[by].k||0)+1; }
     const lbl = e.tier===2?'重裝兵':(e.tier===1?'突擊兵':'偵察兵');
@@ -2668,6 +2710,7 @@ function loop(now){
   requestAnimationFrame(loop);
   let dt=(now-last)/1000; last=now;
   if(dt>0.05) dt=0.05;
+  if(hitStop>0){ hitStop-=dt; dt*=0.1; } else if(slowMo>0){ slowMo-=dt; dt*=0.3; }   // 擊殺瞬間定格 / 狙擊慢動作
   if(running && !menuOpen){ step(dt); netTick(dt); lerpAvatars(dt); }
   renderer.render(scene,camera);
   drawMini();
@@ -2769,6 +2812,7 @@ function step(dt){
     if(sc) sc.style.opacity=scoped?'1':'0'; $('cross').style.opacity=scoped?'0':'';
     if(w0.scope&&gunMeshes[curKey]) gunMeshes[curKey].visible=!scoped;                                  // 進鏡後槍身不擋視線
     if(scoped){ camera.rotation.x+=Math.sin(tnow*1.3)*0.0012; camera.rotation.y+=Math.sin(tnow*0.9)*0.0010; }   // 憋氣晃動
+    if(shakeA>0.002){ camera.rotation.x+=Math.sin(tnow*71)*0.012*shakeA; camera.rotation.y+=Math.sin(tnow*57+1.3)*0.012*shakeA; camera.rotation.z+=Math.sin(tnow*83)*0.008*shakeA; shakeA*=Math.exp(-dt*7); }
     const rr=gunMeshes.rifle&&gunMeshes.rifle.userData.reticleMat; if(rr) rr.opacity=0.7+0.2*Math.sin(tnow*6)+adsAmt*0.2;
     if(boltT>0){ boltT-=dt; const p=1-Math.max(0,boltT)/0.75, b=gunMeshes.sniper&&gunMeshes.sniper.userData.bolt;
       if(b){ b.rotation.z=-Math.sin(Math.min(1,p*2)*Math.PI)*1.2; b.position.z=-0.05+0.12*Math.sin(Math.max(0,Math.min(1,(p-0.25)/0.5))*Math.PI); } } }
@@ -2919,6 +2963,7 @@ function step(dt){
       const g=e.grp; g.userData.t=(g.userData.t||0)+dt;
       g.rotation.z=Math.min(Math.PI/2, g.userData.t*4);
       g.position.y=-Math.min(0.5,g.userData.t*0.8);
+      if(g.userData.kb){ g.position.addScaledVector(g.userData.kb,dt*Math.max(0,1-g.userData.t*1.6)); if(g.userData.spin) g.rotation.y+=dt*g.userData.spin*Math.max(0,1-g.userData.t); }   // 擊退
       if(g.userData.t>1.4){ scene.remove(g); enemies.splice(i,1); delete enemyById[e.id]; }
       continue;
     }
@@ -3637,6 +3682,7 @@ window.__sz = {
   begin, swap, px: PX,
   pxAttack(){ if(atkGap>1.2) atkCount=0; atkGap=0; atkCount++; atkType=(atkCount%3===0)?'stab':'slash'; atkDur=PX.dur(atkCount); atkT=atkDur; return atkCount; },
   pxInspect(){ inspectT=PX.INS_DUR; inspectDur=inspectT; },
+  testKill(){ let best=null,bd=1e9; for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(player.pos); if(d<bd){ bd=d; best=e; } } if(!best) return 'no enemy'; damageEnemy(best,9999,false,NET.id); return 'killed '+best.id+' with '+curKey; },
   get knife(){ return gunMeshes.knife; },
   get hand(){ return gunMeshes.knife.userData.hand; },
   setPose(o){
