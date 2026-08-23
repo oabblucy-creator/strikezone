@@ -948,7 +948,7 @@ function makeKarambitHand(){
   const palm=new TH.Mesh(new TH.SphereGeometry(0.5,18,14),M.fab);
   palm.scale.set(0.30,0.180,0.112); palm.position.set(-0.285,-0.012,-0.076); h.add(palm);
   const heel=new TH.Mesh(new TH.SphereGeometry(0.5,14,12),M.fab);
-  heel.scale.set(0.15,0.170,0.105); heel.position.set(-0.415,-0.026,-0.068); h.add(heel);
+  heel.scale.set(0.15,0.170,0.105); heel.position.set(-0.090,-0.040,-0.030); h.add(heel);   // 反手握：掌根在小指外側（靠刀身那端）
   const back=new TH.Mesh(new TH.SphereGeometry(0.5,16,12),M.fab);
   back.scale.set(0.28,0.160,0.072); back.position.set(-0.275,0.028,0.050); h.add(back);
 
@@ -977,12 +977,16 @@ function makeKarambitHand(){
   limbSeg(h,[-0.330,0.074,-0.034],[-0.160,0.112,0.010],0.046,M.fab,0.038);
   const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
   nail.position.set(-0.186,0.144,0.008); nail.rotation.z=-0.16; h.add(nail);
-  // 腕帶 + 前臂：越過指環往 -x 伸，讓手臂跟其他三把刀一樣從畫面右下進來（往 +x 伸會擋住整個畫面）
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
-  cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.672,-0.052,-0.048); h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
-  tab.position.set(-0.672,0.046,-0.048); h.add(tab);
-  limbSeg(h,[-0.732,-0.058,-0.046],[-1.072,-0.096,-0.038],0.106,M.fab,0.078);
+  // 反手握的手腕是彎的：前臂不沿握把軸線，而是從小指外側往模型 (0.19,-0.88,0.48) 方向伸出去，
+  // 這個方向在持刀 pose 下正好落在畫面右下（沿 -x 伸會變成往上戳出畫面）。
+  limbSeg(h,[-0.105,-0.030,-0.020],[-0.020,-0.150,0.048],0.100,M.fab,0.096);   // 手腕
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.114,0.108,0.098,20),M.strap);
+  cuff.position.set(-0.004,-0.196,0.070);
+  cuff.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),new TH.Vector3(0.19,-0.88,0.48).normalize());
+  h.add(cuff);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.030,0.115,0.055),M.pad);
+  tab.position.set(-0.080,-0.176,0.046); h.add(tab);
+  limbSeg(h,[0.014,-0.240,0.092],[0.112,-0.694,0.340],0.106,M.fab,0.078);      // 前臂
   return h;
 }
 /* ===== 蝴蝶刀的手（右手・正手握）：四指環繞合起來的兩片握把 =====
@@ -1136,58 +1140,146 @@ function makeGunModel(key){
   if(key==='butterfly') return makeButterflyModel();
   if(key==='kunai') return makeKunaiModel();
   const g = new TH.Group();
+  const env = getMainEnv();
+  // 可換皮的兩種材質（applySkin 只會換有 userData.part 的件）
   const matB = new TH.MeshStandardMaterial({color:0x3a3f4a,roughness:.55,metalness:.55});
   const matD = new TH.MeshStandardMaterial({color:0x202329,roughness:.5,metalness:.6});
-  const B=(w,h,d,x,y,z,part,rx)=>{ const m=new TH.Mesh(new TH.BoxGeometry(w,h,d),
-    part==='body'?matB:matD); m.userData.part=part;
+  // 不換皮的細節材質：這些才是「不像積木」的關鍵
+  const steel=new TH.MeshStandardMaterial({color:0x9aa3ae,roughness:.28,metalness:.95,envMap:env,envMapIntensity:1.1});
+  const blued=new TH.MeshStandardMaterial({color:0x2b2f36,roughness:.34,metalness:.88,envMap:env,envMapIntensity:.85});
+  const poly =new TH.MeshStandardMaterial({color:0x1b1e23,roughness:.86,metalness:.06});
+  const bolt =new TH.MeshStandardMaterial({color:0xb8c0cb,roughness:.22,metalness:.98,envMap:env,envMapIntensity:1.3});
+  const wood =new TH.MeshStandardMaterial({map:makeTex((c,S)=>{
+      c.fillStyle='#6b4a2c'; c.fillRect(0,0,S,S);
+      for(let i=0;i<70;i++){ c.strokeStyle='rgba(45,28,14,'+(0.05+Math.random()*0.16)+')';
+        c.lineWidth=1+Math.random()*3; c.beginPath(); const y=Math.random()*S;
+        c.moveTo(-10,y); for(let x=0;x<=S;x+=16) c.lineTo(x,y+Math.sin(x/30+i)*6); c.stroke(); }
+      wear(c,S,0.28); grain(c,S,6);
+    }),color:0xffffff,roughness:.62,metalness:.05});
+
+  // ── 圓角盒：用倒角擠出取代 BoxGeometry，邊緣會吃到光就不像積木了 ──
+  const rrShape=(w,h,r)=>{
+    r=Math.min(r,Math.min(w,h)/2-0.001);
+    const hw=w/2-r, hh=h/2-r, s=new TH.Shape();
+    s.moveTo(-hw-r,-hh);
+    s.lineTo(-hw-r, hh); s.quadraticCurveTo(-hw-r, hh+r, -hw, hh+r);
+    s.lineTo( hw, hh+r); s.quadraticCurveTo( hw+r, hh+r,  hw+r, hh);
+    s.lineTo( hw+r,-hh); s.quadraticCurveTo( hw+r,-hh-r,  hw,-hh-r);
+    s.lineTo(-hw,-hh-r); s.quadraticCurveTo(-hw-r,-hh-r, -hw-r,-hh);
+    s.closePath(); return s;
+  };
+  const RB=(w,h,d,x,y,z,part,rx,mat)=>{
+    const r=Math.min(w,h)*0.28;
+    const geo=new TH.ExtrudeGeometry(rrShape(w,h,r),
+      {depth:d,bevelEnabled:true,bevelThickness:Math.min(0.012,d*0.12),bevelSize:Math.min(0.010,r*0.5),bevelSegments:2});
+    geo.translate(0,0,-d/2);
+    const m=new TH.Mesh(geo, mat || (part==='body'?matB:matD));
+    if(part) m.userData.part=part;
+    m.position.set(x,y,z); if(rx)m.rotation.x=rx; g.add(m); return m;
+  };
+  const B=(w,h,d,x,y,z,part,rx,mat)=>{ const m=new TH.Mesh(new TH.BoxGeometry(w,h,d),
+    mat || (part==='body'?matB:matD)); if(part) m.userData.part=part;
     m.position.set(x,y,z); if(rx)m.rotation.x=rx; g.add(m); return m; };
-  const C=(r1,r2,len,x,y,z,part)=>{ const m=new TH.Mesh(new TH.CylinderGeometry(r1,r2,len,10),
-    part==='body'?matB:matD); m.userData.part=part;
+  const C=(r1,r2,len,x,y,z,part,mat)=>{ const m=new TH.Mesh(new TH.CylinderGeometry(r1,r2,len,20),
+    mat || (part==='body'?matB:matD)); if(part) m.userData.part=part;
     m.rotation.x=Math.PI/2; m.position.set(x,y,z); g.add(m); return m; };
+  // ── 皮卡汀尼導軌：一排小齒，遠看就是「有做細節」 ──
+  const RAIL=(len,x,y,z,w)=>{
+    w=w||0.052;
+    B(w,0.012,len,x,y,z,null,0,blued);
+    const n=Math.max(3,Math.round(len/0.042));
+    for(let i=0;i<n;i++){
+      const t=B(w*0.86,0.016,0.020,x,y+0.013,z-len/2+0.021+i*(len-0.042)/(n-1),null,0,blued);
+      t.castShadow=false;
+    }
+  };
+  // ── 螺絲 / 銷 ──
+  const PIN=(r,x,y,z)=>{ const m=new TH.Mesh(new TH.CylinderGeometry(r,r,0.13,10),bolt);
+    m.rotation.z=Math.PI/2; m.position.set(x,y,z); g.add(m); return m; };
+  // ── 護弓：用環的一段做出弧線，不再是方條 ──
+  const GUARD=(x,y,z,rad)=>{ const m=new TH.Mesh(new TH.TorusGeometry(rad||0.052,0.008,8,16,Math.PI*1.15),blued);
+    m.rotation.y=Math.PI/2; m.rotation.z=-0.5; m.position.set(x,y,z); g.add(m); return m; };
+  // ── 扳機 ──
+  const TRIG=(x,y,z)=>{ const m=new TH.Mesh(new TH.BoxGeometry(0.014,0.052,0.016),bolt);
+    m.rotation.x=0.22; m.position.set(x,y,z); g.add(m); return m; };
+  // ── 槍口制退器：開槽的套筒 ──
+  const BRAKE=(r,len,x,y,z)=>{
+    C(r,r,len,x,y,z,null,blued);
+    for(let i=0;i<3;i++){
+      const sl=new TH.Mesh(new TH.BoxGeometry(r*2.3,0.010,0.016),poly);
+      sl.position.set(x,y,z-len/2+0.018+i*(len-0.03)/2); g.add(sl);
+    }
+  };
+
   let muzzle;
   if(key==='rifle'){            // AK：木護木+木托、彎彈匣、上導氣管
-    B(0.125,0.15,0.44, 0,0,-0.24,'accent');            // 機匣
-    B(0.135,0.125,0.32, 0,-0.005,-0.60,'body');        // 木護木
-    C(0.024,0.024,0.34, 0,0.075,-0.60,'accent');       // 導氣管
-    C(0.026,0.03,0.46, 0,0.01,-0.97,'accent');         // 槍管
-    C(0.036,0.036,0.08, 0,0.01,-1.16,'accent');        // 槍口
-    B(0.022,0.1,0.03, 0,0.07,-1.06,'accent');          // 準星座
-    B(0.05,0.04,0.07, 0,0.10,-0.40,'accent');          // 表尺
-    B(0.075,0.2,0.12, 0,-0.19,-0.16,'accent',-0.18);   // 彈匣上段
-    B(0.075,0.17,0.1, 0,-0.335,-0.065,'accent',-0.6);  // 彈匣下段（彎）
-    B(0.09,0.17,0.1, 0,-0.155,-0.015,'body',0.28);     // 木握把
-    B(0.1,0.125,0.3, 0,-0.035,0.17,'body',0.05);       // 木槍托
-    B(0.105,0.14,0.03, 0,-0.05,0.325,'accent');        // 托底板
+    RB(0.125,0.15,0.44, 0,0,-0.24,'accent');           // 機匣
+    B(0.128,0.030,0.16, 0,0.062,-0.30,null,0,blued);   // 機匣頂蓋
+    RB(0.135,0.125,0.32, 0,-0.005,-0.60,'body',0,wood);// 木護木
+    for(let i=0;i<5;i++) B(0.138,0.008,0.018, 0,0.030,-0.72+i*0.055,null,0,blued);  // 護木散熱溝
+    C(0.024,0.024,0.34, 0,0.075,-0.60,'accent',blued); // 導氣管
+    C(0.026,0.03,0.46, 0,0.01,-0.97,'accent',blued);   // 槍管
+    BRAKE(0.036,0.09, 0,0.01,-1.17);                   // 斜切槍口制退器
+    B(0.022,0.10,0.03, 0,0.07,-1.06,'accent',0,steel); // 準星座
+    B(0.050,0.04,0.07, 0,0.10,-0.40,'accent',0,steel); // 表尺
+    B(0.036,0.026,0.09, 0.062,0.020,-0.30,null,0,poly);// 拋殼口（凹槽感）
+    B(0.020,0.020,0.10, 0.075,0.030,-0.24,null,0,bolt);// 拉柄
+    RB(0.075,0.20,0.12, 0,-0.19,-0.16,'accent',-0.18); // 彈匣上段
+    RB(0.075,0.17,0.10, 0,-0.335,-0.065,'accent',-0.6);// 彈匣下段（彎）
+    for(let i=0;i<3;i++) B(0.078,0.010,0.016, 0,-0.15-i*0.055,-0.145+i*0.02,null,-0.18,blued); // 彈匣加強肋
+    RB(0.09,0.17,0.10, 0,-0.155,-0.015,'body',0.28,wood);  // 木握把
+    RB(0.10,0.125,0.30, 0,-0.035,0.17,'body',0.05,wood);   // 木槍托
+    B(0.105,0.14,0.03, 0,-0.05,0.325,'accent',0,steel);    // 托底板
+    GUARD(0,-0.115,-0.075,0.050); TRIG(0,-0.085,-0.070);
+    PIN(0.009,0,-0.02,-0.10); PIN(0.009,0,-0.02,-0.40);
     muzzle=[0,0.01,-1.22];
   } else if(key==='aug'){       // AUG：犢牛式一體聚合物槍身
-    B(0.125,0.14,0.5, 0,-0.01,-0.06,'body');           // 主槍身
-    B(0.11,0.115,0.34, 0,-0.005,-0.45,'body');         // 前段槍身（接握把）
-    B(0.115,0.17,0.13, 0,-0.02,0.21,'body');           // 托底
-    B(0.095,0.085,0.5, 0,0.095,-0.36,'accent');        // 上機匣/滑軌
-    C(0.028,0.032,0.5, 0,0.06,-0.86,'accent');         // 槍管
-    B(0.022,0.05,0.03, 0,0.155,-0.55,'accent');        // 前準星（細柱）
-    B(0.03,0.045,0.03, 0,0.152,-0.16,'accent');        // 後照門（細柱）
-    B(0.055,0.16,0.06, 0,-0.1,-0.5,'body',0.3);        // 前握把
-    B(0.07,0.15,0.09, 0,-0.11,-0.27,'body',0.2);       // 手槍握把
-    B(0.02,0.03,0.16, 0,-0.17,-0.37,'accent');         // 護弓
-    B(0.07,0.19,0.1, 0,-0.17,0.04,'accent',-0.1);      // 後置彈匣
+    RB(0.125,0.14,0.50, 0,-0.01,-0.06,'body');         // 主槍身
+    RB(0.11,0.115,0.34, 0,-0.005,-0.45,'body');        // 前段槍身
+    RB(0.115,0.17,0.13, 0,-0.02,0.21,'body');          // 托底
+    B(0.118,0.012,0.11, 0,0.055,0.21,null,0,poly);     // 托底防滑板
+    RB(0.095,0.085,0.50, 0,0.095,-0.36,'accent');      // 上機匣
+    RAIL(0.42, 0,0.145,-0.34);                          // 頂部導軌
+    C(0.028,0.032,0.50, 0,0.06,-0.86,'accent',blued);  // 槍管
+    BRAKE(0.038,0.085, 0,0.06,-1.15);
+    for(let i=0;i<4;i++) B(0.10,0.010,0.014, 0,0.020,-0.56+i*0.05,null,0,poly);   // 前身散熱槽
+    B(0.030,0.024,0.09, 0.058,0.030,-0.10,null,0,poly);// 拋殼口
+    B(0.018,0.018,0.09, 0.070,0.038,-0.05,null,0,bolt);// 拉柄
+    RB(0.055,0.16,0.06, 0,-0.10,-0.50,'body',0.3);     // 前握把
+    RB(0.07,0.15,0.09, 0,-0.11,-0.27,'body',0.2);      // 手槍握把
+    GUARD(0,-0.165,-0.365,0.048); TRIG(0,-0.135,-0.360);
+    RB(0.07,0.19,0.10, 0,-0.17,0.04,'accent',-0.1);    // 後置彈匣
+    for(let i=0;i<3;i++) B(0.074,0.009,0.014, 0,-0.13-i*0.05,0.055-i*0.006,null,-0.1,blued);
+    PIN(0.008,0,0.02,0.02); PIN(0.008,0,-0.05,-0.30);
     muzzle=[0,0.06,-1.13];
   } else if(key==='shotgun'){   // 霰彈槍：泵動+下置管彈倉
-    B(0.115,0.14,0.32, 0,0,-0.2,'accent');             // 機匣
-    C(0.042,0.045,0.62, 0,0.03,-0.72,'accent');        // 槍管
-    C(0.03,0.03,0.5, 0,-0.045,-0.68,'accent');         // 管彈倉
-    B(0.11,0.085,0.24, 0,-0.045,-0.6,'body');          // 泵動護木
-    B(0.02,0.05,0.02, 0,0.075,-1.0,'accent');          // 準星珠
-    B(0.09,0.16,0.1, 0,-0.15,-0.02,'body',0.3);        // 握把
-    B(0.1,0.13,0.3, 0,-0.03,0.16,'body',0.06);         // 槍托
+    RB(0.115,0.14,0.32, 0,0,-0.20,'accent');           // 機匣
+    B(0.118,0.026,0.14, 0,0.058,-0.22,null,0,blued);   // 機匣頂
+    C(0.042,0.045,0.62, 0,0.03,-0.72,'accent',blued);  // 槍管
+    C(0.030,0.030,0.50, 0,-0.045,-0.68,'accent',steel);// 管彈倉
+    C(0.034,0.034,0.05, 0,-0.045,-0.95,null,bolt);     // 彈倉端帽
+    RB(0.11,0.085,0.24, 0,-0.045,-0.60,'body');        // 泵動護木
+    for(let i=0;i<6;i++) B(0.114,0.012,0.014, 0,-0.010,-0.70+i*0.038,null,0,poly);  // 護木防滑溝
+    B(0.020,0.05,0.02, 0,0.075,-1.00,'accent',0,bolt); // 準星珠
+    B(0.034,0.026,0.10, 0.058,0.020,-0.20,null,0,poly);// 拋殼口
+    RB(0.09,0.16,0.10, 0,-0.15,-0.02,'body',0.3);      // 握把
+    RB(0.10,0.13,0.30, 0,-0.03,0.16,'body',0.06);      // 槍托
+    B(0.104,0.13,0.028, 0,-0.04,0.31,null,0,poly);     // 橡膠托底墊
+    GUARD(0,-0.108,-0.085,0.052); TRIG(0,-0.078,-0.080);
+    PIN(0.009,0,-0.01,-0.09); PIN(0.009,0,-0.01,-0.31);
     muzzle=[0,0.03,-1.06];
   } else {                      // 手槍：滑套+底把
-    B(0.085,0.085,0.36, 0,0.03,-0.2,'accent');         // 滑套
-    B(0.02,0.03,0.05, 0,0.085,-0.35,'accent');         // 準星
-    B(0.02,0.035,0.03, 0,0.085,-0.045,'accent');       // 照門
-    B(0.08,0.055,0.3, 0,-0.035,-0.18,'body');          // 底把
-    B(0.078,0.19,0.11, 0,-0.14,-0.035,'body',0.22);    // 握把
-    B(0.015,0.025,0.1, 0,-0.085,-0.24,'accent');       // 護弓
+    RB(0.085,0.085,0.36, 0,0.03,-0.20,'accent');       // 滑套
+    for(let i=0;i<7;i++) B(0.088,0.030,0.010, 0,0.030,-0.06+i*0.018,null,0,blued);  // 滑套防滑紋
+    B(0.020,0.03,0.05, 0,0.085,-0.35,'accent',0,bolt); // 準星
+    B(0.020,0.035,0.03, 0,0.085,-0.045,'accent',0,bolt);// 照門
+    B(0.030,0.022,0.08, 0.046,0.040,-0.20,null,0,poly);// 拋殼口
+    RB(0.08,0.055,0.30, 0,-0.035,-0.18,'body');        // 底把
+    RAIL(0.10, 0,-0.070,-0.30,0.040);                   // 底把戰術導軌
+    RB(0.078,0.19,0.11, 0,-0.14,-0.035,'body',0.22);   // 握把
+    for(let i=0;i<4;i++) B(0.082,0.010,0.012, 0,-0.09-i*0.038,-0.026-i*0.008,null,0.22,poly); // 握把止滑
+    B(0.074,0.020,0.10, 0,-0.235,-0.010,null,0.22,bolt);// 彈匣底板
+    GUARD(0,-0.098,-0.235,0.042); TRIG(0,-0.070,-0.230);
     muzzle=[0,0.03,-0.42];
   }
   // 槍口火光
@@ -1539,11 +1631,11 @@ const knifeHand=makeKnifeHand(); gunMeshes.knife.add(knifeHand); gunMeshes.knife
 const polarisHand=makePolarisHand(); gunMeshes.polaris.add(polarisHand); gunMeshes.polaris.userData.hand=polarisHand;
 gunMeshes.polaris.rotation.set(-0.12,1.82,0.62); gunMeshes.polaris.scale.set(0.30,0.30,0.30); gunMeshes.polaris.position.set(0.10,0.09,0.01);   // 正手握，與信條同一套朝向
 const karambitHand=makeKarambitHand(); gunMeshes.karambit.add(karambitHand); gunMeshes.karambit.userData.hand=karambitHand;
-gunMeshes.karambit.rotation.set(0.15,-1.34,3.30); gunMeshes.karambit.scale.set(0.33,0.33,0.33); gunMeshes.karambit.position.set(0.16,0.11,0.02);   // 真·反手握：刀尖朝下勾、拳頭在右上（rz≈π 面內翻 + 反向 yaw）
+gunMeshes.karambit.rotation.set(0,1.62,-1.37); gunMeshes.karambit.scale.set(0.265,0.265,0.265); gunMeshes.karambit.position.set(0.15,0.06,0.02);   // 反手握（一般拿法）：刀懸在拳頭下方、爪鉤朝前下、指環露在拳頭上方
 const butterflyHand=makeButterflyHand(); gunMeshes.butterfly.add(butterflyHand); gunMeshes.butterfly.userData.hand=butterflyHand;
 gunMeshes.butterfly.rotation.set(-0.12,1.82,0.62); gunMeshes.butterfly.scale.set(0.32,0.32,0.32); gunMeshes.butterfly.position.set(0.10,0.09,0.01);
 const kunaiHand=makeKunaiHand(); gunMeshes.kunai.add(kunaiHand); gunMeshes.kunai.userData.hand=kunaiHand;
-gunMeshes.kunai.rotation.set(-0.10,1.86,0.46); gunMeshes.kunai.scale.set(0.34,0.34,0.34); gunMeshes.kunai.position.set(0.11,0.08,0.01);   // 投擲握法：刀尖朝前上
+gunMeshes.kunai.rotation.set(-0.10,1.86,0.46); gunMeshes.kunai.scale.set(0.270,0.270,0.270); gunMeshes.kunai.position.set(0.11,0.08,0.01);   // 投擲握法：刀尖朝前上
 gunMeshes.knife.rotation.set(-0.12,1.82,0.62); gunMeshes.knife.scale.set(0.29,0.29,0.29); gunMeshes.knife.position.set(0.10,0.10,0.02);   // 正手握：刀尖朝前上、刀刃朝下、拳頭在右下、前臂往右後（已對圖驗證）
 const GUN_HIP = new TH.Vector3(0.16,-0.16,-0.34);
 const GUN_ADS = {                       // 每把槍的開鏡位置：瞄具貼準心下緣、不擋視線
@@ -1969,21 +2061,80 @@ function shotFx(a,b){
 
 /* ========= 苦無投擲物：飛出去、命中結算、插在地上 ========= */
 const kunais=[]; let kunaiTpl=null;
+/* ===== 苦無飛行特效：面向飛行方向時，左側噴火焰、右側結冰霜 ===== */
+const kunaiFx=[];                                  // 拖尾粒子 {mesh,life,max,vel}
+function elemStreak(color){                        // 往後收尖的光條
+  // 用一般混合而非加色：加色在亮天空下會被沖成白色，顏色分不出來
+  const m=new TH.Mesh(new TH.ConeGeometry(0.072,1.10,12,1,true),
+    new TH.MeshBasicMaterial({color:color,transparent:true,opacity:0.72,
+      depthWrite:false,side:TH.DoubleSide}));
+  m.rotation.z=Math.PI/2;                          // 圓錐尖端轉到 -x（拖在後面）
+  m.position.x=-0.55;                              // 細長才像拖尾，粗短會像一顆圓錐
+  return m;
+}
+function makeKunaiFx(){
+  const fx=new TH.Group();
+  const fire=elemStreak(0xff4a08); fire.position.z=-0.19; fx.add(fire);   // 左（local -z）＝火焰
+  const ice =elemStreak(0x1fa8f0); ice.position.z= 0.19; fx.add(ice);     // 右（local +z）＝冰霜
+  const fCore=new TH.Mesh(new TH.SphereGeometry(0.052,10,8),
+    new TH.MeshBasicMaterial({color:0xffc45a,transparent:true,opacity:0.95,
+      blending:TH.AdditiveBlending,depthWrite:false}));
+  fCore.position.set(-0.02,0,-0.19); fx.add(fCore);
+  const iCore=fCore.clone(); iCore.material=fCore.material.clone();
+  iCore.material.color.set(0xbdefff); iCore.position.z=0.19; fx.add(iCore);
+  fx.userData={fire:fire,ice:ice,fCore:fCore,iCore:iCore,t:0};
+  scene.add(fx); return fx;
+}
+// 以飛行方向建座標系：local x=前、y=上、z=玩家的右手邊
+const _fwd=new TH.Vector3(), _rgt=new TH.Vector3(), _up=new TH.Vector3(), _m4=new TH.Matrix4();
+function orientFx(fx,pos,vel){
+  _fwd.copy(vel).normalize();
+  _rgt.crossVectors(_fwd,new TH.Vector3(0,1,0));
+  if(_rgt.lengthSq()<1e-6) _rgt.set(0,0,1);
+  _rgt.normalize();
+  _up.crossVectors(_rgt,_fwd).normalize();
+  _m4.makeBasis(_fwd,_up,_rgt);
+  fx.quaternion.setFromRotationMatrix(_m4);
+  fx.position.copy(pos);
+}
+function spawnFxSpark(pos,color,side){
+  const m=new TH.Mesh(new TH.SphereGeometry(0.030+Math.random()*0.026,7,6),
+    new TH.MeshBasicMaterial({color:color,transparent:true,opacity:0.9,
+      blending:TH.AdditiveBlending,depthWrite:false}));
+  m.position.copy(pos);
+  scene.add(m);
+  const life=0.30+Math.random()*0.20;
+  kunaiFx.push({mesh:m, life:life, max:life,
+    vel:side.clone().multiplyScalar(0.5+Math.random()*0.9).add(
+        new TH.Vector3((Math.random()-0.5)*0.7,0.5+Math.random()*0.7,(Math.random()-0.5)*0.7))});
+}
+function stepKunaiFx(dt){
+  for(let i=kunaiFx.length-1;i>=0;i--){
+    const f=kunaiFx[i]; f.life-=dt;
+    if(f.life<=0){ scene.remove(f.mesh); f.mesh.material.dispose(); f.mesh.geometry.dispose(); kunaiFx.splice(i,1); continue; }
+    f.mesh.position.addScaledVector(f.vel,dt);
+    const k=f.life/f.max;
+    f.mesh.material.opacity=0.9*k;
+    f.mesh.scale.setScalar(0.5+k*0.7);
+  }
+}
 function spawnKunai(){
   if(!kunaiTpl) kunaiTpl=makeKunaiModel(true);      // 輕量版模板，之後 clone
-  const m=kunaiTpl.clone(); m.scale.setScalar(0.26);
+  const m=kunaiTpl.clone(); m.scale.setScalar(0.205);
   const dir=new TH.Vector3(); camera.getWorldDirection(dir); dir.normalize();
   const o=camera.getWorldPosition(new TH.Vector3());
   m.position.copy(o).addScaledVector(dir,0.55).add(new TH.Vector3(0,-0.10,0));
   scene.add(m);
-  kunais.push({mesh:m, vel:dir.clone().multiplyScalar(52), life:7, stuck:false, spin:0});
+  kunais.push({mesh:m, vel:dir.clone().multiplyScalar(52), life:7, stuck:false, spin:0, fx:makeKunaiFx(), emit:0});
 }
 function stepKunais(dt){
+  stepKunaiFx(dt);
   const XA=new TH.Vector3(1,0,0);
+  const killFx=k=>{ if(k.fx){ scene.remove(k.fx); k.fx=null; } };
   for(let i=kunais.length-1;i>=0;i--){
     const k=kunais[i];
     k.life-=dt;
-    if(k.life<=0){ scene.remove(k.mesh); kunais.splice(i,1); continue; }
+    if(k.life<=0){ scene.remove(k.mesh); killFx(k); kunais.splice(i,1); continue; }
     if(k.stuck) continue;
     const prev=k.mesh.position.clone();
     k.vel.y-=9.5*dt;                                  // 輕微下墜，丟遠會有拋物線
@@ -1991,6 +2142,22 @@ function stepKunais(dt){
     const d=k.vel.clone().normalize();
     k.mesh.quaternion.setFromUnitVectors(XA,d);       // 刀尖朝飛行方向
     k.spin+=dt*20; k.mesh.rotateX(k.spin);            // 沿飛行軸自旋
+    if(k.fx){                                        // 特效跟著飛、左火右冰各噴各的
+      orientFx(k.fx,k.mesh.position,k.vel);
+      const u=k.fx.userData; u.t+=dt;
+      const fl=0.72+Math.sin(u.t*38)*0.28;            // 火焰跳動
+      u.fire.material.opacity=0.9*fl; u.fCore.material.opacity=0.95*fl;
+      u.fire.scale.set(1,0.85+fl*0.3,1);
+      const ic=0.80+Math.sin(u.t*11)*0.14;            // 冰霜緩慢起伏
+      u.ice.material.opacity=0.85*ic; u.iCore.material.opacity=0.9*ic;
+      k.emit+=dt;
+      if(k.emit>0.028){ k.emit=0;
+        const L=new TH.Vector3(0,0,-1).applyQuaternion(k.fx.quaternion);   // local -z = 左
+        const R=L.clone().negate();
+        spawnFxSpark(k.mesh.position.clone().addScaledVector(L,0.19),0xff6a12,L);
+        spawnFxSpark(k.mesh.position.clone().addScaledVector(R,0.19),0x5fd0ff,R);
+      }
+    }
     const seg=new TH.Vector3().subVectors(k.mesh.position,prev);
     const len=seg.length();
     let gone=false;
@@ -2004,19 +2171,19 @@ function stepKunais(dt){
           if(isHost()) damageEnemy(e,dmg,head,NET.id);
           else { toHost({t:'ehit',id:e.id,d:dmg,h:head}); showHit(false,head); }
           sHitEnemy(); sparkBurst(hit[0].point.clone(),0xff5050);
-          scene.remove(k.mesh); kunais.splice(i,1); gone=true; break;
+          scene.remove(k.mesh); killFx(k); kunais.splice(i,1); gone=true; break;
         }
       }
     }
     if(gone) continue;
     if(k.mesh.position.y<=0.08){                       // 落地 → 插住幾秒
-      k.mesh.position.y=0.08; k.stuck=true;
+      k.mesh.position.y=0.08; k.stuck=true; killFx(k);
       k.mesh.rotation.set(-Math.PI*0.32,k.mesh.rotation.y,0);
       k.life=Math.min(k.life,4.5);
       sparkBurst(k.mesh.position.clone(),0xffd27a);
     }
     if(Math.abs(k.mesh.position.x)>WALL||Math.abs(k.mesh.position.z)>WALL){
-      scene.remove(k.mesh); kunais.splice(i,1);
+      scene.remove(k.mesh); killFx(k); kunais.splice(i,1);
     }
   }
 }
