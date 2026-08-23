@@ -502,13 +502,13 @@ function makeKnifeHand(){
     limbSeg(h,[fx, 0.064,0.044],[fx,-0.010,0.070+ex],r,M.fab);
     limbSeg(h,[fx,-0.010,0.070+ex],[fx,-0.080,0.020],r*0.94,M.fab);
     limbSeg(h,[fx,-0.080,0.020],[fx,-0.062,-0.054],r*0.84,M.fab);
-    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad); // 指節護甲
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.70,r*1.05,r*0.82),M.pad); // 指節護甲
     pad.position.set(fx,0.070,0.040); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.105,-0.199,-0.291];
   for(let i=0;i<GAPS.length;i++){
-    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.140,0.150),M.seam);
-    gv.position.set(GAPS[i],-0.018,0.032); h.add(gv);
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.007,0.106,0.080),M.seam);
+    gv.position.set(GAPS[i],-0.006,0.008); h.add(gv);
   }
   // 拇指：壓在握把上緣往刀尖方向（分辨左右手的關鍵特徵）
   limbSeg(h,[-0.212,-0.014,-0.086],[-0.156,0.058,-0.038],0.052,M.fab,0.046);
@@ -516,11 +516,11 @@ function makeKnifeHand(){
   const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
   nail.position.set(-0.020,0.122,0.010); nail.rotation.z=-0.16; h.add(nail);
   // 手腕 → 腕帶 → 前臂
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap);
   cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.492,-0.048,-0.048); h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad);
   tab.position.set(-0.492,0.050,-0.048); h.add(tab);
-  limbSeg(h,[-0.552,-0.054,-0.046],[-0.892,-0.092,-0.038],0.106,M.fab,0.078);
+  limbSeg(h,[-0.552,-0.054,-0.046],[-0.892,-0.092,-0.038],0.079,M.fab,0.058);
   return h;
 }
 /* ===== 信條 近戰刀模型（依設計圖：clip-point 鋸齒刀身 + 白骨指虎 + 紅寶石徽章）===== */
@@ -758,13 +758,13 @@ function makePolarisHand(){
     limbSeg(h,[fx, 0.086,0.042],[fx,-0.010,0.068+ex],r,M.fab);
     limbSeg(h,[fx,-0.010,0.068+ex],[fx,-0.098,0.018],r*0.94,M.fab);
     limbSeg(h,[fx,-0.098,0.018],[fx,-0.076,-0.054],r*0.84,M.fab);
-    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad); // 指節護甲
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.70,r*1.05,r*0.82),M.pad); // 指節護甲
     pad.position.set(fx,0.090,0.038); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.187,-0.282,-0.376];
   for(let i=0;i<GAPS.length;i++){
-    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
-    gv.position.set(GAPS[i],-0.020,0.030); h.add(gv);
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.007,0.112,0.084),M.seam);
+    gv.position.set(GAPS[i],-0.006,0.006); h.add(gv);
   }
   // 拇指（加粗＋指甲片，明確壓在握把上緣）
   limbSeg(h,[-0.292,-0.014,-0.080],[-0.238,0.066,-0.032],0.052,M.fab,0.046);
@@ -772,11 +772,11 @@ function makePolarisHand(){
   const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
   nail.position.set(-0.104,0.136,0.008); nail.rotation.z=-0.16; h.add(nail);
   // 手腕束帶 → 前臂護套
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap);
   cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.560,-0.048,-0.046); h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);        // 魔鬼氈壓條
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad);        // 魔鬼氈壓條
   tab.position.set(-0.560,0.050,-0.046); h.add(tab);
-  limbSeg(h,[-0.620,-0.054,-0.044],[-0.960,-0.092,-0.036],0.106,M.fab,0.078); // 前臂護套
+  limbSeg(h,[-0.620,-0.054,-0.044],[-0.960,-0.092,-0.036],0.079,M.fab,0.058); // 前臂護套
   return h;
 }
 /* ===== 爪刀 Karambit（三角洲風：黑鋼虎紋握把 + 古銅指環 + hawkbill 內凹刃）=====
@@ -964,13 +964,13 @@ function makeKarambitHand(){
     limbSeg(h,[fx, 0.068,0.036],[fx,-0.008,0.058+ex],r,M.fab);
     limbSeg(h,[fx,-0.008,0.058+ex],[fx,-0.076,0.016],r*0.94,M.fab);
     limbSeg(h,[fx,-0.076,0.016],[fx,-0.058,-0.050],r*0.84,M.fab);
-    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.70,r*1.05,r*0.82),M.pad);
     pad.position.set(fx,0.072,0.034); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.288,-0.176];
   for(let i=0;i<GAPS.length;i++){
-    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
-    gv.position.set(GAPS[i],-0.020,0.030); h.add(gv);
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.007,0.112,0.084),M.seam);
+    gv.position.set(GAPS[i],-0.006,0.006); h.add(gv);
   }
   // 拇指：壓在握把上緣、朝刀身方向
   limbSeg(h,[-0.390,-0.014,-0.078],[-0.330,0.056,-0.032],0.050,M.fab,0.044);
@@ -980,13 +980,13 @@ function makeKarambitHand(){
   // 反手握的手腕是彎的：前臂不沿握把軸線，而是從小指外側往模型 (0.19,-0.88,0.48) 方向伸出去，
   // 這個方向在持刀 pose 下正好落在畫面右下（沿 -x 伸會變成往上戳出畫面）。
   limbSeg(h,[-0.105,-0.030,-0.020],[-0.020,-0.150,0.048],0.100,M.fab,0.096);   // 手腕
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.114,0.108,0.098,20),M.strap);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.098,0.092,0.088,20),M.strap);
   cuff.position.set(-0.004,-0.196,0.070);
   cuff.quaternion.setFromUnitVectors(new TH.Vector3(0,1,0),new TH.Vector3(0.19,-0.88,0.48).normalize());
   h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.030,0.115,0.055),M.pad);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.024,0.096,0.046),M.pad);
   tab.position.set(-0.080,-0.176,0.046); h.add(tab);
-  limbSeg(h,[0.014,-0.240,0.092],[0.112,-0.694,0.340],0.106,M.fab,0.078);      // 前臂
+  limbSeg(h,[0.014,-0.240,0.092],[0.112,-0.694,0.340],0.079,M.fab,0.058);      // 前臂
   return h;
 }
 /* ===== 蝴蝶刀的手（右手・正手握）：四指環繞合起來的兩片握把 =====
@@ -1006,23 +1006,23 @@ function makeButterflyHand(){
     limbSeg(h,[fx, 0.076,0.062],[fx,-0.010,0.090+ex],r,M.fab);
     limbSeg(h,[fx,-0.010,0.090+ex],[fx,-0.092,0.030],r*0.94,M.fab);
     limbSeg(h,[fx,-0.092,0.030],[fx,-0.074,-0.060],r*0.84,M.fab);
-    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.70,r*1.05,r*0.82),M.pad);
     pad.position.set(fx,0.082,0.056); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.209,-0.307,-0.403];
   for(let i=0;i<GAPS.length;i++){
-    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.160),M.seam);
-    gv.position.set(GAPS[i],-0.020,0.044); h.add(gv);
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.007,0.114,0.090),M.seam);
+    gv.position.set(GAPS[i],-0.008,0.014); h.add(gv);
   }
   limbSeg(h,[-0.318,-0.014,-0.100],[-0.262,0.062,-0.048],0.052,M.fab,0.046);
   limbSeg(h,[-0.262,0.062,-0.048],[-0.098,0.096,0.014],0.046,M.fab,0.038);
   const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
   nail.position.set(-0.124,0.128,0.012); nail.rotation.z=-0.16; h.add(nail);
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap);
   cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.590,-0.048,-0.062); h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad);
   tab.position.set(-0.590,0.050,-0.062); h.add(tab);
-  limbSeg(h,[-0.650,-0.054,-0.060],[-0.990,-0.092,-0.050],0.106,M.fab,0.078);
+  limbSeg(h,[-0.650,-0.054,-0.060],[-0.990,-0.092,-0.050],0.079,M.fab,0.058);
   return h;
 }
 /* ===== 苦無 Kunai（黑鋼葉形雙刃 + 緋紅纏繩 + 金環吊符）=====
@@ -1114,23 +1114,23 @@ function makeKunaiHand(){
     limbSeg(h,[fx, 0.078,0.050],[fx,-0.010,0.078+ex],r,M.fab);
     limbSeg(h,[fx,-0.010,0.078+ex],[fx,-0.096,0.022],r*0.94,M.fab);
     limbSeg(h,[fx,-0.096,0.022],[fx,-0.074,-0.056],r*0.84,M.fab);
-    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.95,r*1.45,r*1.15),M.pad);
+    const pad=new TH.Mesh(new TH.BoxGeometry(r*1.70,r*1.05,r*0.82),M.pad);
     pad.position.set(fx,0.084,0.044); pad.rotation.x=-0.30; h.add(pad);
   }
   const GAPS=[-0.085,-0.175,-0.263];
   for(let i=0;i<GAPS.length;i++){
-    const gv=new TH.Mesh(new TH.BoxGeometry(0.009,0.150,0.150),M.seam);
-    gv.position.set(GAPS[i],-0.020,0.034); h.add(gv);
+    const gv=new TH.Mesh(new TH.BoxGeometry(0.007,0.112,0.084),M.seam);
+    gv.position.set(GAPS[i],-0.006,0.010); h.add(gv);
   }
   limbSeg(h,[-0.200,-0.014,-0.090],[-0.145,0.066,-0.040],0.052,M.fab,0.046);   // 拇指壓在刀根
   limbSeg(h,[-0.145,0.066,-0.040],[0.012,0.098,0.012],0.046,M.fab,0.038);
   const nail=new TH.Mesh(new TH.BoxGeometry(0.078,0.016,0.054),M.pad);
   nail.position.set(-0.014,0.130,0.010); nail.rotation.z=-0.16; h.add(nail);
-  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.112,0.106,0.095,20),M.strap);
+  const cuff=new TH.Mesh(new TH.CylinderGeometry(0.096,0.090,0.086,20),M.strap);
   cuff.rotation.z=Math.PI/2+0.05; cuff.position.set(-0.470,-0.048,-0.050); h.add(cuff);
-  const tab=new TH.Mesh(new TH.BoxGeometry(0.055,0.030,0.115),M.pad);
+  const tab=new TH.Mesh(new TH.BoxGeometry(0.046,0.024,0.096),M.pad);
   tab.position.set(-0.470,0.050,-0.050); h.add(tab);
-  limbSeg(h,[-0.530,-0.054,-0.048],[-0.870,-0.092,-0.040],0.106,M.fab,0.078);
+  limbSeg(h,[-0.530,-0.054,-0.048],[-0.870,-0.092,-0.040],0.079,M.fab,0.058);
   return h;
 }
 function makeGunModel(key){
@@ -1590,7 +1590,7 @@ function getMainEnv(){
   return mainEnv;
 }
 
-let equipped={rifle:'default',shotgun:'default',pistol:'default'};
+let equipped={rifle:'default',aug:'default',shotgun:'default',pistol:'default'};   // aug 之前漏掉
 try{ const sv=JSON.parse(localStorage.getItem('sz_skins')||'{}');
   for(const k in equipped) if(sv[k]&&skinById(sv[k]).id===sv[k]) equipped[k]=sv[k];
 }catch(e){}
@@ -1600,11 +1600,50 @@ function saveSkins(){ try{localStorage.setItem('sz_skins',JSON.stringify(equippe
 const CREDIT_BY_TIER=[10,25,50];          // 偵察兵(綠) / 突擊兵(紅) / 重裝兵(紫)
 let credits=0;
 let owned={knife:false, polaris:false, karambit:false, butterfly:false, kunai:false};
+let drawCount=0;              // 已抽次數：決定下一抽價格
+let ownedSkins={};            // 已抽到的槍塗裝 {'rifle:desert':true,...}；default 一律免費
 try{ const wv=JSON.parse(localStorage.getItem('sz_wallet')||'{}');
   if(typeof wv.credits==='number' && isFinite(wv.credits)) credits=Math.max(0,Math.floor(wv.credits));
   if(wv.owned) for(const k in owned) owned[k]=!!wv.owned[k];
+  if(typeof wv.drawCount==='number' && isFinite(wv.drawCount)) drawCount=Math.max(0,Math.floor(wv.drawCount));
+  if(wv.ownedSkins && typeof wv.ownedSkins==='object') ownedSkins=wv.ownedSkins;
 }catch(e){}
-function saveWallet(){ try{localStorage.setItem('sz_wallet',JSON.stringify({credits:credits,owned:owned}));}catch(e){} }
+function saveWallet(){ try{localStorage.setItem('sz_wallet',
+  JSON.stringify({credits:credits,owned:owned,drawCount:drawCount,ownedSkins:ownedSkins}));}catch(e){} }
+
+/* ========= 轉蛋：四把刀 + 槍的塗裝。第一抽 1000，之後每抽 ×1.5；抽到重複退一半 ========= */
+const GACHA_KNIVES=['polaris','karambit','butterfly','kunai'];   // 信條不進池，維持直接購買
+const GACHA_GUNS=['rifle','aug','shotgun','pistol'];
+const SKIN_WEIGHT=[0,3,2,1.5,1];                                  // 依稀有度給權重，越稀有越難抽
+function drawCost(){ return Math.round(1000*Math.pow(1.5,drawCount)); }
+function skinOwned(gun,id){ return id==='default' || !!ownedSkins[gun+':'+id]; }
+function gachaPool(){
+  const pool=[];
+  for(const k of GACHA_KNIVES)
+    pool.push({w:8,type:'knife',key:k,name:WEAPONS[k].name,rar:4,css:'linear-gradient(135deg,#ffd76b,#c9862b)'});
+  for(const gk of GACHA_GUNS) for(const sk of SKINS){
+    if(sk.id==='default') continue;
+    pool.push({w:SKIN_WEIGHT[sk.rar]||1,type:'skin',gun:gk,skin:sk.id,
+               name:WEAPONS[gk].name+' · '+sk.name,rar:sk.rar,css:sk.css});
+  }
+  return pool;
+}
+function doDraw(){
+  const cost=drawCost();
+  if(credits<cost) return null;
+  credits-=cost; drawCount++;
+  const pool=gachaPool();
+  let tot=0; for(const q of pool) tot+=q.w;
+  let r=Math.random()*tot, pick=pool[pool.length-1];
+  for(const q of pool){ r-=q.w; if(r<=0){ pick=q; break; } }
+  let dup=false;
+  if(pick.type==='knife'){ if(owned[pick.key]) dup=true; else owned[pick.key]=true; }
+  else { const id=pick.gun+':'+pick.skin; if(ownedSkins[id]) dup=true; else ownedSkins[id]=true; }
+  const refund = dup ? Math.floor(cost/2) : 0;
+  if(refund){ credits+=refund; }
+  saveWallet(); updCredits(); updHUD();
+  return {pick:pick,cost:cost,dup:dup,refund:refund,next:drawCost()};
+}
 function updCredits(){
   const el=$('credBig'); if(!el) return;
   el.textContent=credits.toLocaleString();
@@ -3108,8 +3147,10 @@ function pvShow(key,skinId){
       sk.name+'</b><small>'+RARITY[sk.rar].n+'</small>';
   }
 }
+let lastDraw=null;                       // 記住上一抽結果，重繪時還看得到
 function renderArmTabs(){
-  let h='';
+  let h='<div class="armTab'+(armWeap==='__gacha'?' sel':'')+'" data-k="__gacha">🎲 轉蛋'
+    +'<small style="color:#ffcf6b">'+drawCost().toLocaleString()+' 點券／抽</small></div>';
   for(const k of order){ const melee=isSpecial(k); const sk=skinById(equipped[k]); const lock=isLocked(k);
     h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+(lock?'🔒 ':'')+WEAPONS[k].name+
       '<small style="color:'+(lock?'#ff9a5a':(melee?'#cfd3d8':RARITY[sk.rar].c))+'">'
@@ -3120,17 +3161,59 @@ function renderArmTabs(){
   for(const el of tabs) el.onclick=()=>{ armWeap=el.dataset.k; refreshArmory(); };
 }
 function renderSkinGrid(){
+  if(armWeap==='__gacha'){
+    const cost=drawCost(), can=credits>=cost;
+    const kn=GACHA_KNIVES.filter(k=>owned[k]).length;
+    const skTotal=GACHA_GUNS.length*(SKINS.length-1);
+    const skHave=Object.keys(ownedSkins).length;
+    let res='';
+    if(lastDraw){
+      const d=lastDraw, col=(d.pick.type==='knife')?'#ffd76b':RARITY[d.pick.rar].c;
+      res='<div style="margin:14px auto 4px;max-width:270px;padding:12px;border-radius:12px;'
+        +'border:1px solid '+col+'55;background:'+col+'14">'
+        +'<div style="height:34px;border-radius:7px;background:'+d.pick.css+';margin-bottom:8px"></div>'
+        +'<div style="font-weight:800;color:'+col+'">'+((d.pick.type==='knife')?'🗡 ':'🎨 ')+d.pick.name+'</div>'
+        +'<div style="font-size:12px;color:#9aa7bd;margin-top:4px">'
+        +(d.dup?('重複了 · 退回 <b style="color:#5fd0ff">'+d.refund.toLocaleString()+'</b> 點券')
+               :'<b style="color:#7fe08a">新入手！</b>')+'</div></div>';
+    }
+    $('armSkins').innerHTML='<div style="grid-column:1/-1;padding:18px 16px;text-align:center;color:#9aa7bd;line-height:1.7">'
+      +'<div style="font-size:15px;color:#e9e3d3;font-weight:800">🎲 轉蛋</div>'
+      +'<div style="font-size:12px;margin-top:6px">池子裡有 <b style="color:#ffd76b">4 把刀</b> 和 <b style="color:#5fd0ff">'
+      +skTotal+' 種槍塗裝</b><br>抽到重複的會退一半點券</div>'
+      +res
+      +'<button id="drawBtn" class="buyBtn'+(can?'':' no')+'" style="margin-top:12px">'
+      +(can?'抽一次':'點券不足')+'　'+cost.toLocaleString()+' 點券</button>'
+      +'<div style="margin-top:8px;font-size:12px;color:#7f8da6">目前 <b style="color:#5fd0ff">'
+      +credits.toLocaleString()+'</b> 點券'+(can?'':('，還差 <b style="color:#ff9a5a">'+(cost-credits).toLocaleString()+'</b>'))
+      +'<br>已抽 '+drawCount+' 次 · 下一抽 '+Math.round(cost*1.5).toLocaleString()+' 點券</div>'
+      +'<div style="margin-top:10px;font-size:12px;color:#7f8da6">收集進度　刀 <b style="color:#ffd76b">'
+      +kn+'/4</b>　塗裝 <b style="color:#5fd0ff">'+skHave+'/'+skTotal+'</b></div></div>';
+    const db=$('drawBtn');
+    if(db) db.onclick=()=>{
+      const r=doDraw(); if(!r) return;
+      lastDraw=r;
+      addFeed((r.dup?'重複 ':'抽到 ')+'<b style="color:'+((r.pick.type==='knife')?'#ffd76b':'#5fd0ff')+'">'+r.pick.name+'</b>');
+      refreshArmory();
+    };
+    return;
+  }
   if(isSpecial(armWeap)){
     const w=WEAPONS[armWeap], have=!!owned[armWeap], can=credits>=w.price;
     const kindTxt=w.thrown?'投擲武器':'近戰武器', kindIcon=w.thrown?'🗡':'🗡️';
     const foot = have
       ? '<div class="ownTag">✓ 已擁有</div><small style="color:#7f8da6">遊戲中按 <b style="color:#cfd3d8">'
         +(order.indexOf(armWeap)+1)+'</b> 拿出　<b style="color:#cfd3d8">左鍵</b> '+(w.thrown?'投擲（無限）':'揮砍')+'　<b style="color:#cfd3d8">F</b> 旋轉檢視</small>'
-      : '<small style="color:#7f8da6">擊殺敵人賺點券：<b style="color:#66c04a">綠兵 10</b> · <b style="color:#e8483d">紅兵 25</b> · <b style="color:#9a5cff">紫兵 50</b></small>'
-        +'<br><button id="buyBtn" class="buyBtn'+(can?'':' no')+'">'+(can?'購買':'點券不足')+'　'
-        +w.price.toLocaleString()+' 點券</button>'
-        +'<div style="margin-top:8px;font-size:12px;color:#7f8da6">目前 <b style="color:#5fd0ff">'+credits.toLocaleString()+'</b> 點券'
-        +(can?'':'，還差 <b style="color:#ff9a5a">'+(w.price-credits).toLocaleString()+'</b>')+'</div>';
+      : ((GACHA_KNIVES.indexOf(armWeap)>=0)
+        ? '<small style="color:#7f8da6">擊殺敵人賺點券：<b style="color:#66c04a">綠兵 10</b> · <b style="color:#e8483d">紅兵 25</b> · <b style="color:#9a5cff">紫兵 50</b></small>'
+          +'<br><div style="margin-top:12px;padding:12px;border-radius:12px;border:1px solid #ffd76b55;background:#ffd76b14">'
+          +'🎲 這把刀只能從 <b style="color:#ffd76b">轉蛋</b> 抽到<br>'
+          +'<small style="color:#9aa7bd">去左邊第一個分頁抽，目前一抽 '+drawCost().toLocaleString()+' 點券</small></div>'
+        : '<small style="color:#7f8da6">擊殺敵人賺點券：<b style="color:#66c04a">綠兵 10</b> · <b style="color:#e8483d">紅兵 25</b> · <b style="color:#9a5cff">紫兵 50</b></small>'
+          +'<br><button id="buyBtn" class="buyBtn'+(can?'':' no')+'">'+(can?'購買':'點券不足')+'　'
+          +w.price.toLocaleString()+' 點券</button>'
+          +'<div style="margin-top:8px;font-size:12px;color:#7f8da6">目前 <b style="color:#5fd0ff">'+credits.toLocaleString()+'</b> 點券'
+          +(can?'':'，還差 <b style="color:#ff9a5a">'+(w.price-credits).toLocaleString()+'</b>')+'</div>');
     $('armSkins').innerHTML='<div style="grid-column:1/-1;padding:22px 16px;text-align:center;color:#9aa7bd;line-height:1.8">'
       +kindIcon+' <b style="color:#e9e3d3">'+w.name+'</b> 是<b>'+kindTxt+'</b><br>無塗裝可換，這裡供你 360° 檢視<br>'
       +foot+'</div>';
@@ -3147,22 +3230,25 @@ function renderSkinGrid(){
   let h='';
   for(const s of SKINS){
     const eq=equipped[armWeap]===s.id;
+    const have=skinOwned(armWeap,s.id);
     h+='<div class="skCard'+(eq?' eq':'')+'" data-id="'+s.id+'">'+
-      '<div class="skSw" style="background:'+s.css+'"></div>'+
-      '<div class="skNm">'+s.name+'</div>'+
-      '<div class="skRar" style="color:'+RARITY[s.rar].c+'">'+RARITY[s.rar].n+
-      (eq?'　✔ 已裝備':'')+'</div></div>';
+      '<div class="skSw" style="background:'+s.css+(have?'':';filter:grayscale(1) brightness(.5)')+'"></div>'+
+      '<div class="skNm">'+(have?'':'🔒 ')+s.name+'</div>'+
+      '<div class="skRar" style="color:'+(have?RARITY[s.rar].c:'#6b7688')+'">'+RARITY[s.rar].n+
+      (eq?'　✔ 已裝備':(have?'':'　轉蛋取得'))+'</div></div>';
   }
   $('armSkins').innerHTML=h;
   const cards=document.querySelectorAll('.skCard');
   for(const el of cards) el.onclick=()=>{
+    if(!skinOwned(armWeap,el.dataset.id)){ addFeed('這個塗裝要用 <b style="color:#ffcf6b">轉蛋</b> 才拿得到'); return; }
     equipped[armWeap]=el.dataset.id; saveSkins();
     applySkin(gunMeshes[armWeap],armWeap,el.dataset.id,getMainEnv());
     refreshArmory(); updHUD();
   };
 }
 function refreshArmory(){
-  renderArmTabs(); renderSkinGrid(); pvShow(armWeap,equipped[armWeap]);
+  renderArmTabs(); renderSkinGrid();
+  if(armWeap!=='__gacha') pvShow(armWeap,equipped[armWeap]);
 }
 function openArmory(){
   armoryOpen=true; $('armory').classList.remove('hide'); refreshArmory();
@@ -3238,7 +3324,9 @@ window.__sz = {
     if(credits<w.price) return 'not enough ('+credits+'/'+w.price+')';
     credits-=w.price; owned[k]=true; saveWallet(); updCredits();
     return {credits:credits, owned:JSON.parse(JSON.stringify(owned))}; },
-  resetWallet(){ credits=0; for(const k in owned) owned[k]=false; saveWallet(); updCredits(); return 'reset'; },
+  resetWallet(){ credits=0; for(const k in owned) owned[k]=false; drawCount=0; ownedSkins={}; saveWallet(); updCredits(); return 'reset'; },
+  get drawCost(){ return drawCost(); },
+  draw(){ return doDraw(); },
   // 窗格內 pointer lock 會失敗 → 合成 mousedown 觸發不了開火，測試時直接設 firing
   setFiring(v){ firing=!!v; return firing; },
   fireOnce(){ firing=true; return 'firing set — 呼叫 stepFrames 讓它送出'; },
