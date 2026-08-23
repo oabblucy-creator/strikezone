@@ -4,7 +4,8 @@
 手上拿著三角洲風格的「北極星」OTF 彈簧刀。
 
 ## 怎麼玩
-直接雙擊 `index.html` 就能開（需要連網，Three.js 從 CDN 載入）。
+線上版：https://oabblucy-creator.github.io/strikezone/polaris-field/ （第二個世界；第一個世界是 https://oabblucy-creator.github.io/strikezone/ ）
+本機：直接雙擊 `index.html` 就能開（需要連網，Three.js 從 CDN 載入）。
 
 | 按鍵 | 動作 |
 |---|---|
