@@ -1869,6 +1869,7 @@ const PX=(()=>{
   const TRC=[]; for(let i=0;i<3;i++){ const geo=new TH.BufferGeometry(); geo.setAttribute('position',new TH.BufferAttribute(new Float32Array(6),3));
     const ln=new TH.Line(geo,new TH.LineBasicMaterial({color:0xffe2a0,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false})); ln.frustumCulled=false; ln.visible=false; ln.userData.life=0; scene.add(ln); TRC.push(ln); }
   function tracer(a,b){ const ln=TRC.find(l=>!l.visible)||TRC[0]; const pa=ln.geometry.attributes.position; pa.setXYZ(0,a.x,a.y,a.z); pa.setXYZ(1,b.x,b.y,b.z); pa.needsUpdate=true; ln.userData.life=0.35; ln.visible=true; }
+  for(const o of [sparks,trail].concat(FXS,TRC)) o.raycast=function(){};   // 特效物件不參與射線偵測（Sprite 沒設 camera 會丟例外 → 整個 fire() 掛掉）
   function updateFx(dt){ for(const sp of FXS){ if(!sp.visible) continue; sp.userData.life-=dt; const pp=1-Math.max(0,sp.userData.life)/0.35; const sc=0.6+pp*3.2; sp.scale.set(sc,sc,1); sp.material.opacity=(1-pp)*0.9; if(sp.userData.life<=0) sp.visible=false; }
     for(const ln of TRC){ if(!ln.visible) continue; ln.userData.life-=dt; ln.material.opacity=Math.max(0,ln.userData.life/0.35); if(ln.userData.life<=0) ln.visible=false; } }
   /* ── rig 組裝：rig → wrist(關節) → wIn → { hand, kspin(拇指支點) → kIn → model }，前臂固定在 rig ── */
@@ -2403,7 +2404,7 @@ function fire(){
     }
     // 命中環境？
     let envD=w.range, envPt=null;
-    const inter=ray.intersectObjects(scene.children,false);
+    const inter=ray.intersectObjects(scene.children.filter(o=>o.type==='Mesh'),false);
     for(const it of inter){
       if(it.object.type!=='Mesh') continue;
       if(it.object.geometry && it.object.geometry.type==='PlaneGeometry'){
@@ -3682,6 +3683,7 @@ window.__sz = {
   begin, swap, px: PX,
   pxAttack(){ if(atkGap>1.2) atkCount=0; atkGap=0; atkCount++; atkType=(atkCount%3===0)?'stab':'slash'; atkDur=PX.dur(atkCount); atkT=atkDur; return atkCount; },
   pxInspect(){ inspectT=PX.INS_DUR; inspectDur=inspectT; },
+  get enemies(){ return enemies; },
   testKill(){ let best=null,bd=1e9; for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(player.pos); if(d<bd){ bd=d; best=e; } } if(!best) return 'no enemy'; damageEnemy(best,9999,false,NET.id); return 'killed '+best.id+' with '+curKey; },
   get knife(){ return gunMeshes.knife; },
   get hand(){ return gunMeshes.knife.userData.hand; },
