@@ -109,7 +109,7 @@
   #menu .tag{color:#8fa0bd;letter-spacing:6px;font-size:13px;margin-top:-6px;}
   #menu .keys{color:#9fb0cc;font-size:13px;line-height:2.1;text-align:center;
     background:rgba(255,255,255,.04);padding:18px 30px;border-radius:10px;
-    border:1px solid rgba(255,255,255,.08);max-width:460px;}
+    border:1px solid rgba(255,255,255,.08);max-width:min(460px,94vw);}
   #menu .keys b{color:#ffcf6b;}
   #playBtn{pointer-events:auto;cursor:pointer;font:800 20px "Segoe UI";letter-spacing:3px;
     padding:15px 54px;border:0;border-radius:8px;color:#0a0f18;
@@ -256,6 +256,55 @@
   #scope .t1,#scope .t2{top:50%;height:10px;width:2px;margin-top:-5px} #scope .t1{left:calc(50% - 12vmin)} #scope .t2{left:calc(50% + 12vmin)}
   #scope .t3,#scope .t4{left:50%;width:10px;height:2px;margin-left:-5px} #scope .t3{top:calc(50% - 12vmin)} #scope .t4{top:calc(50% + 12vmin)}
   #scope .dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b,0 0 2px #fff}
+
+  /* ===== 響應式：手機 / 平板 / 小視窗 ===== */
+  #menu{overflow-y:auto;overflow-x:hidden;justify-content:flex-start;-webkit-overflow-scrolling:touch;
+    padding:max(18px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
+  #menu > :first-child{margin-top:auto} #menu > :last-child{margin-bottom:auto}   /* 內容放得下就置中，放不下就可以捲 */
+  .opBtn{min-width:150px}
+  #rotHint{position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);z-index:40;display:none;
+    background:rgba(10,14,22,.9);border:1px solid rgba(255,215,107,.6);color:#ffd76b;font:700 13px "Segoe UI";letter-spacing:1px;
+    padding:8px 14px;border-radius:20px;pointer-events:none;white-space:nowrap}
+  body.touchui.portrait.ingame #rotHint{display:block;top:max(48px,calc(env(safe-area-inset-top) + 40px));animation:rotFade 7s forwards}
+  @keyframes rotFade{0%,80%{opacity:1}100%{opacity:0}}
+  body.touchui .op{width:56px;height:56px;border-radius:9px} body.touchui .op b{font-size:14px;margin-top:8px} body.touchui .op span{font-size:9px} body.touchui .op .t{font-size:16px;top:8px}
+  #bSlide{right:214px;bottom:118px;width:60px;height:60px;background:rgba(255,215,107,.14);border-color:rgba(255,215,107,.45)}
+  /* 觸控版 HUD：血條/彈藥放到搖桿和按鈕中間，技能格可以直接點 */
+  body.touchui #bottom{left:165px;right:300px;padding:0 0 14px}
+  body.touchui #hpwrap{width:min(300px,46%)}
+  body.touchui #ops{bottom:62px;left:0;right:80px;transform:none;justify-content:center} body.touchui #opName{display:none} .op{flex:none}
+  body.touchui .op{pointer-events:auto;cursor:pointer}
+  body.touchui #top{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  /* 直立手機：按鈕縮到右下角、HUD 抬高 */
+  body.touchui.portrait #bottom{left:12px;right:12px;bottom:250px;padding:0}
+  body.touchui.portrait #ops{left:0;right:0;bottom:300px}
+  body.touchui.portrait #bFire{right:16px;bottom:24px;width:84px;height:84px}
+  body.touchui.portrait #bReload{right:110px;bottom:28px;width:56px;height:56px}
+  body.touchui.portrait #bAim{right:16px;bottom:120px;width:60px;height:60px}
+  body.touchui.portrait #bJump{right:86px;bottom:110px;width:56px;height:56px}
+  body.touchui.portrait #bSwap{right:156px;bottom:100px;width:52px;height:52px}
+  body.touchui.portrait #bInspect{right:16px;bottom:192px;width:50px;height:50px}
+  body.touchui.portrait #bSlide{right:76px;bottom:178px;width:52px;height:52px}
+  body.touchui.portrait #moveStick{left:16px;bottom:20px}
+  @media (max-width:760px),(max-height:520px){
+    #menu{gap:10px} #menu h1{font-size:clamp(28px,8vw,40px);letter-spacing:5px} #menu .tag{font-size:11px;letter-spacing:3px}
+    #menu .keys{font-size:11px;line-height:1.75;padding:12px 14px}
+    .lobBtn{font-size:14px;padding:11px 18px;letter-spacing:1px} .modeBtn{font-size:13px;padding:8px 14px}
+    #menu input{width:min(200px,44vw);font-size:14px;padding:8px 10px} .modeRow,.lobbyRow{gap:8px}
+    #top{padding:8px 12px;font-size:11px} #waveBig,#scoreBig,#credBig{font-size:16px} #waveSub,#scoreSub,#credSub{font-size:9px;letter-spacing:1px}
+    #mini{width:92px;height:92px;left:10px;top:48px} #feed{right:10px;top:48px} #feed div{font-size:11px;margin-bottom:3px}
+    #bottom{padding:8px 12px} #hpwrap{width:min(300px,36vw)} .lbl{font-size:9px;margin-bottom:3px} .bar{height:10px} #arwrap{margin-top:4px;height:6px} #arwrap .bar{height:6px}
+    #ammoBig{font-size:30px} #ammoBig small{font-size:14px} #gunName{font-size:10px;letter-spacing:2px;margin-top:3px} #reloadHint{font-size:10px}
+    #killT{font-size:24px;letter-spacing:4px} #headT{font-size:13px} #centerT{font-size:26px;letter-spacing:2px} #centerS{font-size:12px}
+    #ops{gap:6px;bottom:8px} #opName{font-size:12px;padding-bottom:4px;margin-right:2px} #opName small{font-size:8px;letter-spacing:1px}
+    .op{width:46px;height:46px;border-radius:8px} .op b{font-size:12px;margin-top:6px} .op span{font-size:8px;letter-spacing:0;margin-top:2px} .op .t{font-size:14px;top:6px}
+    #opBoost{font-size:9px;padding-bottom:16px;margin-left:2px}
+    body.touchui #bottom{left:160px;right:292px} body.touchui #ops{bottom:56px}
+    #armTop{flex-wrap:wrap;gap:8px;padding:10px 12px} #armTitle{font-size:18px;letter-spacing:3px} #armTitle span{display:block;margin:2px 0 0;font-size:10px} #armClose{padding:8px 14px;font-size:12px}
+    #armMain{padding:0 12px 12px;gap:10px} .armTab{padding:9px 8px;font-size:13px} .armTab small{font-size:10px} #armSkins{max-height:220px}
+    #board{min-width:min(280px,90vw);padding:12px 16px;font-size:12px}
+    #dmgDir i{top:-96px}
+  }
 </style>
 </head>
 <body>
@@ -305,6 +354,8 @@
 <div id="bSwap" class="touch tbtn">換槍</div>
 <div id="bAim" class="touch tbtn">瞄準</div>
 <div id="bInspect" class="touch tbtn">檢視</div>
+<div id="bSlide" class="touch tbtn">滑鏟</div>
+<div id="rotHint">📱 手機轉成橫的比較好玩</div>
 
 <div id="menu">
   <h1>STRIKE ZONE</h1>
@@ -341,7 +392,7 @@
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
     <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；每一刀 <b>50% 機率爆頭</b>（爆頭 2.4 倍傷害，沒爆頭就普通傷害）；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
-    手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
+    手機/平板：左下搖桿移動（推到底＝衝刺）、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍／滑鏟；<b>點下面的技能格</b>就放技能（蜂醫長按 C 格自療）。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
     合作：一起撐過 AI 波次，倒下隊友可在附近 5 秒後自動復活。<br>
@@ -389,11 +440,17 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = TH.PCFSoftShadowMap;
 document.body.insertBefore(renderer.domElement, document.body.firstChild);
 
-addEventListener('resize',()=>{
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+function fitScreen(){                                   // 響應式：視窗/手機轉向都重新配畫面
+  const w=innerWidth||1, h=innerHeight||1;
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(devicePixelRatio,(navigator.maxTouchPoints>0&&Math.min(w,h)<900)?1.5:2));   // 手機降一點解析度比較順
+  renderer.setSize(w,h);
+  document.body.classList.toggle('portrait',h>w*1.05);
+}
+addEventListener('resize',fitScreen);
+addEventListener('orientationchange',()=>setTimeout(fitScreen,150));
+if(window.visualViewport) visualViewport.addEventListener('resize',fitScreen);
+fitScreen();
 
 // 光
 const hemi = new TH.HemisphereLight(0xcfe0ff, 0x40443a, 0.85);
@@ -2279,6 +2336,8 @@ addEventListener('mousemove',e=>{
 /* ===== 觸控 ===== */
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
 if(isTouch) document.body.classList.add('istouch');
+const touchUI=isTouch&&!matchMedia('(hover:hover) and (pointer:fine)').matches;   // 真的用手指玩（不是有觸控螢幕的筆電）
+if(touchUI) document.body.classList.add('touchui');
 let mv={x:0,y:0};
 (function(){
   const st=$('moveStick'), nub=$('moveNub'); let id=null,cx=0,cy=0;
@@ -2314,6 +2373,10 @@ let mv={x:0,y:0};
   bind($('bInspect'),()=>inspect());
   bind($('bAim'),()=>{ adsToggle=!adsToggle;
     $('bAim').classList.toggle('on',adsToggle); });
+  bind($('bSlide'),()=>{ const s=keys.ShiftLeft,w=keys.KeyW; keys.ShiftLeft=true; keys.KeyW=true; trySlide(); keys.ShiftLeft=s; keys.KeyW=w; });
+  // 技能格直接點：C 格對蜂醫是「點＝治療彈、按住＝自療」
+  bind($('op0'),()=>{ if(curOp==='stinger') hormDown(); else useSkill(0); },()=>{ if(curOp==='stinger') hormUp(); });
+  bind($('op1'),()=>useSkill(1)); bind($('op2'),()=>useSkill(2));
 })();
 
 /* ========= 射擊邏輯 ========= */
@@ -2980,7 +3043,7 @@ function step(dt){
   if(keys.KeyW) iz-=1; if(keys.KeyS) iz+=1;
   if(keys.KeyA) ix-=1; if(keys.KeyD) ix+=1;
   if(isTouch){ ix+=mv.x; iz+=mv.y; }
-  const sprint = (keys.ShiftLeft||keys.ShiftRight) && iz<0 && adsAmt<0.3;
+  const sprint = (((keys.ShiftLeft||keys.ShiftRight) && iz<0) || (isTouch && mv.y<-0.82)) && adsAmt<0.3;   // 搖桿推到底＝衝刺
   player.crouch = !!keys.ControlLeft || slideT>0;
   let spd = player.crouch?2.4:(sprint?7.4:4.6);
   if(adsAmt>0.5) spd*=0.55;
@@ -3357,7 +3420,7 @@ function gameOver(){
   }
   player.alive=false; running=false;
   document.exitPointerLock&&document.exitPointerLock();
-  const m=$('menu'); menuOpen=true;
+  const m=$('menu'); menuOpen=true; document.body.classList.remove('ingame');
   m.innerHTML =
    '<h1 style="background:linear-gradient(90deg,#ff6b6b,#ff9a5a);-webkit-background-clip:text;background-clip:text;color:transparent;">陣亡</h1>'+
    '<div class="tag">STRIKE ZONE</div>'+
@@ -3880,10 +3943,11 @@ $('mPvp').onclick=()=>{ selMode='pvp'; reflectMode(); };
 function doBegin(){
   if(NET.started) return; NET.started=true;
   $('menu').style.display='none'; $('roomBox').classList.add('hide');
-  menuOpen=false; running=true;
+  menuOpen=false; running=true; document.body.classList.add('ingame');
   validLoadout(); curKey='rifle'; showGun(); updHUD(); renderOps();
   audio(); if(AC.state==='suspended') AC.resume();
   if(!isTouch) cv.requestPointerLock();
+  else { try{ const de=document.documentElement; if(de.requestFullscreen){ const r=de.requestFullscreen({navigationUI:'hide'}); if(r&&r.catch) r.catch(()=>{}); } }catch(e){} }   // 手機：全螢幕
   ensureP(NET.id,NET.name);
   player.alive=true;
   if(NET.mode==='pvp'){
