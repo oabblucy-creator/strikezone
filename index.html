@@ -225,6 +225,15 @@
   body.istouch .touch{display:flex;}
   body.istouch #moveStick{display:block;}
   @media (hover:hover) and (pointer:fine){ .touch{display:none!important;} }
+  #ops{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:10px;align-items:flex-end;pointer-events:none;z-index:3}
+  #opName{color:#ffd76b;font-weight:900;font-size:16px;letter-spacing:2px;text-shadow:0 0 8px rgba(255,200,80,.6);margin-right:6px;text-align:right;padding-bottom:6px}
+  #opName small{display:block;font-size:10px;letter-spacing:2px;color:#cfd3d8;font-weight:600}
+  .op{position:relative;width:64px;height:64px;border:2px solid rgba(255,215,107,.7);border-radius:10px;background:rgba(10,12,18,.7);overflow:hidden;text-align:center;color:#eee;transition:box-shadow .15s}
+  .op i{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(255,215,107,.35)} .op.cd{border-color:rgba(120,120,130,.5);color:#8a8f98}
+  .op b{display:block;font-size:16px;margin-top:10px;color:#ffd76b;position:relative} .op.cd b{color:#8a8f98} .op span{display:block;font-size:11px;letter-spacing:1px;margin-top:4px;position:relative}
+  .op .t{position:absolute;left:0;right:0;top:8px;font-size:20px;font-weight:800;color:#fff}
+  .op.flash{box-shadow:0 0 18px #ffd76b;border-color:#fff}
+  #opBoost{font-size:11px;color:#7fe0ff;letter-spacing:2px;opacity:0;transition:opacity .2s;margin-left:6px;padding-bottom:26px;text-shadow:0 0 8px #4cc2ff} #opBoost.on{opacity:1}
   #killT{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);font-size:40px;font-weight:900;letter-spacing:8px;color:#7fe0ff;text-shadow:0 0 16px currentColor,0 0 2px #000;opacity:0;pointer-events:none;white-space:nowrap;z-index:2}
   #killT.pop{animation:killPop .9s ease-out forwards}
   @keyframes killPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}30%{transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
@@ -244,6 +253,7 @@
 <div id="hud">
   <div id="scope"><div class="ring"></div><div class="h"></div><div class="v"></div><div class="tick t1"></div><div class="tick t2"></div><div class="tick t3"></div><div class="tick t4"></div><div class="dot"></div></div>
   <div id="killT"></div>
+  <div id="ops"><div id="opName">威龍<small>VYRON · 突擊</small></div><div class="op" id="opCannon"><i></i><b>C</b><span>虎蹲炮</span></div><div class="op" id="opDash"><i></i><b>V</b><span>動力推進</span></div><div class="op" id="opBomb"><i></i><b>G</b><span>磁吸炸彈</span></div><div id="opBoost">⚡ 動力輔助</div></div>
   <div id="cross">
     <div id="cL" class="ch"></div><div id="cR" class="ch"></div>
     <div id="cT" class="cv"></div><div id="cB" class="cv"></div>
@@ -319,7 +329,7 @@
 
   <div class="keys">
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~7 或滾輪／Q　<b>白金步槍</b>1　<b>白金狙擊</b>2　🔒<b>信條</b>3（1000）　🔒<b>北極星</b>4（2000）　🔒<b>爪刀</b>5（1500）　🔒<b>蝴蝶刀</b>6（2000）　🔒<b>苦無·無限投擲</b>7（5000）　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1~7 或滾輪／Q　<b>白金步槍</b>1　<b>白金狙擊</b>2　🔒<b>信條</b>3（1000）　🔒<b>北極星</b>4（2000）　🔒<b>爪刀</b>5（1500）　🔒<b>蝴蝶刀</b>6（2000）　🔒<b>苦無·無限投擲</b>7（5000）　<b>記分板</b> Tab　<b>檢視/旋轉</b> F<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員 威龍</b> C 虎蹲炮／V 動力推進／G 磁吸炸彈（用技能或高處落地會加速）<br>
     手機/平板：左下搖桿移動、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -1864,13 +1874,13 @@ const PX=(()=>{
   const _v=new TH.Vector3(), _v2=new TH.Vector3(), _v3=new TH.Vector3();
   /* ── 擊殺爆光 / 狙擊彈道光線（擊殺爽感） ── */
   const FXS=[]; for(let i=0;i<4;i++){ const sp=new TH.Sprite(new TH.SpriteMaterial({map:dotTex,color:0xffffff,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false})); sp.visible=false; sp.userData.life=0; scene.add(sp); FXS.push(sp); }
-  function burst(pos,hex){ const c=new TH.Color(hex); spawnSparks(pos,46,null,4.5,0,false,1,0.06,0.6,[c.r,c.g,c.b]); spawnSparks(pos,16,null,2.0,0,true,0.3,0.04,0.5);
-    const sp=FXS.find(s=>!s.visible)||FXS[0]; sp.position.copy(pos); sp.material.color.setHex(hex); sp.userData.life=0.35; sp.visible=true; }
+  function burst(pos,hex,small){ const c=new TH.Color(hex); spawnSparks(pos,small?14:46,null,small?2.5:4.5,0,false,1,small?0.04:0.06,small?0.35:0.6,[c.r,c.g,c.b]); if(!small) spawnSparks(pos,16,null,2.0,0,true,0.3,0.04,0.5);
+    const sp=FXS.find(s=>!s.visible)||FXS[0]; sp.position.copy(pos); sp.material.color.setHex(hex); sp.userData.life=small?0.18:0.35; sp.userData.max=small?0.18:0.35; sp.userData.big=small?1.2:3.2; sp.visible=true; }
   const TRC=[]; for(let i=0;i<3;i++){ const geo=new TH.BufferGeometry(); geo.setAttribute('position',new TH.BufferAttribute(new Float32Array(6),3));
     const ln=new TH.Line(geo,new TH.LineBasicMaterial({color:0xffe2a0,transparent:true,opacity:0,blending:TH.AdditiveBlending,depthWrite:false})); ln.frustumCulled=false; ln.visible=false; ln.userData.life=0; scene.add(ln); TRC.push(ln); }
   function tracer(a,b){ const ln=TRC.find(l=>!l.visible)||TRC[0]; const pa=ln.geometry.attributes.position; pa.setXYZ(0,a.x,a.y,a.z); pa.setXYZ(1,b.x,b.y,b.z); pa.needsUpdate=true; ln.userData.life=0.35; ln.visible=true; }
   for(const o of [sparks,trail].concat(FXS,TRC)) o.raycast=function(){};   // 特效物件不參與射線偵測（Sprite 沒設 camera 會丟例外 → 整個 fire() 掛掉）
-  function updateFx(dt){ for(const sp of FXS){ if(!sp.visible) continue; sp.userData.life-=dt; const pp=1-Math.max(0,sp.userData.life)/0.35; const sc=0.6+pp*3.2; sp.scale.set(sc,sc,1); sp.material.opacity=(1-pp)*0.9; if(sp.userData.life<=0) sp.visible=false; }
+  function updateFx(dt){ for(const sp of FXS){ if(!sp.visible) continue; sp.userData.life-=dt; const pp=1-Math.max(0,sp.userData.life)/(sp.userData.max||0.35); const sc=0.6+pp*(sp.userData.big||3.2); sp.scale.set(sc,sc,1); sp.material.opacity=(1-pp)*0.9; if(sp.userData.life<=0) sp.visible=false; }
     for(const ln of TRC){ if(!ln.visible) continue; ln.userData.life-=dt; ln.material.opacity=Math.max(0,ln.userData.life/0.35); if(ln.userData.life<=0) ln.visible=false; } }
   /* ── rig 組裝：rig → wrist(關節) → wIn → { hand, kspin(拇指支點) → kIn → model }，前臂固定在 rig ── */
   function buildRig(k,model,handMode,P){
@@ -2204,6 +2214,10 @@ const keys={};
 addEventListener('keydown',e=>{
   keys[e.code]=true;
   if(e.code==='KeyR') reload();
+  if(e.code==='ControlLeft'&&!e.repeat) trySlide();
+  if(e.code==='KeyV') opDash();
+  if(e.code==='KeyC') opCannon();
+  if(e.code==='KeyG') opBomb();
   if(e.code==='Digit1') swap('rifle');
   if(e.code==='Digit2') swap('sniper');
   if(e.code==='Digit3') swap('knife');
@@ -2287,12 +2301,17 @@ let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.4;   // F 檢視動畫
 let boltT=0;                              // 狙擊槍拉機柄動畫
 let hitStop=0, slowMo=0, shakeA=0;        // 擊殺爽感：定格 / 慢動作 / 鏡頭震動
+let slideT=0, slideCd=0; const slideDir=new TH.Vector3();                                   // 滑鏟
+let dashT=0, dashCd=0, cannonCd=0, bombCd=0, boostT=0; const dashDir=new TH.Vector3();     // 威龍：動力推進 / 虎蹲炮 / 磁吸炸彈 / 被動加速
+const DASH_CD=15, CANNON_CD=20, BOMB_CD=12;
+let streakN=0, streakT=0;                 // 連殺
+const shells=[];                          // 威龍投射物（氣彈 / 磁吸炸彈）
 let inspectDur=INSPECT_DUR;               // 這一次檢視的長度（北極星 2.6）
 let atkT=0, atkType='slash', atkCount=0, atkGap=99, slashDir=1; const STAB_DUR=0.22, SLASH_DUR=0.30;   // 近戰橫斬/重戳連段
 let atkDur=SLASH_DUR;                     // 這一擊實際長度（每把近戰武器不同）
 let bflyFlip=0;                           // 蝴蝶刀兩片握把的開合角（rad），每幀由動作寫入
 let throwT=0, throwReleased=false; const THROW_DUR=0.44;   // 苦無投擲
-const ray = new TH.Raycaster();
+const ray = new TH.Raycaster(); ray.camera=camera;   // 有設 camera 才能對 Sprite 做射線（避免丟例外）
 
 function inspect(){
   if(!running||menuOpen||reloading||inspectT>0||adsAmt>0.4) return;
@@ -2423,6 +2442,7 @@ function fire(){
       if(p===0) shotFx(a0,pBestPt);
     } else if(best && bestD<=envD){           // 合作：打到 AI 敵人
       const dmg=w.dmg*(bestHead?2.4:1)*atkMul;
+      hitFx(bestPt,w);
       if(isHost()) damageEnemy(best,dmg,bestHead,NET.id);
       else { toHost({t:'ehit',id:best.id,d:dmg,h:bestHead});
         showHit(false,bestHead); sHitEnemy(); }
@@ -2554,7 +2574,7 @@ function stepKunais(dt){
         if(hit.length){
           const head=hit[0].object.userData.head===true;
           const dmg=WEAPONS.kunai.dmg*(head?2.4:1);
-          if(isHost()) damageEnemy(e,dmg,head,NET.id);
+          if(isHost()) damageEnemy(e,dmg,head,NET.id,'kunai');
           else { toHost({t:'ehit',id:e.id,d:dmg,h:head}); showHit(false,head); }
           sHitEnemy(); sparkBurst(hit[0].point.clone(),0xff5050);
           scene.remove(k.mesh); killFx(k); kunais.splice(i,1); gone=true; break;
@@ -2573,23 +2593,102 @@ function stepKunais(dt){
     }
   }
 }
+function trySlide(){                                           // 滑鏟：跑步中按 Ctrl
+  if(!running||menuOpen||slideCd>0||slideT>0||!player.onGround) return;
+  const sprinting=(keys.ShiftLeft||keys.ShiftRight)&&keys.KeyW&&adsAmt<0.3; if(!sprinting) return;
+  slideDir.set(-Math.sin(player.yaw),0,-Math.cos(player.yaw)); slideT=0.8; slideCd=1.3; blip(180,0.25,0.16,'sawtooth');
+}
+function opFlash(id){ const el=$(id); if(!el) return; el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),250); }
+function opDash(){                                             // 威龍：動力推進（往移動方向衝刺）
+  if(!running||menuOpen||dashCd>0) return;
+  let dx=0,dz=0; if(keys.KeyW) dz-=1; if(keys.KeyS) dz+=1; if(keys.KeyA) dx-=1; if(keys.KeyD) dx+=1; if(!dx&&!dz) dz=-1;
+  const l=Math.hypot(dx,dz); dx/=l; dz/=l; const cy=Math.cos(player.yaw), sy=Math.sin(player.yaw);
+  dashDir.set((-sy)*-dz + cy*dx, 0, (-cy)*-dz + (-sy)*dx).normalize();
+  dashT=0.35; dashCd=DASH_CD; boostT=3; shakeA=Math.max(shakeA,0.5); PX.SFX.swoosh(true); blip(90,0.25,0.35,'sawtooth'); opFlash('opDash');
+}
+function opCannon(){                                           // 威龍：虎蹲炮（壓縮空氣彈，5 m 內敵人倒地 5 秒）
+  if(!running||menuOpen||cannonCd>0) return; cannonCd=CANNON_CD; boostT=3;
+  const o=camera.getWorldPosition(new TH.Vector3()), d=camera.getWorldDirection(new TH.Vector3());
+  const m=new TH.Mesh(new TH.SphereGeometry(0.22,12,10),new TH.MeshBasicMaterial({color:0xbfefff,transparent:true,opacity:.55,blending:TH.AdditiveBlending,depthWrite:false})); m.raycast=function(){};
+  m.position.copy(o).addScaledVector(d,0.8); scene.add(m); shells.push({kind:'air',m:m,v:d.clone().multiplyScalar(30),life:1.4});
+  recoilKick=Math.min(recoilKick+0.08,0.16); shakeA=Math.max(shakeA,0.6); blip(60,0.3,0.5,'sine'); PX.SFX.stab(true); opFlash('opCannon');
+}
+function opBomb(){                                             // 威龍：磁吸炸彈（黏在牆/地/敵人身上，倒數後爆炸）
+  if(!running||menuOpen||bombCd>0) return; bombCd=BOMB_CD; boostT=3;
+  const o=camera.getWorldPosition(new TH.Vector3()), d=camera.getWorldDirection(new TH.Vector3());
+  const g=new TH.Group(); g.add(new TH.Mesh(new TH.BoxGeometry(0.16,0.10,0.16),new TH.MeshStandardMaterial({color:0x2a2e36,roughness:.5,metalness:.6})));
+  const led=new TH.Mesh(new TH.SphereGeometry(0.03,8,8),new TH.MeshBasicMaterial({color:0xff3030})); led.position.y=0.07; g.add(led); g.userData.led=led;
+  const ring=new TH.Mesh(new TH.TorusGeometry(0.09,0.012,6,18),new TH.MeshStandardMaterial({color:0xd9b44a,metalness:.9,roughness:.3})); ring.rotation.x=Math.PI/2; g.add(ring);
+  g.traverse(x=>{ x.raycast=function(){}; }); g.position.copy(o).addScaledVector(d,0.6); scene.add(g);
+  shells.push({kind:'bomb',m:g,v:d.clone().multiplyScalar(13).add(new TH.Vector3(0,3,0)),life:2.6,stuck:false,host:null,beep:0});
+  blip(520,0.05,0.12,'square'); opFlash('opBomb');
+}
+function inBox(p,c,pad){ pad=pad||0; return p.x>c.min.x-pad&&p.x<c.max.x+pad&&p.z>c.min.z-pad&&p.z<c.max.z+pad&&p.y<c.h; }
+function stepShells(dt){
+  for(let i=shells.length-1;i>=0;i--){ const sh=shells[i], pos=sh.m.position;
+    if(sh.kind==='air'){ pos.addScaledVector(sh.v,dt); sh.life-=dt; sh.m.scale.setScalar(1+(1.4-sh.life)*0.6);
+      let hit=false; for(const e of enemies){ if(e.dead) continue; const cx=e.grp.position.x-pos.x, cz=e.grp.position.z-pos.z; if(Math.hypot(cx,cz)<1.3&&pos.y>-0.2&&pos.y<e.grp.position.y+2.4){ hit=true; break; } }
+      const wall=Math.abs(pos.x)>WALL-0.5||Math.abs(pos.z)>WALL-0.5||pos.y<0.1||colliders.some(c=>inBox(pos,c,0));
+      if(hit||wall||sh.life<=0){ airBlast(pos.clone()); scene.remove(sh.m); shells.splice(i,1); }
+    } else {
+      if(!sh.stuck){ sh.v.y-=14*dt; pos.addScaledVector(sh.v,dt); sh.m.rotation.x+=dt*6;
+        for(const e of enemies){ if(e.dead) continue; const cx=e.grp.position.x-pos.x, cz=e.grp.position.z-pos.z; if(Math.hypot(cx,cz)<1.0&&pos.y>0&&pos.y<e.grp.position.y+2.3){ sh.stuck=true; sh.host=e; sh.off=pos.clone().sub(e.grp.position); sh.off.y=Math.max(0.6,Math.min(1.6,sh.off.y)); break; } }
+        if(!sh.stuck&&(pos.y<=0.08||colliders.some(c=>inBox(pos,c,0.1)))){ sh.stuck=true; if(pos.y<0.1) pos.y=0.08; }
+        if(sh.stuck) blip(900,0.04,0.15,'square');
+      } else if(sh.host){ pos.copy(sh.host.grp.position).add(sh.off); if(sh.host.dead) sh.host=null; }
+      sh.life-=dt; sh.beep-=dt;
+      if(sh.beep<=0){ sh.beep=Math.max(0.08,sh.life*0.35); blip(1200,0.03,0.10,'square'); const lm=sh.m.userData.led.material; lm.color.setHex(lm.color.getHex()===0xff3030?0xffffff:0xff3030); }
+      if(sh.life<=0){ bombBlast(pos.clone()); scene.remove(sh.m); shells.splice(i,1); }
+    }
+  }
+}
+function airBlast(p){ PX.burst(p,0xbfefff); PX.burst(p,0xffffff); shakeA=Math.max(shakeA,1.0); blip(50,0.4,0.6,'sine'); PX.SFX.stab(true);
+  if(!isHost()) return;
+  for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(p);
+    if(d<5){ e.knocked=5; e.windup=0; const push=new TH.Vector3().subVectors(e.grp.position,p); push.y=0; push.normalize(); e.grp.userData.kbv=push.multiplyScalar(4); dashCd=Math.min(dashCd,5); killText('虎蹲炮 · 擊倒','#bfefff'); } }
+}
+function bombBlast(p){ PX.burst(p,0xff8a30); PX.burst(p,0xffd27a); sparkBurst(p,0xff9a3c); shakeA=Math.max(shakeA,1.8); slowMo=Math.max(slowMo,0.15);
+  blip(40,0.6,0.8,'sine'); blip(200,0.2,0.4,'sawtooth'); flashCross('#ffb070');
+  const dp=player.pos.distanceTo(p); if(dp<3.2) netHurt(NET.id,Math.round(30*(1-dp/3.2)+5),p);
+  if(!isHost()) return;
+  for(const e of enemies){ if(e.dead) continue; const d=e.grp.position.distanceTo(p);
+    if(d<4.5){ const dmg=Math.round(130*(1-d/4.5)+25); damageEnemy(e,dmg,false,NET.id,'bomb');
+      if(!e.dead){ const push=new TH.Vector3().subVectors(e.grp.position,p); push.y=0; push.normalize(); e.grp.userData.kbv=push.multiplyScalar(5); } } }
+}
+function updOps(){
+  const set=(id,cd,max)=>{ const el=$(id); if(!el) return; const f=Math.max(0,cd)/max; el.classList.toggle('cd',cd>0); el.querySelector('i').style.height=(f*100)+'%';
+    let t=el.querySelector('.t'); if(cd>0){ if(!t){ t=document.createElement('div'); t.className='t'; el.appendChild(t); } t.textContent=Math.ceil(cd); } else if(t) t.remove(); };
+  set('opCannon',cannonCd,CANNON_CD); set('opDash',dashCd,DASH_CD); set('opBomb',bombCd,BOMB_CD); const ob=$('opBoost'); if(ob) ob.classList.toggle('on',boostT>0);
+}
+const KILLFX={                                                 // 每把武器自己的擊殺爽感
+  rifle:   {hex:0xffd27a,col:'#ffd76b',text:'擊殺',          stop:0.05,shake:0.9,kb:2.5},
+  sniper:  {hex:0xffd27a,col:'#ffd76b',text:'一槍斃命',      slow:0.4, shake:1.6,kb:6,  spin:6,tracer:true},
+  polaris: {hex:0x4cc2ff,col:'#7fe0ff',text:'北極星 · 處決', stop:0.09,shake:1.2,kb:3.5,shing:true},
+  knife:   {hex:0xff5a3a,col:'#ffb29a',text:'信條 · 處決',   stop:0.09,shake:1.2,kb:3.5,shing:true},
+  karambit:{hex:0xffa040,col:'#ffc27a',text:'爪刀 · 撕裂',   stop:0.08,shake:1.1,kb:3.0,spin:8,shing:true},
+  butterfly:{hex:0xdfefff,col:'#eef6ff',text:'蝴蝶刀 · 處決',stop:0.08,shake:1.0,kb:3.0,shing:true},
+  kunai:   {hex:0xff7a30,col:'#ffb070',text:'苦無 · 命中要害',slow:0.25,shake:1.2,kb:4.0,spin:5},
+  bomb:    {hex:0xff8a30,col:'#ffb070',text:'磁吸炸彈 · 炸飛',stop:0.06,shake:1.4,kb:5,  spin:4}
+};
+function hitFx(pt,w){ if(!pt) return; const F=KILLFX[curKey]||KILLFX.rifle; PX.burst(pt,F.hex,true);
+  if(w.melee){ hitStop=Math.max(hitStop,0.035); shakeA=Math.max(shakeA,0.35); } else if(curKey==='sniper'){ shakeA=Math.max(shakeA,0.3); } }
 function killText(t,c){ const k=$('killT'); k.textContent=t; k.style.color=c; k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); }
 function flashCross(c){ const ds=document.querySelectorAll('#cross div'); ds.forEach(d=>{ d.style.background=c; d.style.boxShadow='0 0 10px '+c; d.style.transform='scale(1.6)'; });
   setTimeout(()=>ds.forEach(d=>{ d.style.background=''; d.style.boxShadow=''; d.style.transform=''; }),220); }
-function killJuice(e,key,head){                                  // 北極星 / 信條 / 狙擊 擊殺的爽感
+function killJuice(e,key,head){                                  // 每一把槍、每一把刀擊殺都有爽感（含連殺）
+  const F=KILLFX[key]||KILLFX.rifle, now=performance.now();
+  streakN=(now-streakT<3000)?streakN+1:1; streakT=now;
+  const suf=streakN>=4?'  殺戮盛宴':streakN===3?'  三連殺':streakN===2?'  雙殺':'';
   const pos=e.grp.position.clone(); pos.y+=1.1;
   const dir=new TH.Vector3().subVectors(pos,camera.position); dir.y=0; dir.normalize();
-  if(key==='polaris'||key==='knife'){
-    hitStop=0.09; shakeA=1.2; PX.burst(pos,key==='polaris'?0x4cc2ff:0xff5a3a);
-    killText(key==='polaris'?'北極星 · 處決':'信條 · 處決',key==='polaris'?'#7fe0ff':'#ffb29a'); flashCross(key==='polaris'?'#7fe0ff':'#ffb29a');
-    PX.SFX.shing(); blip(70,0.3,0.5,'sine'); e.grp.userData.kb=dir.multiplyScalar(3.5);
-  } else if(key==='sniper'){
-    slowMo=0.4; shakeA=1.6; const gm=gunMeshes.sniper; const mz=new TH.Vector3(); if(gm&&gm.userData.flash) gm.userData.flash.getWorldPosition(mz); else mz.copy(camera.position);
-    PX.tracer(mz,pos); PX.burst(pos,0xffd27a); killText(head?'爆頭 · 一槍斃命':'一槍斃命','#ffd76b'); flashCross('#ffd76b');
-    blip(48,0.45,0.6,'sine'); setTimeout(()=>blip(1800,0.12,0.12,'sine'),60); e.grp.userData.kb=dir.multiplyScalar(6); e.grp.userData.spin=6;
-  }
+  if(F.stop) hitStop=Math.max(hitStop,F.stop); if(F.slow) slowMo=Math.max(slowMo,F.slow); shakeA=Math.max(shakeA,F.shake+streakN*0.15);
+  PX.burst(pos,F.hex);
+  if(F.tracer){ const gm=gunMeshes.sniper, mz=new TH.Vector3(); if(gm&&gm.userData.flash) gm.userData.flash.getWorldPosition(mz); else mz.copy(camera.position); PX.tracer(mz,pos); }
+  killText((head&&(key==='rifle'||key==='sniper'||key==='kunai')?'爆頭 · ':'')+F.text+suf,F.col); flashCross(F.col);
+  if(F.shing) PX.SFX.shing(); blip(70,0.3,0.5,'sine'); blip(600+streakN*140,0.08,0.14,'triangle');
+  e.grp.userData.kb=dir.multiplyScalar(F.kb); if(F.spin) e.grp.userData.spin=F.spin;
 }
-function damageEnemy(e,dmg,head,by){
+function damageEnemy(e,dmg,head,by,wk){
   by = by || NET.id;
   e.hp-=dmg;
   const dead = e.hp<=0 && !e.dead;
@@ -2598,7 +2697,7 @@ function damageEnemy(e,dmg,head,by){
     e.dead=true; e.grp.userData.t=0;
     const pts = e.tier===2?60:(e.tier===1?30:18);
     const cr  = CREDIT_BY_TIER[e.tier]||CREDIT_BY_TIER[0];
-    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); killJuice(e,curKey,head); }
+    if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); killJuice(e,wk||curKey,head); }
     else if(players[by]){ players[by].sc=(players[by].sc||0)+pts;
       players[by].k=(players[by].k||0)+1; }
     const lbl = e.tier===2?'重裝兵':(e.tier===1?'突擊兵':'偵察兵');
@@ -2737,7 +2836,7 @@ function step(dt){
   /* --- 武器計時 --- */
   if(reloading){ reloadT-=dt; $('reloadHint').textContent='換彈中… '+reloadT.toFixed(1)+'s';
     if(reloadT<=0) doReload(); }
-  fireTimer-=dt; atkGap+=dt;
+  fireTimer-=dt; atkGap+=dt; slideCd-=dt; dashCd-=dt; cannonCd-=dt; bombCd-=dt; boostT-=dt;
   const w=W(), a=ammo[curKey];
   const wantFire = firing && (w.auto || fireTimer<=-9990);
   if(firing && !reloading && fireTimer<=0 && a.mag>0){
@@ -2766,16 +2865,19 @@ function step(dt){
   if(keys.KeyA) ix-=1; if(keys.KeyD) ix+=1;
   if(isTouch){ ix+=mv.x; iz+=mv.y; }
   const sprint = (keys.ShiftLeft||keys.ShiftRight) && iz<0 && adsAmt<0.3;
-  player.crouch = !!keys.ControlLeft;
+  player.crouch = !!keys.ControlLeft || slideT>0;
   let spd = player.crouch?2.4:(sprint?7.4:4.6);
   if(adsAmt>0.5) spd*=0.55;
+  if(boostT>0) spd*=1.35;                                                   // 威龍被動：動力輔助系統加速
   const len=Math.hypot(ix,iz);
   if(len>0){ ix/=len; iz/=len; }
   const cy=Math.cos(player.yaw), sy=Math.sin(player.yaw);
   // 前方 = -z 旋轉
   const fx=-sy, fz=-cy, rx=cy, rz=-sy;
-  const moveX=(fx*-iz + rx*ix)*spd;
-  const moveZ=(fz*-iz + rz*ix)*spd;
+  let moveX=(fx*-iz + rx*ix)*spd;
+  let moveZ=(fz*-iz + rz*ix)*spd;
+  if(slideT>0){ slideT-=dt; const k=Math.pow(Math.max(0,slideT)/0.8,0.6); moveX=slideDir.x*(2.5+9.5*k); moveZ=slideDir.z*(2.5+9.5*k); }   // 滑鏟：沿滑行方向衝、逐漸減速
+  if(dashT>0){ dashT-=dt; const k=Math.max(0,dashT)/0.35; moveX+=dashDir.x*20*k; moveZ+=dashDir.z*20*k; }                              // 動力推進
   player.pos.x += moveX*dt;
   player.pos.z += moveZ*dt;
 
@@ -2786,7 +2888,9 @@ function step(dt){
   }
   player.vel.y-=18*dt;
   player.pos.y+=player.vel.y*dt;
-  if(player.pos.y<=player.height){ player.pos.y=player.height; player.vel.y=0; player.onGround=true; }
+  if(!player.onGround) player.peakY=Math.max(player.peakY||player.pos.y,player.pos.y);
+  if(player.pos.y<=player.height){ if(!player.onGround&&(player.peakY||0)-player.height>2.0){ boostT=Math.max(boostT,2); blip(400,0.08,0.12,'triangle'); }   // 威龍被動：高處落地加速
+    player.peakY=0; player.pos.y=player.height; player.vel.y=0; player.onGround=true; }
   collide(player.pos);
 
   // 走路晃動
@@ -2801,13 +2905,14 @@ function step(dt){
   camera.rotation.order='YXZ';
   camera.rotation.y = player.yaw + recoilYaw;
   camera.rotation.x = player.pitch + recoilKick*0.5;
+  camera.rotation.z = (slideT>0?0.06*Math.min(1,slideT/0.2):0) + (dashT>0?0.03:0);   // 滑鏟 / 推進時鏡頭側傾
 
   // 槍位置（ADS 內插）+ 開鏡視野縮放
   const ADS=GUN_ADS[curKey];
   let gx = GUN_HIP.x+(ADS.x-GUN_HIP.x)*adsAmt + bobX;
   let gy = GUN_HIP.y+(ADS.y-GUN_HIP.y)*adsAmt + bob*0.6;
   let gz = GUN_HIP.z+(ADS.z-GUN_HIP.z)*adsAmt;
-  const fovT = 78 - adsAmt*(78-(W().adsFov||62));
+  const fovT = 78 - adsAmt*(78-(W().adsFov||62)) + (slideT>0?4:0) + (dashT>0?8*dashT/0.35:0);
   if(Math.abs(camera.fov-fovT)>0.05){ camera.fov=fovT; camera.updateProjectionMatrix(); }
   { const w0=W(), scoped=!!(w0.scope&&adsAmt>0.82), sc=$('scope'), tnow=performance.now()*0.001;
     if(sc) sc.style.opacity=scoped?'1':'0'; $('cross').style.opacity=scoped?'0':'';
@@ -2956,6 +3061,7 @@ function step(dt){
   PX.post(dt,PX.has(curKey));
 
   stepKunais(dt);                          // 苦無投擲物
+  stepShells(dt); updOps();                // 威龍投射物 / 技能冷卻 HUD
   /* --- 敵人 --- */
   aliveCount = 0;
   for(let i=enemies.length-1;i>=0;i--){
@@ -2988,6 +3094,10 @@ function step(dt){
     if(e.flashT>0){ e.flashT-=dt;
       e.eFlash.material.opacity=Math.max(0,e.flashT/0.07); }
     if(!SIM) continue;   // 客戶端：敵人交由房主模擬，本端僅渲染
+    if(e.knocked>0){ e.knocked-=dt; g.rotation.x+=(1.35-g.rotation.x)*Math.min(1,dt*10); g.position.y+=(-0.35-g.position.y)*Math.min(1,dt*10);   // 被虎蹲炮打倒：躺著不能動
+      if(g.userData.kbv){ g.position.addScaledVector(g.userData.kbv,dt); g.userData.kbv.multiplyScalar(Math.exp(-dt*4)); } enemyCollide(g); continue; }
+    else if(g.rotation.x>0.01){ g.rotation.x+=(0-g.rotation.x)*Math.min(1,dt*6); g.position.y+=(0-g.position.y)*Math.min(1,dt*6); }
+    if(g.userData.kbv){ g.position.addScaledVector(g.userData.kbv,dt); g.userData.kbv.multiplyScalar(Math.exp(-dt*5)); }
 
     // ===== 近戰怪物：衝向你，靠近就揮拳（不開槍） =====
     let mvx=toP.x + (-toP.z)*e.strafe*0.18;   // 帶一點錯位避免整群疊住
@@ -3203,7 +3313,7 @@ function makeAvatar(nm,col){
   x.fillStyle='rgba(0,0,0,.55)'; x.fillRect(0,0,256,64);
   x.fillStyle='#fff'; x.fillText(nm.substring(0,10),128,44);
   const spr=new TH.Sprite(new TH.SpriteMaterial({map:new TH.CanvasTexture(cv2)}));
-  spr.scale.set(1.7,0.42,1); spr.position.y=2.25; g.add(spr);
+  spr.scale.set(1.7,0.42,1); spr.position.y=2.25; spr.raycast=function(){}; g.add(spr);
   const bl=new TH.Mesh(blobGeo,blobMat); bl.rotation.x=-Math.PI/2; bl.position.y=0.02;
   g.add(bl);
   scene.add(g); return g;
