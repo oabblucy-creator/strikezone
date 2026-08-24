@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<title>3D 槍戰 FPS — STRIKE ZONE</title>
+<title>烽火地帶 — STRIKE ZONE OPERATIONS</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
   html,body{width:100%;height:100%;overflow:hidden;background:#05070c;
@@ -62,6 +62,7 @@
     background:linear-gradient(135deg,#7fe0ff,#3aa8e0);box-shadow:0 3px 12px rgba(58,168,224,.4);}
   .buyBtn:hover{filter:brightness(1.12);}
   .buyBtn.no{background:#3a4049;color:#8894a5;cursor:not-allowed;box-shadow:none;}
+  #bDeploy.no{filter:grayscale(.7) brightness(.72);}
   .ownTag{margin-top:14px;color:#7fe0a0;font:700 15px "Segoe UI";letter-spacing:2px;}
   #knifeSel{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%}
   #knifeLbl{width:100%;text-align:center;font-size:12px;color:#9aa7bd;margin-bottom:2px;letter-spacing:1px}
@@ -259,6 +260,158 @@
   #scope .t3,#scope .t4{left:50%;width:10px;height:2px;margin-left:-5px} #scope .t3{top:calc(50% - 12vmin)} #scope .t4{top:calc(50% + 12vmin)}
   #scope .dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b,0 0 2px #fff}
 
+  /* ===== 烽火地帶 OPERATIONS ===== */
+  .r0{--rc:#aab4c4;--rg:linear-gradient(135deg,#9aa5b7,#6d7789);}
+  .r1{--rc:#7fe08a;--rg:linear-gradient(135deg,#7fe08a,#3f9c58);}
+  .r2{--rc:#5fb8ff;--rg:linear-gradient(135deg,#5fb8ff,#2f6fc4);}
+  .r3{--rc:#c98bff;--rg:linear-gradient(135deg,#c98bff,#7a3fd0);}
+  .r4{--rc:#ffd76b;--rg:linear-gradient(135deg,#ffd76b,#d8912a);}
+
+  /* 搜刮提示 */
+  #lootP{position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:6;
+    display:none;text-align:center;pointer-events:none;
+    background:rgba(8,12,20,.72);border:1px solid rgba(255,255,255,.14);
+    border-radius:12px;padding:11px 22px;min-width:190px;
+    backdrop-filter:blur(3px);box-shadow:0 6px 22px rgba(0,0,0,.5);}
+  #lootP.on{display:block;}
+  #lootIcon{font-size:24px;line-height:1;}
+  #lootName{font:800 15px "Segoe UI";letter-spacing:2px;color:#e9f1ff;margin-top:4px;}
+  #lootKey{font-size:11px;letter-spacing:2px;color:#8fa0bd;margin-top:3px;}
+  #lootKey b{color:#ffcf6b;background:rgba(255,207,107,.14);border:1px solid rgba(255,207,107,.4);
+    border-radius:4px;padding:0 6px;}
+  #lootBarW{margin-top:8px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);
+    overflow:hidden;display:none;}
+  #lootP.busy #lootBarW{display:block;}
+  #lootBar{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffcf6b,#ff9a5a);}
+
+  /* 搜到的東西飄出來 */
+  #lootFeed{position:fixed;left:50%;top:64%;transform:translateX(-50%);z-index:6;
+    text-align:center;pointer-events:none;}
+  #lootFeed div{font:700 14px "Segoe UI";letter-spacing:1px;color:var(--rc,#dfe7f3);
+    margin-bottom:4px;opacity:0;animation:lootUp 2.2s forwards;
+    text-shadow:0 2px 8px #000;}
+  #lootFeed div small{color:#8fa0bd;font-weight:600;margin-left:6px;}
+  @keyframes lootUp{0%{opacity:0;transform:translateY(14px) scale(.9);}
+    14%{opacity:1;transform:none;}70%{opacity:1;}100%{opacity:0;transform:translateY(-16px);}}
+
+  /* 撤離進度 */
+  #exfilP{position:fixed;left:50%;top:46%;transform:translateX(-50%);z-index:6;
+    display:none;text-align:center;pointer-events:none;min-width:260px;
+    background:rgba(6,20,14,.78);border:1px solid rgba(127,224,160,.45);
+    border-radius:12px;padding:13px 26px;box-shadow:0 0 28px rgba(60,220,140,.25);}
+  #exfilP.on{display:block;}
+  #exfilName{font:800 17px "Segoe UI";letter-spacing:3px;color:#7fffb0;}
+  #exfilTxt{font-size:12px;letter-spacing:2px;color:#bfe9c8;margin-top:4px;}
+  #exfilBarW{margin-top:8px;height:9px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;}
+  #exfilBar{display:block;height:100%;width:0;background:linear-gradient(90deg,#7fffb0,#3fd08a);
+    transition:width .08s linear;}
+
+  /* 背包 */
+  #bagPanel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:12;
+    width:min(560px,94vw);background:rgba(10,14,22,.95);border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.7);}
+  #bagPanel.hide{display:none;}
+  #bpTop{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:9px;margin-bottom:11px;}
+  #bpTitle{font:800 16px "Segoe UI";letter-spacing:4px;color:#ffcf6b;}
+  #bpCap{font-size:12px;color:#8fa0bd;letter-spacing:1px;}
+  #bpVal{font:800 17px "Segoe UI";color:#ffd76b;}
+  #bpVal small{font-size:10px;color:#8fa0bd;letter-spacing:2px;font-weight:600;}
+  #bpGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;
+    max-height:46vh;overflow-y:auto;}
+  .itm{border:1px solid var(--rc);border-radius:8px;padding:7px 6px;text-align:center;
+    background:rgba(255,255,255,.04);position:relative;overflow:hidden;}
+  .itm::before{content:'';position:absolute;inset:0;background:var(--rg);opacity:.13;}
+  .itm i{display:block;font-size:20px;font-style:normal;position:relative;}
+  .itm b{display:block;font:700 11px "Segoe UI";color:var(--rc);margin-top:3px;position:relative;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .itm span{display:block;font-size:10px;color:#9fb0cc;margin-top:2px;position:relative;}
+  .itm em{position:absolute;right:3px;top:2px;font-style:normal;font-size:9px;color:#7f8da6;}
+  .itm.can{cursor:pointer;} .itm.can:hover{filter:brightness(1.25);}
+  #bpHint{margin-top:11px;font-size:11px;color:#7f8da6;letter-spacing:1px;text-align:center;}
+  #bpEmpty{text-align:center;color:#5f6d85;font-size:13px;padding:26px 0;letter-spacing:2px;}
+
+  /* 結算 */
+  #settle{position:fixed;inset:0;z-index:24;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;overflow-y:auto;
+    padding:24px 14px;background:radial-gradient(circle at 50% 30%,#141d33,#04060a 72%);}
+  #settle.hide{display:none;}
+  #stTitle{font:900 42px "Segoe UI";letter-spacing:8px;}
+  #stTitle.win{background:linear-gradient(90deg,#7fffb0,#3fd08a);-webkit-background-clip:text;
+    background-clip:text;color:transparent;}
+  #stTitle.lose{background:linear-gradient(90deg,#ff6b6b,#ff9a5a);-webkit-background-clip:text;
+    background-clip:text;color:transparent;}
+  #stSub{color:#8fa0bd;letter-spacing:5px;font-size:12px;margin-top:-6px;}
+  #stNums{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:15px 28px;}
+  #stNums div{text-align:center;}
+  #stNums b{display:block;font:800 24px "Segoe UI";}
+  #stNums small{display:block;font-size:10px;letter-spacing:3px;color:#7f8da6;margin-top:3px;}
+  #stItems{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;
+    width:min(620px,94vw);max-height:32vh;overflow-y:auto;}
+  #stMsg{color:#9fb0cc;font-size:13px;letter-spacing:2px;text-align:center;max-width:min(560px,92vw);line-height:1.8;}
+
+  /* 大廳：裝備方案 */
+  #opsPanel{flex-direction:column;gap:10px;width:min(680px,95vw);
+    background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:14px 16px;}
+  #opsPanel.hide{display:none;}
+  #haffRow{display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid rgba(255,255,255,.09);padding-bottom:9px;}
+  #haffBig{font:800 24px "Segoe UI";color:#ffd76b;text-shadow:0 0 12px rgba(255,215,107,.4);}
+  #haffBig small{font-size:11px;color:#8fa0bd;letter-spacing:3px;font-weight:600;margin-left:6px;}
+  #stashBtn{cursor:pointer;font:700 13px "Segoe UI";padding:8px 16px;border-radius:8px;
+    border:1px solid rgba(255,207,107,.45);background:rgba(255,207,107,.1);color:#ffcf6b;}
+  #stashBtn:hover{filter:brightness(1.2);}
+  .gearRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .gearLbl{width:74px;flex:none;font-size:12px;color:#9aa7bd;letter-spacing:1px;}
+  .gBtn{padding:6px 11px;border-radius:8px;border:1px solid #3a4150;background:#151a24;
+    color:#cfd3d8;font:700 12px "Segoe UI";cursor:pointer;}
+  .gBtn small{display:block;font-size:10px;color:#7f8da6;font-weight:600;margin-top:1px;}
+  .gBtn.sel{border-color:#ffd76b;color:#ffd76b;background:#2a2415;
+    box-shadow:0 0 10px rgba(255,215,107,.3);}
+  .gBtn.no{opacity:.42;cursor:not-allowed;}
+  #kitBar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    border-top:1px solid rgba(255,255,255,.09);padding-top:11px;margin-top:2px;}
+  #kitCost{font-size:12px;color:#8fa0bd;letter-spacing:1px;flex:1;min-width:220px;}
+  #kitCost b{color:#ff9a5a;}
+  #bDeploy{font-size:17px;padding:12px 30px;letter-spacing:3px;}
+  .gearRow{min-height:0;}
+  .gBtn{padding:5px 10px;line-height:1.25;}
+
+  /* 倉庫 */
+  #stash{position:fixed;inset:0;z-index:22;background:rgba(6,9,15,.97);
+    display:flex;flex-direction:column;padding:16px;}
+  #stash.hide{display:none;}
+  #stTop2{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+    border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:12px;margin-bottom:12px;}
+  #stTitle2{font:800 22px "Segoe UI";letter-spacing:5px;color:#ffcf6b;}
+  #stTitle2 span{display:inline-block;margin-left:10px;font-size:11px;letter-spacing:2px;
+    color:#7f8da6;font-weight:600;}
+  #stashGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;
+    overflow-y:auto;flex:1;align-content:start;}
+  #stashBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+
+  /* 撤離點 / 任務標記（螢幕邊緣指向） */
+  #exMarks{position:fixed;inset:0;z-index:5;pointer-events:none;}
+  .exM{position:absolute;transform:translate(-50%,-50%);text-align:center;
+    font:700 11px "Segoe UI";color:#7fffb0;text-shadow:0 2px 6px #000;letter-spacing:1px;
+    transition:opacity .2s;}
+  .exM i{display:block;font-size:17px;font-style:normal;line-height:1;}
+  .exM u{display:block;text-decoration:none;font-size:10px;color:#bfe9c8;opacity:.85;}
+  .exM.shut{color:#ff9a5a;} .exM.shut u{color:#ffc9a0;}
+
+  /* 手機：搜刮 / 背包 */
+  /* 橫向：放在搖桿正上方（右邊已經被射擊/瞄準那一排佔滿了）*/
+  #bLoot{left:20px;bottom:168px;width:60px;height:60px;font-size:13px;
+    background:rgba(255,207,107,.16);border-color:rgba(255,207,107,.5);}
+  #bBag{left:88px;bottom:172px;width:52px;height:52px;font-size:12px;
+    background:rgba(120,180,255,.14);border-color:rgba(120,180,255,.45);}
+  body:not(.ops) #bLoot,body:not(.ops) #bBag{display:none!important;}
+  body.touchui.portrait #bLoot{left:auto;right:172px;bottom:28px;width:52px;height:52px}
+  body.touchui.portrait #bBag{left:auto;right:214px;bottom:160px;width:48px;height:48px}
+
   /* ===== 響應式：手機 / 平板 / 小視窗 ===== */
   #menu{overflow-y:auto;overflow-x:hidden;justify-content:flex-start;-webkit-overflow-scrolling:touch;
     padding:max(18px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
@@ -308,6 +461,22 @@
     #armMain{padding:0 12px 12px;gap:10px} .armTab{padding:9px 8px;font-size:13px} .armTab small{font-size:10px} #armSkins{max-height:220px}
     #board{min-width:min(280px,90vw);padding:12px 16px;font-size:12px}
     #dmgDir i{top:-96px}
+    /* 烽火地帶：手機把裝備面板壓扁，出擊鍵才不會被推到畫面外 */
+    #opsPanel{padding:10px 12px;gap:6px} #haffBig{font-size:19px} #haffBig small{font-size:9px}
+    #haffRow{padding-bottom:7px} #stashBtn{padding:6px 12px;font-size:12px}
+    .gearLbl{width:56px;font-size:11px} .gearRow{gap:4px}
+    .gBtn{padding:4px 7px;font-size:11px} .gBtn small{font-size:9px}
+    #kitBar{padding-top:8px} #kitCost{font-size:10px;min-width:0;letter-spacing:0}
+    #bDeploy{font-size:14px;padding:9px 18px;letter-spacing:2px}
+    #bagPanel{width:min(560px,95vw);padding:12px 12px}
+    #bpGrid{grid-template-columns:repeat(auto-fill,minmax(78px,1fr));max-height:40vh}
+    .itm i{font-size:17px} .itm b{font-size:10px} .itm span{font-size:9px}
+    #stTitle{font-size:30px;letter-spacing:5px} #stNums{gap:14px;padding:11px 16px}
+    #stNums b{font-size:18px} #stNums small{font-size:9px;letter-spacing:2px}
+    #stItems{grid-template-columns:repeat(auto-fill,minmax(78px,1fr));max-height:26vh}
+    #stMsg{font-size:11px} #stTitle2{font-size:17px;letter-spacing:3px}
+    #stashGrid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+    .exM{font-size:10px} .exM i{font-size:14px}
   }
 </style>
 </head>
@@ -345,6 +514,13 @@
     </div>
   </div>
 
+  <div id="exMarks"></div>
+  <div id="lootP"><div id="lootIcon">📦</div><div id="lootName">木箱</div>
+    <div id="lootKey">按住 <b>F</b> 搜刮</div>
+    <div id="lootBarW"><i id="lootBar"></i></div></div>
+  <div id="lootFeed"></div>
+  <div id="exfilP"><div id="exfilName">🚁 撤離點</div><div id="exfilTxt">撤離中…</div>
+    <div id="exfilBarW"><i id="exfilBar"></i></div></div>
   <div id="center"><div id="centerT"></div><div id="centerS"></div></div>
   <div id="vig"></div><div id="flash"></div><div id="healFx"></div>
   <div id="dmgDir"><i></i></div>
@@ -360,17 +536,35 @@
 <div id="bInspect" class="touch tbtn">檢視</div>
 <div id="bSlide" class="touch tbtn">滑鏟</div>
 <div id="bSpray" class="touch tbtn">噴漆</div>
+<div id="bLoot" class="touch tbtn">搜刮</div>
+<div id="bBag" class="touch tbtn">背包</div>
 <div id="rotHint">📱 手機轉成橫的比較好玩</div>
 
 <div id="menu">
   <h1>STRIKE ZONE</h1>
-  <div class="tag">3D 第一人稱 槍戰　單人 · 合作 · 對戰</div>
+  <div class="tag">烽火地帶 OPERATIONS　搜刮 · 撤離 · 全部皮膚免費</div>
 
   <input id="nameIn" maxlength="10" placeholder="你的名字" autocomplete="off">
 
   <div class="modeRow">
-    <button class="modeBtn sel" id="mCoop">合作生存<small>一起打 AI 波次</small></button>
+    <button class="modeBtn sel" id="mOps">🎯 烽火地帶<small>搜物資 · 活著撤離</small></button>
+    <button class="modeBtn" id="mCoop">合作生存<small>一起打 AI 波次</small></button>
     <button class="modeBtn" id="mPvp">單挑對戰<small>玩家互打 PvP</small></button>
+  </div>
+
+  <div id="opsPanel" class="lobbyRow">
+    <div id="haffRow">
+      <div id="haffBig">0<small>哈夫幣</small></div>
+      <button id="stashBtn">📦 倉庫</button>
+    </div>
+    <div class="gearRow"><div class="gearLbl">🛡 護甲</div><div id="selArmor" class="gearRow"></div></div>
+    <div class="gearRow"><div class="gearLbl">⛑ 頭盔</div><div id="selHelm" class="gearRow"></div></div>
+    <div class="gearRow"><div class="gearLbl">🎒 背包</div><div id="selBag" class="gearRow"></div></div>
+    <div class="gearRow"><div class="gearLbl">💊 醫療包</div><div id="selMed" class="gearRow"></div></div>
+    <div id="kitBar">
+      <div id="kitCost">這套裝備成本 <b>0</b> 哈夫幣　·　死了就全部沒收，撤離成功才留得住</div>
+      <button id="bDeploy" class="lobBtn host">🎯 進入戰區</button>
+    </div>
   </div>
 
   <div class="lobbyRow">
@@ -395,8 +589,12 @@
   </div>
 
   <div class="keys">
+    <b style="color:#7fffb0">🎯 烽火地帶怎麼玩</b>：大廳選好裝備進圖 → 走進房子，<b>看著箱子按住 F</b> 搜刮 →
+    背包裝滿或時間快到，就跑去<b style="color:#7fffb0">撤離點</b>（綠色光柱，畫面上會顯示距離）站著撐 <b>8 秒</b> →
+    撤離成功物資才進倉庫，賣掉變哈夫幣。<b style="color:#ff8a5a">陣亡或 6 分鐘到，背包和身上的裝備全部沒收。</b><br>
+    <b>搜刮</b> 按住 F　<b>背包</b> Tab　<b>醫療包</b> H　撤離點：北方公路／東側碼頭／西南隧道／南方農場<br>
     <b>移動</b> WASD　<b>跳</b> 空白　<b>蹲</b> Ctrl　<b>衝刺</b> Shift　<b>換彈</b> R<br>
-    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；每一刀 <b>50% 機率爆頭</b>（爆頭 2.4 倍傷害，沒爆頭就普通傷害）；🔒 信條 1000 · 北極星 2000 · 爪刀 1500 · 蝴蝶刀 2000 · 苦無 5000 點券　<b>記分板</b> Tab　<b>檢視/旋轉</b> F（步槍、狙擊槍、每把刀都有自己的檢視動作）　<b>噴漆</b> T（威龍、蜂醫各有自己的圖案，對著牆或地板噴）<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
+    <b>射擊</b> 左鍵　<b>瞄準</b> 右鍵　<b>換武器</b> 1 步槍／2 狙擊／3 你帶的刀（或滾輪／Q）　<b>一局只能帶一把刀</b>，在大廳選；每一刀 <b>50% 機率爆頭</b>（爆頭 2.4 倍傷害，沒爆頭就普通傷害）；<b style="color:#7fe0a0">五把刀和所有槍枝皮膚全部免費</b>　<b>背包／記分板</b> Tab　<b>檢視/旋轉</b> F（步槍、狙擊槍、每把刀都有自己的檢視動作）　<b>噴漆</b> T（威龍、蜂醫各有自己的圖案，對著牆或地板噴）<br><b>滑鏟</b> 跑步中按 Ctrl　<b>幹員</b> 大廳選威龍或蜂醫（一局一個）　威龍：C 虎蹲炮／V 動力推進／G 磁吸炸彈　蜂醫：C 激素槍（點放治療彈、長按自療）／V 煙幕無人機／G 蜂巢煙霧彈（用激素槍打煙會變治療煙）<br>
     手機/平板：左下搖桿移動（推到底＝衝刺）、右側拖曳轉視角、按鈕 射擊／<b>瞄準</b>（點一下開鏡再點關）／換彈／跳／換槍／滑鏟；<b>點下面的技能格</b>就放技能（蜂醫長按 C 格自療）。<br>
     <b>怪物是近戰</b>：會衝過來揮拳，看到牠<b>舉手</b>就是要打了，趁機後退或拉開再開槍解決牠。<br>
     <b>每打完一波</b>：所有槍枝的彈匣＋備彈全部自動補滿。<br>
@@ -404,7 +602,7 @@
     對戰：玩家互相射擊，被擊倒 4 秒後重生，比擊殺數。
   </div>
   <div class="small">建議電腦＋滑鼠遊玩；連線用 PeerJS，需連網</div>
-  <div class="small" id="verTag">版本 v24 · 爪刀新握法＋新揮砍　<b style="color:#7fe0a0">看到 v24 就是最新版</b></div>
+  <div class="small" id="verTag">版本 v25 · 烽火地帶（撤離模式）＋皮膚全免費　<b style="color:#7fe0a0">看到 v25 就是最新版</b></div>
 </div>
 
 <div id="armory" class="hide">
@@ -421,6 +619,45 @@
     </div>
     <div id="armSkins"></div>
   </div>
+</div>
+
+<div id="bagPanel" class="hide">
+  <div id="bpTop">
+    <div id="bpTitle">背包</div>
+    <div id="bpCap">0 / 16 格</div>
+    <div id="bpVal">0<small> 哈夫幣</small></div>
+  </div>
+  <div id="bpGrid"></div>
+  <div id="bpHint">點物品可以丟掉騰出格子 · 再按 <b>Tab</b> 關閉 · 死了東西全沒，記得撤離</div>
+</div>
+
+<div id="settle" class="hide">
+  <div id="stTitle" class="win">撤離成功</div>
+  <div id="stSub">OPERATION COMPLETE</div>
+  <div id="stNums">
+    <div><b id="stIn" style="color:#ff9a5a">0</b><small>帶入裝備</small></div>
+    <div><b id="stOut" style="color:#7fffb0">0</b><small>帶出物資</small></div>
+    <div><b id="stNet" style="color:#ffd76b">0</b><small>本局淨賺</small></div>
+    <div><b id="stKill" style="color:#cfe3ff">0</b><small>擊殺</small></div>
+  </div>
+  <div id="stItems"></div>
+  <div id="stMsg"></div>
+  <div class="lobbyRow">
+    <button id="stSell" class="lobBtn host">💰 全部賣掉</button>
+    <button id="stBack" class="lobBtn">返回大廳</button>
+  </div>
+</div>
+
+<div id="stash" class="hide">
+  <div id="stTop2">
+    <div id="stTitle2">倉庫 <span>WAREHOUSE · 撤離帶回來的物資都放這</span></div>
+    <div id="stashBar">
+      <span id="stashSum" style="color:#ffd76b;font:800 18px 'Segoe UI'"></span>
+      <button id="sellAll" class="lobBtn">全部賣出</button>
+      <button id="stashClose" class="lobBtn">✕ 返回大廳</button>
+    </div>
+  </div>
+  <div id="stashGrid"></div>
 </div>
 
 <div id="board" class="hide"></div>
@@ -470,7 +707,7 @@ sun.shadow.camera.left=-90; sun.shadow.camera.right=90;
 sun.shadow.camera.top=90; sun.shadow.camera.bottom=-90;
 sun.shadow.bias = -0.0006;
 scene.add(sun);
-scene.add(new TH.AmbientLight(0x404a5a, 0.35));
+scene.add(new TH.AmbientLight(0x4a5568, 0.48));   // 房子有屋頂，室內要看得見
 
 /* ========= 地面 + 場景物件 ========= */
 const colliders = []; // {min:{x,z}, max:{x,z}, h}
@@ -507,33 +744,214 @@ const WALL = 60;
 [[0,-WALL,WALL*2,2],[0,WALL,WALL*2,2],[-WALL,0,2,WALL*2],[WALL,0,2,WALL*2]]
  .forEach(([x,z,w,d])=>addBox(x,z,w,d,7,0x53596b,0.95));
 
-// 建築 / 掩體（城鎮風）
+// 建築 / 掩體（三角洲風小鎮：房子都能走進去搜刮）
 const palette=[0x6b5d4f,0x7a6a58,0x5c6470,0x4f5a52,0x8a7a64];
-function building(x,z,w,d,h){ addBox(x,z,w,d,h,palette[(Math.abs(x+z)|0)%palette.length],0.85); }
-building(-30,-28,16,16,16); building(28,-32,14,20,20); building(34,18,18,14,13);
-building(-34,22,16,18,17); building(-6,38,22,12,15); building(8,-44,20,12,18);
-building(-46,-4,12,26,14); building(44,-6,12,24,16);
+const EXF_R=3.6;                       // 撤離點半徑
+
+/* 可進入的房子：四面牆、指定方向留門口，屋頂只是視覺（跳不上去） */
+function room(cx,cz,w,d,h,doors,col){
+  col = (col==null) ? palette[Math.abs(Math.round(cx+cz))%palette.length] : col;
+  const t=0.5, dw=3.4, lh=Math.max(0.25,h-2.4);
+  const lintel=(horiz,fx)=>{                              // 門楣（門口上方那塊牆）
+    const m=new TH.Mesh(new TH.BoxGeometry(horiz?dw:t, lh, horiz?t:dw),
+      new TH.MeshStandardMaterial({color:col,roughness:.88}));
+    m.position.set(horiz?cx:fx, 2.4+lh/2, horiz?fx:cz);
+    m.castShadow=true; m.receiveShadow=true; scene.add(m);
+  };
+  const side=(horiz,fx,door)=>{
+    if(!door){ if(horiz) addBox(cx,fx,w,t,h,col,.88); else addBox(fx,cz,t,d,h,col,.88); return; }
+    const L=horiz?w:d, seg=(L-dw)/2;
+    if(seg>0.3){
+      if(horiz){ addBox(cx-(L+dw)/4,fx,seg,t,h,col,.88); addBox(cx+(L+dw)/4,fx,seg,t,h,col,.88); }
+      else     { addBox(fx,cz-(L+dw)/4,t,seg,h,col,.88); addBox(fx,cz+(L+dw)/4,t,seg,h,col,.88); }
+    }
+    lintel(horiz,fx);
+  };
+  side(true , cz-d/2, doors.indexOf('N')>=0);
+  side(true , cz+d/2, doors.indexOf('S')>=0);
+  side(false, cx-w/2, doors.indexOf('W')>=0);
+  side(false, cx+w/2, doors.indexOf('E')>=0);
+  const rf=new TH.Mesh(new TH.BoxGeometry(w+1,0.35,d+1),      // 天花板自發光一點，室內才不會全黑
+    new TH.MeshStandardMaterial({color:0x39404c,roughness:.95,emissive:0x272e3a}));
+  rf.position.set(cx,h+0.18,cz); rf.castShadow=true; rf.receiveShadow=true; scene.add(rf);
+  return {x:cx,z:cz,w:w,d:d,h:h};
+}
+
+/* 小鎮：西北工廠 / 東北民宅 / 西醫療站 / 中央塔樓 / 東碼頭 / 東南商店街 / 南農舍 / 西南隧道 */
+room(-36,-34, 22,18, 7, 'SE', 0x5c6470);   // 工廠主廠房
+room(-16,-42, 13,11, 5, 'S' , 0x6b5d4f);   // 工廠倉庫
+room( 30,-40, 13,11, 5, 'S' , 0x7a6a58);   // 民宅 A
+room( 44,-26, 11,13, 5, 'W' , 0x8a7a64);   // 民宅 B
+room( 24,-21, 12,10, 5, 'N' , 0x6b5d4f);   // 民宅 C
+room(-46, -4, 14,18, 6, 'E' , 0xa8b0b8);   // 醫療站
+room(  0,  0, 15,15, 9, 'NS', 0x4f5a52);   // 中央塔樓（高價物資）
+room(-16, 12, 11,10, 5, 'E' , 0x7a6a58);   // 廣場小屋
+room( 44, 10, 13,17, 6, 'W' , 0x5c6470);   // 碼頭倉庫
+room( 14, 22, 11, 9, 5, 'W' , 0x8a7a64);   // 加油站
+room( 32, 36, 14,12, 5, 'NW', 0x6b5d4f);   // 商店 A
+room( 46, 46, 11,11, 5, 'N' , 0x7a6a58);   // 商店 B
+room( -8, 42, 15,12, 5, 'N' , 0x8a7a64);   // 南方農舍
+room(-44, 42, 13,13, 6, 'NE', 0x4f5a52);   // 西南隧道口
+
 // 矮掩體 / 路障
-const cover=[[0,0,5,5,2.2],[-12,8,3,8,1.6],[12,-8,8,3,1.6],[-18,-14,4,4,2.4],
- [18,12,4,4,2.4],[6,18,7,3,1.4],[-8,-22,3,7,1.4],[22,-18,5,5,1.8],
- [-24,4,6,3,1.5],[2,-30,3,6,1.7],[-2,28,6,3,1.5],[26,2,3,6,1.7]];
+const cover=[[-26,-14,5,5,2.2],[10,-30,7,3,1.7],[-4,-16,3,7,1.6],[18,-6,5,5,1.9],
+ [-28,6,6,3,1.5],[8,8,3,6,1.7],[30,18,5,5,2.1],[-30,24,6,3,1.6],[6,32,7,3,1.5],
+ [-24,-24,4,4,2.4],[36,-8,4,4,2.4],[-10,26,4,4,2.0],[20,46,6,3,1.6],[-32,52,5,5,2.2],
+ [52,28,4,8,2.3],[-52,26,4,8,2.3],[0,-16,8,2.4,1.4],[0,20,8,2.4,1.4]];
 cover.forEach(([x,z,w,d,h])=>addBox(x,z,w,d,h, 0x4a5160, 0.8));
-// 桶（裝飾，可被穿過視覺）
-for(let i=0;i<14;i++){
-  const a=Math.random()*Math.PI*2, r=10+Math.random()*40;
-  const x=Math.cos(a)*r, z=Math.sin(a)*r;
+// 貨櫃
+[[50,-6,0,0x2f6f5a],[50,-12,0,0xa04a34],[38,26,1,0x2f5a6f],[44,30,1,0xa08a34],
+ [-52,14,0,0x6f4a7a],[26,-4,1,0x2f6f5a]].forEach(([x,z,rot,col])=>{
+  const w=rot?2.6:6.2, d=rot?6.2:2.6;
+  addBox(x,z,w,d,2.6,col,0.82);
+});
+// 油桶
+[[-20,-8],[-18,-6],[12,-20],[14,-18],[34,4],[36,6],[-38,18],[-36,20],
+ [22,28],[24,30],[-6,-36],[-4,-34],[40,-14],[-56,-14],[56,36],[-14,50]].forEach(([x,z])=>{
   const b=new TH.Mesh(new TH.CylinderGeometry(0.45,0.45,1.5,12),
     new TH.MeshStandardMaterial({color:0xb5532f,roughness:.6,metalness:.3}));
   b.position.set(x,0.75,z); b.castShadow=true; scene.add(b);
   colliders.push({min:{x:x-0.5,z:z-0.5},max:{x:x+0.5,z:z+0.5},h:1.5});
+});
+
+/* ===== 搜刮容器 ===== */
+const CONTAINERS=[];
+function mkContainer(x,z,type,wOverride){
+  const g=new TH.Group(); g.position.set(x,0,z);
+  const M=(geo,col,rough,metal)=>new TH.Mesh(geo,
+    new TH.MeshStandardMaterial({color:col,roughness:rough==null?.85:rough,metalness:metal||0}));
+  const add=(m,px,py,pz)=>{ m.position.set(px||0,py||0,pz||0);
+    m.castShadow=true; m.receiveShadow=true; g.add(m); return m; };
+  let fw=0.9, fd=0.9, hh=0.7;
+  if(type==='crate'){
+    add(M(new TH.BoxGeometry(0.95,0.7,0.72),0x8a6a44,.92),0,0.35,0);
+    add(M(new TH.BoxGeometry(0.99,0.09,0.76),0x6b5232,.95),0,0.64,0);
+    add(M(new TH.BoxGeometry(0.99,0.09,0.76),0x6b5232,.95),0,0.08,0);
+    fw=0.95; fd=0.72; hh=0.7;
+  } else if(type==='ammo'){
+    add(M(new TH.BoxGeometry(1.0,0.55,0.62),0x44532f,.85),0,0.28,0);
+    add(M(new TH.BoxGeometry(1.02,0.1,0.64),0x39472a,.85),0,0.56,0);
+    add(M(new TH.BoxGeometry(1.03,0.08,0.1),0xd8b23a,.7),0,0.34,0.31);
+    fw=1.0; fd=0.62; hh=0.62;
+  } else if(type==='med'){
+    add(M(new TH.BoxGeometry(0.9,1.7,0.5),0xdde3ea,.6),0,0.85,0);
+    add(M(new TH.BoxGeometry(0.16,0.6,0.06),0xd83a30,.5),0,1.15,0.27);
+    add(M(new TH.BoxGeometry(0.6,0.16,0.06),0xd83a30,.5),0,1.15,0.27);
+    add(M(new TH.BoxGeometry(0.86,0.05,0.52),0xc3ccd6,.6),0,0.62,0);
+    fw=0.9; fd=0.5; hh=1.7;
+  } else if(type==='shelf'){
+    for(const y of [0.4,1.05,1.7]) add(M(new TH.BoxGeometry(1.6,0.08,0.6),0x8c949e,.8,.3),0,y,0);
+    for(const sx of [-0.76,0.76]) add(M(new TH.BoxGeometry(0.08,1.9,0.6),0x6d757f,.8,.3),sx,0.95,0);
+    add(M(new TH.BoxGeometry(0.5,0.3,0.4),0x5a6270,.9),-0.35,1.9,0);
+    add(M(new TH.BoxGeometry(0.4,0.26,0.36),0x7a6a58,.9),0.4,1.86,0);
+    fw=1.6; fd=0.6; hh=2.0;
+  } else if(type==='pc'){
+    add(M(new TH.BoxGeometry(0.62,1.1,0.9),0x2b3038,.55,.5),0,0.55,0);
+    const led=new TH.Mesh(new TH.BoxGeometry(0.04,0.72,0.03),
+      new TH.MeshBasicMaterial({color:0x5fd0ff})); led.position.set(0.32,0.6,0.44); g.add(led);
+    add(M(new TH.BoxGeometry(0.5,0.06,0.06),0x1b1f26,.5),0.32,1.02,0.44);
+    fw=0.62; fd=0.9; hh=1.1;
+  } else if(type==='cache'){
+    add(M(new TH.BoxGeometry(1.3,0.8,0.85),0x55613f,.9),0,0.4,0);
+    add(M(new TH.BoxGeometry(1.34,0.12,0.89),0x424c30,.9),0,0.79,0);
+    for(const sx of [-0.4,0.4]) add(M(new TH.BoxGeometry(0.1,0.86,0.9),0x2f3624,.9),sx,0.42,0);
+    fw=1.3; fd=0.85; hh=0.9;
+  } else if(type==='safe'){
+    add(M(new TH.BoxGeometry(0.92,1.0,0.85),0x3d4552,.5,.75),0,0.5,0);
+    add(M(new TH.BoxGeometry(0.72,0.8,0.06),0x515b6b,.45,.8),0,0.5,0.43);
+    const dial=M(new TH.CylinderGeometry(0.13,0.13,0.08,16),0xd9c37a,.35,.9);
+    dial.rotation.x=Math.PI/2; add(dial,0.1,0.5,0.49);
+    add(M(new TH.BoxGeometry(0.06,0.34,0.05),0xd9c37a,.35,.9),-0.24,0.5,0.47);
+    fw=0.92; fd=0.85; hh=1.0;
+  } else {                                   // body：敵人掉的戰利品包
+    add(M(new TH.BoxGeometry(0.55,0.5,0.36),0x4a4030,.9),0,0.25,0);
+    add(M(new TH.BoxGeometry(0.4,0.2,0.4),0x5b503c,.9),0,0.45,0);
+    add(M(new TH.BoxGeometry(0.58,0.07,0.38),0x2f281d,.9),0,0.3,0);
+    fw=0.55; fd=0.4; hh=0.55;
+  }
+  const lit=new TH.Group();
+  lit.add(new TH.Mesh(new TH.SphereGeometry(0.085,10,8),
+    new TH.MeshBasicMaterial({color:0xffe9a8})));
+  lit.add(new TH.Mesh(new TH.SphereGeometry(0.22,12,10),
+    new TH.MeshBasicMaterial({color:0xffd76b,transparent:true,opacity:0.30,depthWrite:false})));
+  lit.position.set(0,hh+0.22,0); g.add(lit);
+  scene.add(g);
+  const c={x:x,z:z,type:type,grp:g,lit:lit,done:false,w:wOverride||null};
+  if(type!=='body') colliders.push({min:{x:x-fw/2,z:z-fd/2},max:{x:x+fw/2,z:z+fd/2},h:hh});
+  CONTAINERS.push(c);
+  return c;
 }
+function setContainerLit(c,on){ c.lit.visible=!!on; }
+
+[  // 西北工廠（工業 / 科技）
+  [-44,-40,'shelf'],[-44,-29,'crate'],[-29,-40,'cache'],[-29,-28,'pc'],[-36,-34,'safe'],
+  [-18,-45,'crate'],[-13,-38,'shelf'],
+  // 東北民宅（生活雜物）
+  [26,-44,'crate'],[34,-36,'shelf'],[41,-30,'crate'],[47,-22,'med'],[20,-24,'crate'],[28,-18.5,'pc'],
+  // 醫療站
+  [-50,-10,'med'],[-50,1,'med'],[-42,-10,'shelf'],[-42,2,'safe'],
+  // 中央塔樓（高價）
+  [-4,-4,'safe'],[4,-4,'cache'],[-4,4,'pc'],[4,4,'safe'],
+  // 廣場小屋
+  [-19,9,'crate'],[-13,15,'shelf'],
+  // 碼頭倉庫（軍用）
+  [40,4,'cache'],[40,15,'shelf'],[48,4,'crate'],[48,15,'cache'],[44,10,'safe'],
+  // 加油站
+  [11,19,'ammo'],[17,25,'crate'],
+  // 東南商店街
+  [28,33,'shelf'],[36,40,'crate'],[36,32,'safe'],[43,43,'shelf'],[49,49,'pc'],
+  // 南方農舍
+  [-13,39,'crate'],[-3,45,'shelf'],[-13,45,'cache'],
+  // 西南隧道
+  [-48,39,'ammo'],[-40,46,'cache'],[-48,46,'safe'],
+  // 戶外
+  [0,-30,'ammo'],[-20,0,'crate'],[20,0,'ammo'],[0,30,'crate'],[-30,-6,'crate'],[30,8,'ammo'],
+  [-30,30,'crate'],[14,-12,'crate'],[-8,20,'ammo'],[52,-30,'crate'],[-54,-30,'crate'],[52,54,'crate'],
+].forEach(([x,z,t])=>mkContainer(x,z,t));
+
+/* ===== 撤離點 ===== */
+const EXFILS=[];
+function mkExfil(name,x,z,ic){
+  const g=new TH.Group(); g.position.set(x,0,z);
+  const pad=new TH.Mesh(new TH.CircleGeometry(EXF_R,32),
+    new TH.MeshBasicMaterial({color:0x3fd08a,transparent:true,opacity:0.20,depthWrite:false}));
+  pad.rotation.x=-Math.PI/2; pad.position.y=0.03; g.add(pad);
+  const ring=new TH.Mesh(new TH.RingGeometry(EXF_R*0.82,EXF_R,40),
+    new TH.MeshBasicMaterial({color:0x7fffb0,transparent:true,opacity:0.4,
+      depthWrite:false,side:TH.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.05; g.add(ring);
+  const beam=new TH.Mesh(new TH.CylinderGeometry(EXF_R*0.75,EXF_R*0.95,34,20,1,true),
+    new TH.MeshBasicMaterial({color:0x4dffa0,transparent:true,opacity:0.17,
+      depthWrite:false,side:TH.DoubleSide}));
+  beam.position.y=17; g.add(beam);
+  const core=new TH.Mesh(new TH.CylinderGeometry(EXF_R*0.3,EXF_R*0.42,34,14,1,true),
+    new TH.MeshBasicMaterial({color:0xbfffdc,transparent:true,opacity:0.22,
+      depthWrite:false,side:TH.DoubleSide}));
+  core.position.y=17; g.add(core);
+  for(let i=0;i<4;i++){ const a=i*Math.PI/2+Math.PI/4;
+    const p=new TH.Mesh(new TH.CylinderGeometry(0.08,0.08,1.9,8),
+      new TH.MeshStandardMaterial({color:0x2f3a33,roughness:.8}));
+    p.position.set(Math.cos(a)*EXF_R,0.95,Math.sin(a)*EXF_R); p.castShadow=true; g.add(p);
+    const lamp=new TH.Mesh(new TH.SphereGeometry(0.13,8,8),
+      new TH.MeshBasicMaterial({color:0x7fffb0}));
+    lamp.position.set(Math.cos(a)*EXF_R,1.95,Math.sin(a)*EXF_R); g.add(lamp);
+  }
+  scene.add(g);
+  const e={name:name,x:x,z:z,ic:ic,grp:g,ring:ring,beam:beam,
+    ph:EXFILS.length*1.7,near:false,el:null};
+  EXFILS.push(e); return e;
+}
+mkExfil('北方公路',  0,-53,'🚚');
+mkExfil('東側碼頭', 55,  8,'🚤');   // 往東挪，光柱才不會穿進碼頭倉庫的牆
+mkExfil('西南隧道',-53, 54,'🚇');
+mkExfil('南方農場', 14, 53,'🚁');
 
 /* ========= 玩家 ========= */
 const player = {
   pos: new TH.Vector3(0,1.6,40),
   vel: new TH.Vector3(),
   yaw: Math.PI, pitch: 0,
-  onGround:true, hp:100, armor:100, alive:true,
+  onGround:true, hp:100, armor:100, armorMax:100, alive:true,
   height:1.6, crouch:false, speedBob:0
 };
 const R_PLAYER = 0.4;
@@ -1759,12 +2177,11 @@ function saveSkins(){ try{localStorage.setItem('sz_skins',JSON.stringify(equippe
 /* ========= 點券：擊殺敵人賺取，用來解鎖近戰武器（存 localStorage，關掉遊戲也留著）========= */
 const CREDIT_BY_TIER=[10,25,50];          // 偵察兵(綠) / 突擊兵(紅) / 重裝兵(紫)
 let credits=0;
-let owned={knife:false, polaris:false, karambit:false, butterfly:false, kunai:false};
+let owned={knife:true, polaris:true, karambit:true, butterfly:true, kunai:true};   // 刀跟皮膚全部免費
 let drawCount=0;              // 已抽次數：決定下一抽價格
 let ownedSkins={};            // 已抽到的槍塗裝 {'rifle:desert':true,...}；default 一律免費
 try{ const wv=JSON.parse(localStorage.getItem('sz_wallet')||'{}');
   if(typeof wv.credits==='number' && isFinite(wv.credits)) credits=Math.max(0,Math.floor(wv.credits));
-  if(wv.owned) for(const k in owned) owned[k]=!!wv.owned[k];
   if(typeof wv.drawCount==='number' && isFinite(wv.drawCount)) drawCount=Math.max(0,Math.floor(wv.drawCount));
   if(wv.ownedSkins && typeof wv.ownedSkins==='object') ownedSkins=wv.ownedSkins;
 }catch(e){}
@@ -1785,12 +2202,447 @@ function renderKnifeSel(){
 function saveWallet(){ try{localStorage.setItem('sz_wallet',
   JSON.stringify({credits:credits,owned:owned,drawCount:drawCount,ownedSkins:ownedSkins}));}catch(e){} }
 
+/* ========= 烽火地帶 OPERATIONS：撤離模式 =========
+   進圖 → 搜刮物資 → 解決幽靈兵 → 跑到撤離點撐完倒數 → 帶出去的才算你的。
+   死了或超時：背包＋身上裝備全部沒收。撤離成功：裝備原樣拿回、物資進倉庫。 */
+
+const fmt=n=>Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
+
+/* ── 物資表：稀有度 0 普通 / 1 進階 / 2 稀有 / 3 史詩 / 4 傳說 ── */
+const LOOT=[
+  {id:'rag',  n:'破布捲',   r:0,v:700,   s:1,e:'🧻'},
+  {id:'wren', n:'生鏽扳手', r:0,v:900,   s:1,e:'🔧'},
+  {id:'bolt', n:'螺絲盒',   r:0,v:1100,  s:1,e:'🔩'},
+  {id:'batt', n:'舊電池',   r:0,v:1300,  s:1,e:'🔋'},
+  {id:'can',  n:'軍用罐頭', r:0,v:1600,  s:1,e:'🥫'},
+  {id:'wire', n:'電線束',   r:0,v:1900,  s:1,e:'🧵'},
+  {id:'tape', n:'強力膠帶', r:0,v:2300,  s:1,e:'📼'},
+
+  {id:'band', n:'醫用繃帶', r:1,v:3600,  s:1,e:'🩹'},
+  {id:'gear', n:'齒輪組',   r:1,v:4400,  s:1,e:'⚙️'},
+  {id:'ext',  n:'滅火器',   r:1,v:5000,  s:2,e:'🧯'},
+  {id:'oil',  n:'高級潤滑油',r:1,v:5800, s:1,e:'🛢'},
+  {id:'radio',n:'手持電台', r:1,v:6900,  s:1,e:'📻'},
+  {id:'psu',  n:'電源供應器',r:1,v:8400, s:2,e:'🔌'},
+  {id:'scope',n:'瞄具鏡片', r:1,v:9200,  s:1,e:'🔎'},
+
+  {id:'adr',  n:'腎上腺素', r:2,v:13000, s:1,e:'💉'},
+  {id:'tool', n:'精密工具箱',r:2,v:15000,s:2,e:'🧰'},
+  {id:'hdd',  n:'軍用硬碟', r:2,v:17000, s:1,e:'💾'},
+  {id:'cell', n:'軍規電池', r:2,v:20000, s:1,e:'🪫'},
+  {id:'ant',  n:'訊號發射器',r:2,v:24000,s:2,e:'📡'},
+  {id:'therm',n:'熱像儀模組',r:2,v:28000,s:1,e:'🔭'},
+  {id:'ingot',n:'銀錠',     r:2,v:32000, s:1,e:'🥈'},
+
+  {id:'vial', n:'實驗藥劑', r:3,v:48000, s:1,e:'🧪'},
+  {id:'watch',n:'黃金懷錶', r:3,v:56000, s:1,e:'⌚️'},
+  {id:'gpu',  n:'顯示卡',   r:3,v:70000, s:2,e:'🖥'},
+  {id:'medal',n:'軍官勳章', r:3,v:80000, s:1,e:'🎖'},
+  {id:'cpu',  n:'核心處理器',r:3,v:95000,s:1,e:'🧠'},
+  {id:'usb',  n:'加密隨身碟',r:3,v:125000,s:1,e:'🔐'},
+
+  {id:'gold', n:'金條',     r:4,v:260000,s:2,e:'🪙'},
+  {id:'neck', n:'藍寶石項鍊',r:4,v:340000,s:1,e:'💎'},
+  {id:'prism',n:'稜鏡核心', r:4,v:420000,s:1,e:'🧿'},
+  {id:'sat',  n:'衛星模組', r:4,v:480000,s:3,e:'🛰'},
+  {id:'crown',n:'古董王冠', r:4,v:620000,s:2,e:'👑'},
+];
+const LOOT_BY_R=[[],[],[],[],[]];
+for(const it of LOOT) LOOT_BY_R[it.r].push(it);
+const lootById=id=>LOOT.find(i=>i.id===id);
+
+/* ── 裝備：死了就沒收，撤離成功原樣拿回 ── */
+const ARMORS=[{id:'a0',n:'無護甲',dur:0,price:0},{id:'a1',n:'一級防彈衣',dur:70,price:6000},
+  {id:'a2',n:'二級防彈衣',dur:130,price:22000},{id:'a3',n:'三級複合甲',dur:210,price:65000},
+  {id:'a4',n:'四級重型甲',dur:320,price:170000}];
+const HELMS=[{id:'h0',n:'無頭盔',dur:0,price:0},{id:'h1',n:'戰術盔',dur:40,price:4000},
+  {id:'h2',n:'防彈盔',dur:80,price:18000},{id:'h3',n:'重型盔',dur:140,price:55000}];
+const PACKS=[{id:'b0',n:'戰術腰包',cap:10,price:0},{id:'b1',n:'突擊背包',cap:16,price:12000},
+  {id:'b2',n:'遠征背包',cap:24,price:48000},{id:'b3',n:'重載背包',cap:34,price:140000}];
+const MEDKITS=[{id:'m0',n:'不帶',cnt:0,price:0},{id:'m1',n:'醫療包 ×2',cnt:2,price:6000},
+  {id:'m2',n:'醫療包 ×4',cnt:4,price:12000},{id:'m3',n:'醫療包 ×6',cnt:6,price:18000}];
+const byId=(arr,id)=>arr.find(o=>o.id===id)||arr[0];
+
+/* ── 存檔：哈夫幣 + 倉庫 + 裝備方案 ── */
+let haff=150000, stash=[], kit={a:'a1',h:'h1',b:'b1',m:'m1'};
+try{ const s=JSON.parse(localStorage.getItem('sz_ops')||'null');
+  if(s){ if(typeof s.haff==='number'&&isFinite(s.haff)) haff=Math.max(0,Math.floor(s.haff));
+    if(Array.isArray(s.stash)) stash=s.stash.filter(o=>o&&lootById(o.id)).map(o=>({id:o.id,q:Math.max(1,o.q|0)}));
+    if(s.kit){ for(const k of ['a','h','b','m']) if(typeof s.kit[k]==='string') kit[k]=s.kit[k]; } }
+}catch(e){}
+function saveOps(){ try{ localStorage.setItem('sz_ops',
+  JSON.stringify({haff:haff,stash:stash,kit:kit})); }catch(e){} }
+function kitCost(){ return byId(ARMORS,kit.a).price+byId(HELMS,kit.h).price
+  +byId(PACKS,kit.b).price+byId(MEDKITS,kit.m).price; }
+function stashInto(items){                       // 撤離帶回來的東西進倉庫（同款疊起來）
+  for(const it of items){ const e=stash.find(o=>o.id===it.id);
+    if(e) e.q+=(it.q||1); else stash.push({id:it.id,q:it.q||1}); }
+  saveOps();
+}
+function stashValue(){ let v=0; for(const o of stash){ const it=lootById(o.id); if(it) v+=it.v*o.q; } return v; }
+
+/* ── 局內狀態 ── */
+const RAID={ on:false, t:0, dur:360, over:false,
+  bag:[], cap:16, meds:0, medMax:0, healT:0,
+  target:null, srchT:0, srchDur:0,
+  exf:null, exfT:0, exfNeed:8,
+  spawnT:2, killed:0, warned:0 };
+let bagOpen=false, lootHold=false;
+
+function bagUsed(){ let s=0; for(const i of RAID.bag) s+=i.s*(i.q||1); return s; }
+function bagValue(){ let v=0; for(const i of RAID.bag) v+=i.v*(i.q||1); return v; }
+function bagAdd(it){                             // 放得下才收；同款疊起來
+  const q=RAID.bag.find(o=>o.id===it.id);
+  if(bagUsed()+it.s>RAID.cap) return false;
+  if(q) q.q=(q.q||1)+1; else RAID.bag.push({id:it.id,n:it.n,r:it.r,v:it.v,s:it.s,e:it.e,q:1});
+  return true;
+}
+function lootFeed(it,full){
+  const f=$('lootFeed'); const d=document.createElement('div');
+  d.className='r'+it.r;
+  d.innerHTML=(full?'🚫 背包滿了 · ':'')+it.e+' '+it.n+'<small>'+fmt(it.v)+'</small>';
+  f.appendChild(d); setTimeout(()=>d.remove(),2300);
+  if(f.children.length>6) f.removeChild(f.firstChild);
+}
+
+/* ── 容器：搜刮箱 ── */
+const CTYPE={
+  crate:{n:'木箱',      ic:'📦',t:1.5,w:[60,27,10,3,0], c:[1,2]},
+  ammo :{n:'彈藥箱',    ic:'🧰',t:1.6,w:[46,32,16,5,1], c:[1,2],ammo:60},
+  med  :{n:'醫療櫃',    ic:'🏥',t:2.0,w:[40,34,18,7,1], c:[1,2],heal:35},
+  shelf:{n:'貨架',      ic:'🗄',t:2.2,w:[34,35,22,8,1], c:[2,3]},
+  pc   :{n:'電腦主機',  ic:'🖥',t:2.8,w:[16,30,34,18,2],c:[1,2]},
+  cache:{n:'軍用補給箱',ic:'🪖',t:3.2,w:[10,26,36,24,4],c:[2,3],ammo:40},
+  safe :{n:'保險箱',    ic:'🔐',t:4.2,w:[4,14,34,38,10],c:[2,3]},
+  body :{n:'戰利品包',  ic:'🎒',t:1.8,w:[45,32,17,5,1], c:[1,2],ammo:30},
+};
+function rollRarity(w){
+  let tot=0; for(const x of w) tot+=x;
+  let r=Math.random()*tot;
+  for(let i=0;i<w.length;i++){ r-=w[i]; if(r<=0) return i; }
+  return 0;
+}
+function rollLoot(type,wOverride){
+  const T=CTYPE[type], w=wOverride||T.w;
+  const n=T.c[0]+Math.floor(Math.random()*(T.c[1]-T.c[0]+1));
+  const out=[];
+  for(let i=0;i<n;i++){ const r=rollRarity(w); const pool=LOOT_BY_R[r];
+    out.push(pool[Math.floor(Math.random()*pool.length)]); }
+  return out;
+}
+function doSearch(c){
+  c.done=true; setContainerLit(c,false);
+  const got=rollLoot(c.type,c.w);
+  for(const it of got){ const ok=bagAdd(it); lootFeed(it,!ok); }
+  const T=CTYPE[c.type];
+  if(T.ammo){ let any=false;
+    for(const k of ['rifle','sniper']){ const a=ammo[k], W2=WEAPONS[k];
+      const add=Math.round(T.ammo*(k==='sniper'?0.25:1));
+      if(a.res<W2.reserve*1.5){ a.res+=add; any=true; } }
+    if(any){ const d=document.createElement('div'); d.className='r1';
+      d.innerHTML='🔫 補充彈藥'; $('lootFeed').appendChild(d); setTimeout(()=>d.remove(),2300); } }
+  if(T.heal&&player.hp<100){ healPlayer(T.heal);
+    const d=document.createElement('div'); d.className='r1'; d.innerHTML='💊 +'+T.heal+' 生命';
+    $('lootFeed').appendChild(d); setTimeout(()=>d.remove(),2300); }
+  blip(760,0.10,0.16,'triangle'); blip(1140,0.12,0.12,'sine');
+  updHUD();
+  if(isMP()){ const i=CONTAINERS.indexOf(c);
+    if(NET.role==='host') bcast({t:'loot',i:i}); else toHost({t:'loot',i:i}); }
+}
+
+/* ── 醫療包 ── */
+function useMed(){
+  if(!RAID.on||!player.alive) return;
+  if(RAID.meds<=0){ bigText('','沒有醫療包了'); setTimeout(clearBig,900); return; }
+  if(player.hp>=100){ bigText('','生命已滿'); setTimeout(clearBig,900); return; }
+  RAID.meds--; RAID.healT=2.2;
+  blip(520,0.12,0.2,'sine');
+  const d=document.createElement('div'); d.className='r1';
+  d.innerHTML='💊 使用醫療包（剩 '+RAID.meds+'）'; $('lootFeed').appendChild(d);
+  setTimeout(()=>d.remove(),2300);
+  updHUD();
+}
+
+/* ── 每幀：找可以搜的箱子 / 撤離 / 倒數 / 補兵 ── */
+const _v3=new TH.Vector3();
+function opsStep(dt){
+  if(!RAID.on||RAID.over) return;
+
+  /* 倒數 */
+  if(isHost()){ RAID.t+=dt; }
+  const left=Math.max(0,RAID.dur-RAID.t);
+  if(left<=60&&RAID.warned<1){ RAID.warned=1; bigText('剩 1 分鐘','快去撤離點！'); setTimeout(clearBig,2400); sHurt(); }
+  if(left<=20&&RAID.warned<2){ RAID.warned=2; bigText('剩 20 秒','來不及就全沒了'); setTimeout(clearBig,2000); }
+  if(left<=0&&isHost()){ endRaid(false,'撤離時間到，你被留在戰區'); return; }
+
+  /* 醫療包回血 */
+  if(RAID.healT>0){ RAID.healT-=dt; healPlayer(22*dt); }
+
+  /* 撤離點：站進去撐滿就走 */
+  let onPad=null;
+  for(const x of EXFILS){
+    const d=Math.hypot(player.pos.x-x.x, player.pos.z-x.z);
+    x.near=d<EXF_R;
+    if(x.near&&!onPad) onPad=x;
+    const s=1+Math.sin(RAID.t*2.4+x.ph)*0.06;
+    x.ring.scale.set(s,s,1);
+    x.ring.material.opacity=0.34+Math.sin(RAID.t*2.4+x.ph)*0.14;
+    x.beam.rotation.y+=dt*0.25;
+  }
+  if(onPad&&player.alive){
+    if(RAID.exf!==onPad){ RAID.exf=onPad; RAID.exfT=0; }
+    RAID.exfT+=dt;
+    $('exfilP').classList.add('on');
+    $('exfilName').textContent=onPad.ic+' '+onPad.name;
+    $('exfilTxt').textContent='撤離中… 待在原地 '+Math.max(0,RAID.exfNeed-RAID.exfT).toFixed(1)+' 秒';
+    $('exfilBar').style.width=Math.min(100,RAID.exfT/RAID.exfNeed*100)+'%';
+    if(RAID.exfT>=RAID.exfNeed){ endRaid(true,'從「'+onPad.name+'」成功撤離'); return; }
+  } else if(RAID.exf){
+    RAID.exf=null; RAID.exfT=0;
+    $('exfilP').classList.remove('on');
+  }
+
+  /* 搜刮：看著箱子按住 F */
+  let best=null,bd=2.9;
+  const fw=_v3.set(0,0,-1).applyQuaternion(camera.quaternion);
+  const pul=1+Math.sin(RAID.t*3.4)*0.22;                 // 沒搜過的箱子閃一閃
+  for(const c of CONTAINERS){
+    if(c.done) continue;
+    c.lit.scale.setScalar(pul);
+    const dx=c.x-player.pos.x, dz=c.z-player.pos.z;
+    const d=Math.hypot(dx,dz);
+    if(d>bd) continue;
+    if(d>0.6&&(dx*fw.x+dz*fw.z)/d<0.30) continue;   // 要大致看著它
+    best=c; bd=d;
+  }
+  if(best!==RAID.target){ RAID.target=best; RAID.srchT=0; }
+  const P=$('lootP');
+  if(best){
+    P.classList.add('on');
+    $('lootIcon').textContent=CTYPE[best.type].ic;
+    $('lootName').textContent=CTYPE[best.type].n;
+    const hold=!!keys.KeyF||lootHold;
+    if(hold&&player.alive){
+      RAID.srchT+=dt; P.classList.add('busy');
+      const dur=CTYPE[best.type].t;
+      $('lootKey').textContent='搜刮中…';
+      $('lootBar').style.width=Math.min(100,RAID.srchT/dur*100)+'%';
+      if(RAID.srchT%0.28<dt) blip(280+Math.random()*90,0.03,0.05,'square');
+      if(RAID.srchT>=dur){ doSearch(best); RAID.target=null; RAID.srchT=0; P.classList.remove('on','busy'); }
+    } else {
+      RAID.srchT=0; P.classList.remove('busy');
+      $('lootKey').innerHTML=isTouch?'按住 <b>搜刮</b> 鍵':'按住 <b>F</b> 搜刮';
+    }
+  } else P.classList.remove('on','busy');
+
+  /* 幽靈兵：場上維持一定數量，越後面越硬 */
+  if(isHost()){
+    const want=Math.min(12, 5+Math.floor(RAID.t/70));
+    RAID.spawnT-=dt;
+    if(aliveCount<want&&RAID.spawnT<=0){ opsSpawn(); RAID.spawnT=2.2+Math.random()*2.2; }
+  }
+  updExMarks();
+}
+
+function opsSpawn(){
+  for(let i=0;i<24;i++){
+    const a=Math.random()*Math.PI*2, r=16+Math.random()*40;
+    const x=Math.max(-WALL+5,Math.min(WALL-5,Math.cos(a)*r));
+    const z=Math.max(-WALL+5,Math.min(WALL-5,Math.sin(a)*r));
+    if(Math.hypot(x-player.pos.x,z-player.pos.z)<26) continue;
+    const p=RAID.t/RAID.dur;
+    let tier=0;
+    if(Math.random()<0.18+p*0.30) tier=1;
+    if(Math.random()<0.05+p*0.22) tier=2;
+    makeEnemy(x,z,tier);
+    return;
+  }
+}
+
+/* 敵人死掉：掉一個戰利品包（階級越高，掉的東西越好） */
+const BAGW=t=>t===2?[8,24,38,26,4]:(t===1?[28,36,26,9,1]:[54,31,13,2,0]);
+function dropBagMesh(x,z,tier){ return mkContainer(x,z,'body',BAGW(tier)); }
+function dropBag(x,z,tier){
+  const c=dropBagMesh(x,z,tier);
+  if(isHost()&&isMP()) bcast({t:'bag',x:+x.toFixed(2),z:+z.toFixed(2),tier:tier});
+  return c;
+}
+function markLooted(i){ const c=CONTAINERS[i];
+  if(c&&!c.done){ c.done=true; setContainerLit(c,false); } }
+
+/* ── 撤離點的螢幕標記 ── */
+function updExMarks(){
+  const box=$('exMarks'); const W2=innerWidth,H2=innerHeight;
+  for(const x of EXFILS){
+    if(!x.el){ x.el=document.createElement('div'); x.el.className='exM';
+      x.el.innerHTML='<i>'+x.ic+'</i>'+x.name+'<u></u>'; box.appendChild(x.el); }
+    _v3.set(x.x,2.6,x.z).project(camera);
+    const behind=_v3.z>1;
+    let sx=(_v3.x*0.5+0.5)*W2, sy=(-_v3.y*0.5+0.5)*H2;
+    if(behind){ sx=W2-sx; sy=H2-8; }
+    const m=44;
+    sx=Math.max(m,Math.min(W2-m,sx)); sy=Math.max(m,Math.min(H2-m,sy));
+    x.el.style.left=sx+'px'; x.el.style.top=sy+'px';
+    x.el.style.opacity=x.near?1:0.72;
+    const d=Math.round(Math.hypot(player.pos.x-x.x,player.pos.z-x.z));
+    x.el.querySelector('u').textContent=d+' m';
+  }
+}
+
+/* ── 開局 / 結束 ── */
+function startRaid(){
+  const A=byId(ARMORS,kit.a),H=byId(HELMS,kit.h),B=byId(PACKS,kit.b),M=byId(MEDKITS,kit.m);
+  RAID.on=true; RAID.over=false; RAID.t=0; RAID.killed=0; RAID.warned=0;
+  $('settle').classList.add('hide'); $('menu').style.display='none';
+  running=true; menuOpen=false; player.alive=true;
+  document.body.classList.add('ingame');
+  RAID.bag=[]; RAID.cap=B.cap; RAID.meds=M.cnt; RAID.medMax=M.cnt; RAID.healT=0;
+  RAID.exf=null; RAID.exfT=0; RAID.target=null; RAID.srchT=0; RAID.spawnT=2;
+  RAID.kitIn=kitCost();
+  haff=Math.max(0,haff-RAID.kitIn); saveOps();
+  for(const k in WEAPONS){ ammo[k].mag=WEAPONS[k].mag; ammo[k].res=WEAPONS[k].reserve; }
+  for(let i=CONTAINERS.length-1;i>=0;i--){ const c=CONTAINERS[i];
+    if(c.type==='body'){ scene.remove(c.grp); CONTAINERS.splice(i,1); }
+    else { c.done=false; setContainerLit(c,true); } }
+  for(const e of enemies) scene.remove(e.grp);
+  enemies.length=0; for(const k in enemyById) delete enemyById[k]; aliveCount=0;
+  player.armorMax=Math.max(1,A.dur+H.dur); player.armor=A.dur+H.dur;
+  player.hp=100;
+  document.body.classList.add('ops');
+  // 出生點：地圖邊緣隨機一角
+  const sp=[[-50,-50],[50,-50],[-50,50],[50,50],[0,-52],[0,52]][Math.floor(Math.random()*6)];
+  player.pos.set(sp[0],1.6,sp[1]);
+  player.yaw=Math.atan2(-sp[0],-sp[1]);
+  bigText('烽火地帶','搜刮物資 → 跑到撤離點 → 活著出去');
+  setTimeout(clearBig,2600);
+  updHUD();
+}
+function endRaid(ok,msg){
+  if(RAID.over) return;
+  RAID.over=true; RAID.on=false; running=false; firing=false;
+  document.exitPointerLock&&document.exitPointerLock();
+  document.body.classList.remove('ingame');
+  $('lootP').classList.remove('on','busy'); $('exfilP').classList.remove('on');
+  $('bagPanel').classList.add('hide'); bagOpen=false;
+  const out=ok?bagValue():0;
+  if(ok){ haff+=RAID.kitIn; stashInto(RAID.bag); }   // 裝備原樣拿回、物資進倉庫
+  saveOps();
+  const T=$('stTitle');
+  T.className=ok?'win':'lose';
+  T.textContent=ok?'撤離成功':'撤離失敗';
+  $('stSub').textContent=ok?'OPERATION SUCCESS':'OPERATION FAILED';
+  $('stIn').textContent=fmt(RAID.kitIn);
+  $('stOut').textContent=fmt(out);
+  $('stNet').textContent=(ok?'+':'−')+fmt(ok?out:RAID.kitIn);
+  $('stNet').style.color=ok?'#7fffb0':'#ff6b6b';
+  $('stKill').textContent=RAID.killed;
+  $('stItems').innerHTML=RAID.bag.length
+    ? RAID.bag.map(i=>itemHTML(i)).join('')
+    : '<div style="grid-column:1/-1;text-align:center;color:#5f6d85;padding:18px">這局沒搜到東西</div>';
+  $('stMsg').innerHTML = ok
+    ? '物資已經放進<b style="color:#ffcf6b">倉庫</b>，裝備原樣拿回來了。'+msg
+    : '<b style="color:#ff8a5a">背包裡的東西和身上的裝備全部沒收。</b>'+msg;
+  const sell=$('stSell'), sv=stashValue();
+  if(sv>0){ sell.style.display=''; sell.textContent='💰 倉庫全部賣掉 +'+fmt(sv); sell.disabled=false; }
+  else sell.style.display='none';
+  $('settle').classList.remove('hide');
+}
+function itemHTML(i){
+  const q=i.q||1;
+  return '<div class="itm r'+i.r+'">'+(q>1?'<em>×'+q+'</em>':'')+
+    '<i>'+i.e+'</i><b>'+i.n+'</b><span>'+fmt(i.v*q)+'</span></div>';
+}
+
+/* ── 背包面板 ── */
+function renderBag(){
+  const used=bagUsed();
+  $('bpCap').textContent=used+' / '+RAID.cap+' 格　💊 '+RAID.meds;
+  $('bpVal').innerHTML=fmt(bagValue())+'<small> 哈夫幣</small>';
+  $('bpGrid').innerHTML=RAID.bag.length
+    ? RAID.bag.map((i,n)=>itemHTML(i).replace('class="itm','data-n="'+n+'" class="itm can')).join('')
+    : '<div id="bpEmpty">背包是空的 — 去房子裡找箱子，看著它按住 F</div>';
+  for(const el of $('bpGrid').querySelectorAll('.itm.can')) el.onclick=()=>{
+    const n=+el.dataset.n, it=RAID.bag[n]; if(!it) return;
+    it.q=(it.q||1)-1; if(it.q<=0) RAID.bag.splice(n,1);
+    renderBag(); updHUD();
+  };
+}
+function toggleBag(v){
+  if(!RAID.on) return;
+  bagOpen=(v==null)?!bagOpen:!!v;
+  $('bagPanel').classList.toggle('hide',!bagOpen);
+  if(bagOpen){ renderBag(); document.exitPointerLock&&document.exitPointerLock(); }
+  else if(!isTouch&&running) cv.requestPointerLock();
+}
+
+/* ── 倉庫 ── */
+function renderStash(){
+  $('stashSum').textContent=fmt(stashValue())+' 哈夫幣';
+  $('stashGrid').innerHTML=stash.length
+    ? stash.map((o,n)=>{ const it=lootById(o.id); if(!it) return '';
+        return itemHTML({...it,q:o.q}).replace('class="itm','data-n="'+n+'" class="itm can'); }).join('')
+    : '<div style="grid-column:1/-1;text-align:center;color:#5f6d85;padding:40px;letter-spacing:2px">'
+      +'倉庫是空的 — 撤離成功帶回來的物資會放這裡</div>';
+  for(const el of $('stashGrid').querySelectorAll('.itm.can')) el.onclick=()=>{
+    const n=+el.dataset.n, o=stash[n]; if(!o) return;
+    const it=lootById(o.id); if(!it) return;
+    haff+=it.v; o.q--; if(o.q<=0) stash.splice(n,1);
+    saveOps(); renderStash(); renderOpsPanel();
+  };
+}
+function openStash(){ $('stash').classList.remove('hide'); renderStash(); }
+function closeStash(){ $('stash').classList.add('hide'); }
+
+/* ── 大廳：裝備方案 ── */
+function gearBtns(el,list,cur,pick,label){
+  el.innerHTML=list.map(o=>{
+    const can=o.price<=haff||o.id===cur;
+    return '<button class="gBtn'+(o.id===cur?' sel':'')+(can?'':' no')+'" data-id="'+o.id+'">'
+      +o.n+'<small>'+(o.price?fmt(o.price):'免費')+(label&&label(o)?' · '+label(o):'')+'</small></button>';
+  }).join('');
+  for(const b of el.querySelectorAll('.gBtn')) b.onclick=()=>{
+    const o=list.find(x=>x.id===b.dataset.id);
+    if(!o) return;
+    if(o.price>haff&&o.id!==cur){ b.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],160); return; }
+    pick(o.id); saveOps(); renderOpsPanel();
+  };
+}
+function renderOpsPanel(){
+  $('haffBig').innerHTML=fmt(haff)+'<small>哈夫幣</small>';
+  gearBtns($('selArmor'),ARMORS,kit.a,v=>kit.a=v,o=>o.dur?('護甲 '+o.dur):'沒防護');
+  gearBtns($('selHelm'), HELMS, kit.h,v=>kit.h=v,o=>o.dur?('護甲 '+o.dur):'沒防護');
+  gearBtns($('selBag'),  PACKS, kit.b,v=>kit.b=v,o=>o.cap+' 格');
+  gearBtns($('selMed'),  MEDKITS,kit.m,v=>kit.m=v,o=>o.cnt?'H 鍵回血':'');
+  const c=kitCost(), poor=c>haff;
+  $('kitCost').innerHTML='這套裝備成本 <b>'+fmt(c)+'</b> 哈夫幣　·　'
+    +(poor?'<b style="color:#ff6b6b">哈夫幣不夠</b> <button id="autoKitBtn" class="gBtn">⬇ 換成買得起的</button>'
+          :'死了就全部沒收，撤離成功才留得住');
+  if(poor) $('autoKitBtn').onclick=autoKit;
+  $('bDeploy').classList.toggle('no',poor);
+}
+function autoKit(){                     // 哈夫幣不夠時：從免費裝備開始，在預算內一格一格升上去
+  kit.a='a0'; kit.h='h0'; kit.b='b0'; kit.m='m0';
+  const slots=[[ARMORS,'a'],[HELMS,'h'],[PACKS,'b'],[MEDKITS,'m']];
+  for(let step=0;step<24;step++){
+    let best=null;
+    for(const sl of slots){ const list=sl[0], k=sl[1];
+      const i=list.findIndex(o=>o.id===kit[k]), nx=list[i+1];
+      if(!nx) continue;
+      const cost=kitCost()-list[i].price+nx.price, up=nx.price-list[i].price;
+      if(cost<=haff && (!best||up<best.up)) best={k:k,id:nx.id,up:up};
+    }
+    if(!best) break;
+    kit[best.k]=best.id;
+  }
+  saveOps(); renderOpsPanel();
+}
+
 /* ========= 轉蛋：四把刀 + 槍的塗裝。第一抽 1000，之後每抽 ×1.5；抽到重複退一半 ========= */
 const GACHA_KNIVES=['polaris','karambit','butterfly','kunai'];   // 信條不進池，維持直接購買
 const GACHA_GUNS=['rifle','sniper'];
 const SKIN_WEIGHT=[0,3,2,1.5,1];                                  // 依稀有度給權重，越稀有越難抽
 function drawCost(){ return Math.round(1000*Math.pow(1.5,drawCount)); }
-function skinOwned(gun,id){ return id==='default' || !!ownedSkins[gun+':'+id]; }
+function skinOwned(gun,id){ return true; }   // 槍跟刀的皮膚全部免費
 function gachaPool(){
   const pool=[];
   for(const k of GACHA_KNIVES)
@@ -2285,7 +3137,8 @@ addEventListener('keydown',e=>{
   if(e.code==='Digit2') swap('sniper');
   if(e.code==='Digit3'&&loadoutKnife) swap(loadoutKnife);
   if(e.code==='KeyQ') cycle();
-  if(e.code==='KeyF') inspect();
+  if(e.code==='KeyF'){ if(!(RAID.on&&RAID.target)) inspect(); }   // 對著箱子時 F＝搜刮
+  if(e.code==='KeyH'&&!e.repeat) useMed();
   if(e.code==='KeyT'&&!e.repeat) doSpray();
   if(e.code==='Escape'&&armoryOpen) closeArmory();
   if(['Space','ControlLeft'].includes(e.code)) e.preventDefault();
@@ -2354,6 +3207,8 @@ let mv={x:0,y:0};
   bind($('bSwap'),()=>cycle());
   bind($('bInspect'),()=>inspect());
   bind($('bSpray'),()=>doSpray());
+  bind($('bLoot'),()=>lootHold=true,()=>lootHold=false);
+  bind($('bBag'),()=>toggleBag());
   bind($('bAim'),()=>{ adsToggle=!adsToggle;
     $('bAim').classList.toggle('on',adsToggle); });
   bind($('bSlide'),()=>{ const s=keys.ShiftLeft,w=keys.KeyW; keys.ShiftLeft=true; keys.KeyW=true; trySlide(); keys.ShiftLeft=s; keys.KeyW=w; });
@@ -2363,6 +3218,12 @@ let mv={x:0,y:0};
 })();
 
 /* ========= 射擊邏輯 ========= */
+let _envM=null,_envN=-1;
+function envMeshes(){                       // 場景 mesh 清單快取：物件數沒變就重用
+  if(_envN!==scene.children.length){ _envN=scene.children.length;
+    _envM=scene.children.filter(o=>o.type==='Mesh'); }
+  return _envM;
+}
 let fireTimer=0, reloading=false, reloadT=0;
 let recoilKick=0, recoilYaw=0, adsAmt=0;
 let inspectT=0; const INSPECT_DUR=2.6;   // F 檢視動畫
@@ -2518,7 +3379,7 @@ function fire(){
     }
     // 命中環境？
     let envD=w.range, envPt=null;
-    const inter=ray.intersectObjects(scene.children.filter(o=>o.type==='Mesh'),false);
+    const inter=ray.intersectObjects(envMeshes(),false);
     for(const it of inter){
       if(it.object.type!=='Mesh') continue;
       if(it.object.geometry && it.object.geometry.type==='PlaneGeometry'){
@@ -2909,6 +3770,8 @@ function damageEnemy(e,dmg,head,by,wk){
   if(by===NET.id){ sHitEnemy(); showHit(dead, head); }
   if(dead){
     e.dead=true; e.grp.userData.t=0;
+    if(RAID.on){ if(by===NET.id) RAID.killed++;
+      if(isHost()) dropBag(e.grp.position.x,e.grp.position.z,e.tier); }
     const pts = e.tier===2?60:(e.tier===1?30:18);
     const cr  = CREDIT_BY_TIER[e.tier]||CREDIT_BY_TIER[0];
     if(by===NET.id){ score+=pts; kills++; myKills=kills; sKill(); addCredits(cr); killJuice(e,wk||curKey,head); }
@@ -2969,11 +3832,23 @@ function updHUD(){
   const sk=skinById(equipped[curKey]);
   $('gunName').textContent = w.name + (sk.id!=='default'?' · '+sk.name:'');
   $('hpfill').style.width = Math.max(0,player.hp)+'%';
-  $('arfill').style.width = Math.max(0,player.armor)+'%';
-  $('waveBig').textContent = '第 '+wave+' 波';
-  $('waveSub').textContent = '剩餘敵人 '+aliveCount;
-  $('scoreBig').textContent = score;
-  $('scoreSub').textContent = '分數 · 擊殺 '+kills;
+  $('arfill').style.width = Math.max(0,Math.min(100,player.armor/(player.armorMax||100)*100))+'%';
+  if(RAID.on){                                          // 烽火地帶：倒數 / 背包價值 / 擊殺
+    const L=Math.max(0,RAID.dur-RAID.t);
+    $('waveBig').textContent = Math.floor(L/60)+':'+('0'+Math.floor(L%60)).slice(-2);
+    $('waveBig').style.color = L<=30?'#ff5a5a':(L<=60?'#ff9a5a':'#e9f1ff');
+    $('waveSub').textContent = '撤離倒數 · 敵人 '+aliveCount;
+    $('credBig').textContent = fmt(bagValue());
+    $('credSub').textContent = '背包 '+bagUsed()+'/'+RAID.cap+' 格 · 💊 '+RAID.meds;
+    $('scoreBig').textContent = RAID.killed;
+    $('scoreSub').textContent = '擊殺 · 護甲 '+Math.max(0,Math.round(player.armor));
+  } else {
+    $('waveBig').style.color = '';
+    $('waveBig').textContent = '第 '+wave+' 波';
+    $('waveSub').textContent = '剩餘敵人 '+aliveCount;
+    $('scoreBig').textContent = score;
+    $('scoreSub').textContent = '分數 · 擊殺 '+kills;
+  }
 }
 function bigText(t,s){ $('centerT').textContent=t; $('centerS').textContent=s;
   $('centerT').style.opacity='1'; $('centerS').style.opacity='1'; }
@@ -3025,7 +3900,7 @@ function loop(now){
   let dt=(now-last)/1000; last=now;
   if(dt>0.05) dt=0.05;
   if(hitStop>0){ hitStop-=dt; dt*=0.1; } else if(slowMo>0){ slowMo-=dt; dt*=0.3; }   // 擊殺瞬間定格 / 狙擊慢動作
-  if(running && !menuOpen){ step(dt); netTick(dt); lerpAvatars(dt); }
+  if(running && !menuOpen && !(bagOpen&&!isMP())){ step(dt); netTick(dt); lerpAvatars(dt); }   // 單人開背包時暫停
   renderer.render(scene,camera);
   drawMini();
   if(armoryOpen&&pvRenderer){                 // 武器庫預覽：自動旋轉展示
@@ -3368,14 +4243,16 @@ function step(dt){
   if(dirT>0){ dirT-=dt; $('dmgDir').style.opacity=Math.max(0,dirT/0.9); }
   // 護甲/血量回復（沒被打 1.8 秒就開始補，速度快一點，不會被慢慢磨死）
   regenT-=dt;
-  if(regenT<=0 && player.alive){
+  if(regenT<=0 && player.alive && !RAID.on){            // 烽火地帶不自動回血，要靠醫療包/醫療櫃
     if(player.armor<100) player.armor=Math.min(100,player.armor+22*dt);
     else if(player.hp<100) player.hp=Math.min(100,player.hp+12*dt);
     updHUD();
   }
 
-  /* --- 波次推進（僅房主/單人；對戰無波次） --- */
-  if(isHost() && NET.mode!=='pvp'){
+  opsStep(dt);                             // 烽火地帶：搜刮 / 撤離 / 倒數 / 補兵
+
+  /* --- 波次推進（只有合作生存有波次） --- */
+  if(isHost() && NET.mode==='coop'){
     if(spawnQueue>0){
       spawnTimer-=dt;
       if(spawnTimer<=0){ spawnOne(); spawnQueue--; spawnTimer=0.6+Math.random()*0.6; }
@@ -3424,7 +4301,7 @@ function step(dt){
 let vigA=0, regenT=0, dirT=0;
 function hurtPlayer(d, fromPos){
   if(!player.alive) return;
-  let abs=Math.min(player.armor, d*0.6);
+  let abs=Math.min(player.armor, d*(RAID.on?0.75:0.6));   // 烽火地帶：護甲擋更多，但不會自己回
   player.armor-=abs;
   player.hp -= (d-abs);
   vigA=Math.min(0.85, vigA + d/70);
@@ -3443,6 +4320,7 @@ function hurtPlayer(d, fromPos){
 }
 
 function gameOver(){
+  if(RAID.on){ endRaid(false,'你在戰區陣亡了'); return; }
   if(isMP()){
     player.alive=false; firing=false;
     if(NET.mode==='pvp'){
@@ -3612,9 +4490,10 @@ function onHostMsg(c,m){
     spawnFx(m.a,m.b); }
   else if(m.t==='spray'){ placeSpray(m.p,m.n,m.op,true); bcast(Object.assign({},m,{o:pid})); }
   else if(m.t==='heal'){ if(m.to&&m.to!==NET.id) sendTo(m.to,{t:'heal',amt:m.amt}); else { healPlayer(m.amt||25); killText('蜂醫治療 +'+(m.amt||25),'#7fe0a0'); } }
-  else if(m.t==='ehit' && NET.mode==='coop'){ const e=enemyById[m.id];
+  else if(m.t==='ehit' && NET.mode!=='pvp'){ const e=enemyById[m.id];
     if(e&&!e.dead) damageEnemy(e,m.d,m.h,pid); }
   else if(m.t==='phit' && NET.mode==='pvp'){ applyPvp(m.vid,m.d,pid); }
+  else if(m.t==='loot'){ markLooted(m.i); bcast({t:'loot',i:m.i}); }
 }
 function onClientMsg(m){
   if(m.t==='heal'){ healPlayer(m.amt||25); killText('蜂醫治療 +'+(m.amt||25),'#7fe0a0'); }
@@ -3627,6 +4506,8 @@ function onClientMsg(m){
   else if(m.t==='spray'){ if(m.o!==NET.id) placeSpray(m.p,m.n,m.op,true); }
   else if(m.t==='dmg'){ hurtPlayer(m.d, m.f?new TH.Vector3(m.f[0],player.pos.y,m.f[1]):null); }
   else if(m.t==='kill'){ addFeed(m.h); }
+  else if(m.t==='loot'){ markLooted(m.i); }
+  else if(m.t==='bag'){ dropBagMesh(m.x,m.z,m.tier); }
   else if(m.t==='left'){ delP(m.pid); }
   else if(m.t==='youdie'){ localDown(m.by); }
   else if(m.t==='respawn'){ doRespawn(m.p); }
@@ -3651,11 +4532,11 @@ function buildSnap(){
     pl.push({i,nm:p.nm,p:[+p.pos.x.toFixed(2),+p.pos.y.toFixed(2),+p.pos.z.toFixed(2)],
       y:+p.yaw.toFixed(2),g:p.gi,hp:p.hp,al:p.al,k:p.k,sc:p.sc}); }
   const en=[];
-  if(NET.mode==='coop') for(const e of enemies)
+  if(NET.mode!=='pvp') for(const e of enemies)
     en.push({i:e.id,p:[+e.grp.position.x.toFixed(2),+e.grp.position.z.toFixed(2)],
       ry:+e.grp.rotation.y.toFixed(2),hp:Math.max(0,e.hp|0),mx:e.max,tr:e.tier,
       dd:e.dead?1:0});
-  return {t:'snap',pl,en,w:wave,ac:aliveCount,ph:phaseTxt};
+  return {t:'snap',pl,en,w:wave,ac:aliveCount,ph:phaseTxt,rt:+RAID.t.toFixed(1)};
 }
 function applySnap(m){
   // 玩家
@@ -3668,7 +4549,7 @@ function applySnap(m){
     if(p.grp) p.grp.visible=r.al; }
   for(const i in players){ if(i!==NET.id && !seen[i]) delP(i); }
   // 敵人
-  if(NET.mode==='coop'){
+  if(NET.mode!=='pvp'){
     const eseen={};
     for(const r of m.en){ eseen[r.i]=1; let e=enemyById[r.i];
       if(!e){ e=makeEnemy(r.p[0],r.p[1],r.tr,r.i); }
@@ -3681,6 +4562,7 @@ function applySnap(m){
         enemies.splice(enemies.indexOf(e),1); delete enemyById[id]; } }
   }
   wave=m.w; aliveCount=m.ac;
+  if(typeof m.rt==='number') RAID.t=m.rt;   // 撤離倒數由房主說了算
   if(m.ph && m.ph!==phaseTxt){ phaseTxt=m.ph;
     bigText(phaseTxt.split('|')[0],phaseTxt.split('|')[1]||'');
     setTimeout(clearBig,1900);
@@ -3769,8 +4651,9 @@ function toggleBoard(s){ boardOn=s; const b=$('board');
   b.innerHTML=h; b.classList.remove('hide');
 }
 addEventListener('keydown',e=>{ if(e.code==='Tab'){ e.preventDefault();
-  if(isMP()) toggleBoard(true); }});
-addEventListener('keyup',e=>{ if(e.code==='Tab') toggleBoard(false); });
+  if(RAID.on){ if(!e.repeat) toggleBag(); }
+  else if(isMP()) toggleBoard(true); }});
+addEventListener('keyup',e=>{ if(e.code==='Tab'&&!RAID.on) toggleBoard(false); });
 
 /* ========= 武器庫（皮膚檢視） ========= */
 let armoryOpen=false, armWeap='rifle';
@@ -3859,13 +4742,12 @@ function pvShow(key,skinId){
 }
 let lastDraw=null;                       // 記住上一抽結果，重繪時還看得到
 function renderArmTabs(){
-  let h='<div class="armTab'+(armWeap==='__gacha'?' sel':'')+'" data-k="__gacha">🎲 轉蛋'
-    +'<small style="color:#ffcf6b">'+drawCost().toLocaleString()+' 點券／抽</small></div>';
+  let h='';                       // 轉蛋拿掉了：刀跟皮膚現在全部免費，抽只會抽到重複的
   for(const k of order){ const melee=isSpecial(k); const sk=skinById(equipped[k]); const lock=isLocked(k);
     h+='<div class="armTab'+(k===armWeap?' sel':'')+'" data-k="'+k+'">'+(lock?'🔒 ':'')+WEAPONS[k].name+
       '<small style="color:'+(lock?'#ff9a5a':(melee?'#cfd3d8':RARITY[sk.rar].c))+'">'
       +(lock?WEAPONS[k].price.toLocaleString()+' 點券':(melee?(WEAPONS[k].thrown?'投擲武器':'近戰武器'):sk.name))+'</small></div>'; }
-  const ac=$('armCred'); if(ac) ac.innerHTML='💠 <b>'+credits.toLocaleString()+'</b> 點券';
+  const ac=$('armCred'); if(ac) ac.innerHTML='<b style="color:#7fe0a0">全部免費</b>';
   $('armTabs').innerHTML=h;
   const tabs=document.querySelectorAll('.armTab');
   for(const el of tabs) el.onclick=()=>{ armWeap=el.dataset.k; refreshArmory(); };
@@ -3969,29 +4851,54 @@ $('bArmory').onclick=openArmory;
 $('armClose').onclick=closeArmory;
 
 /* ========= 啟動 ========= */
-let selMode='coop';
+let selMode='ops';
 let phaseTxt='';
 function pname(){
   const n=($('nameIn').value.trim()||'玩家').substring(0,10);
-  if(n==='簡宥宇'&&!owned.polaris){ owned.polaris=true; saveWallet(); updCredits(); try{ addFeed('<b class="lockTag">⭐ 簡宥宇</b> 北極星免費解鎖'); }catch(e){} }
+  if(n==='簡宥宇'&&!localStorage.getItem('sz_jyy')){ try{ localStorage.setItem('sz_jyy','1'); }catch(e){}
+    haff+=200000; saveOps(); renderOpsPanel(); try{ addFeed('<b class="lockTag">⭐ 簡宥宇</b> 補給金 +200,000 哈夫幣'); }catch(e){} }
   return n;
 }
-function reflectMode(){ $('mCoop').classList.toggle('sel',selMode==='coop');
-  $('mPvp').classList.toggle('sel',selMode==='pvp'); }
+function reflectMode(){ $('mOps').classList.toggle('sel',selMode==='ops');
+  $('mCoop').classList.toggle('sel',selMode==='coop');
+  $('mPvp').classList.toggle('sel',selMode==='pvp');
+  $('opsPanel').classList.toggle('hide',selMode!=='ops');
+  if(selMode==='ops') renderOpsPanel(); }
+$('mOps').onclick=()=>{ selMode='ops'; reflectMode(); };
 $('mCoop').onclick=()=>{ selMode='coop'; reflectMode(); };
 $('mPvp').onclick=()=>{ selMode='pvp'; reflectMode(); };
+$('bDeploy').onclick=begin;
+$('stashBtn').onclick=openStash;
+$('stashClose').onclick=closeStash;
+$('sellAll').onclick=()=>{ haff+=stashValue(); stash=[]; saveOps(); renderStash(); renderOpsPanel(); };
+$('stSell').onclick=()=>{ const v=stashValue(); haff+=v; stash=[]; saveOps();
+  $('stSell').disabled=true; $('stSell').textContent='✔ 已賣掉 +'+fmt(v); };
+$('stBack').onclick=()=>location.reload();
+function kitReady(){                        // 哈夫幣不夠就不讓進圖（會晃一下告訴你）
+  if(selMode!=='ops'||kitCost()<=haff) return true;
+  renderOpsPanel();
+  try{ $('bDeploy').animate([{transform:'translateX(-7px)'},{transform:'translateX(7px)'},
+        {transform:'none'}],{duration:200,iterations:2});
+    $('kitCost').animate([{opacity:1},{opacity:.3},{opacity:1}],{duration:240,iterations:2}); }catch(e){}
+  $('opsPanel').scrollIntoView({block:'center',behavior:'smooth'});
+  return false;
+}
 
 function doBegin(){
   if(NET.started) return; NET.started=true;
   $('menu').style.display='none'; $('roomBox').classList.add('hide');
+  $('stash').classList.add('hide');
   menuOpen=false; running=true; document.body.classList.add('ingame');
+  document.body.classList.toggle('ops', NET.mode==='ops');
   validLoadout(); curKey='rifle'; showGun(); updHUD(); renderOps();
   audio(); if(AC.state==='suspended') AC.resume();
   if(!isTouch) cv.requestPointerLock();
   else { try{ const de=document.documentElement; if(de.requestFullscreen){ const r=de.requestFullscreen({navigationUI:'hide'}); if(r&&r.catch) r.catch(()=>{}); } }catch(e){} }   // 手機：全螢幕
   ensureP(NET.id,NET.name);
   player.alive=true;
-  if(NET.mode==='pvp'){
+  if(NET.mode==='ops'){
+    startRaid();
+  } else if(NET.mode==='pvp'){
     const sp=pvpSpawn(); player.pos.set(sp[0],sp[1],sp[2]);
     phaseTxt='單挑對戰|射擊其他玩家，比擊殺數';
     bigText('單挑對戰','射擊其他玩家，比擊殺數'); setTimeout(clearBig,2200);
@@ -3999,16 +4906,17 @@ function doBegin(){
     startWave();
   }
 }
-function begin(){ NET.role='solo'; NET.mode=selMode; NET.id='me';
+function begin(){ if(!kitReady()) return;
+  NET.role='solo'; NET.mode=selMode; NET.id='me';
   NET.name=pname(); doBegin(); }
 
 $('bSolo').onclick=begin;
 $('bHost').onclick=()=>{ if(typeof Peer==='undefined'){ setStat('PeerJS 載入失敗，請用單人'); return; } hostStart(); };
 $('bJoin').onclick=()=>{ if(typeof Peer==='undefined'){ setStat('PeerJS 載入失敗，請用單人'); return; } joinRoom(); };
-$('bStart').onclick=()=>{ NET.mode=selMode;
+$('bStart').onclick=()=>{ if(!kitReady()) return; NET.mode=selMode;
   bcast({t:'start',mode:NET.mode}); doBegin(); };
 
-reflectMode();
+reflectMode(); renderOpsPanel();
 updHUD(); renderKnifeSel(); renderOpSel(); renderOps();
 requestAnimationFrame(loop);
 
@@ -4035,6 +4943,29 @@ window.__sz = {
     const k=gunMeshes.knife,r=k.rotation,p=k.position;
     return {rot:[+r.x.toFixed(3),+r.y.toFixed(3),+r.z.toFixed(3)],
             pos:[+p.x.toFixed(3),+p.y.toFixed(3),+p.z.toFixed(3)],scale:+k.scale.x.toFixed(3)};
+  },
+  // 烽火地帶除錯
+  ops:{
+    get s(){ return RAID; },
+    get bag(){ return RAID.bag; },
+    get haff(){ return haff; }, setHaff(v){ haff=Math.max(0,v|0); saveOps(); renderOpsPanel(); return haff; },
+    get stash(){ return stash; },
+    get containers(){ return CONTAINERS; }, get exfils(){ return EXFILS; },
+    raid(){ selMode='ops'; if(!NET.started) begin(); else startRaid(); return {t:RAID.t,cap:RAID.cap,meds:RAID.meds}; },
+    loot(k){ let c=0; for(const b of CONTAINERS){ if(c>=(k||5)) break;
+      if(!b.done){ doSearch(b); c++; } } return {items:RAID.bag.length,val:bagValue(),used:bagUsed()}; },
+    lootAt(x,z){ let best=null,bd=99; for(const b of CONTAINERS){ if(b.done) continue;
+      const d=Math.hypot(b.x-x,b.z-z); if(d<bd){bd=d;best=b;} }
+      if(best) doSearch(best); return best&&best.type; },
+    tp(x,z){ player.pos.set(x,1.6,z); return [x,z]; },
+    toExfil(i){ const e=EXFILS[i||0]; player.pos.set(e.x,1.6,e.z); return e.name; },
+    toBox(i){ const b=CONTAINERS[i||0]; player.pos.set(b.x+1.6,1.6,b.z);
+      player.yaw=Math.atan2(-(b.x-player.pos.x),-(b.z-player.pos.z)); return b.type; },
+    hold(v){ lootHold=v!==false; return lootHold; },
+    time(t){ RAID.t=t; return RAID.dur-RAID.t; },
+    bagUI(v){ toggleBag(v); return bagOpen; },
+    win(){ endRaid(true,'除錯：直接撤離'); return {haff:haff,stash:stash.length}; },
+    lose(){ endRaid(false,'除錯：直接陣亡'); return haff; },
   },
   get credits(){ return credits; },
   set credits(v){ credits=Math.max(0,v|0); saveWallet(); updCredits(); },
