@@ -260,6 +260,24 @@
   #scope .t3,#scope .t4{left:50%;width:10px;height:2px;margin-left:-5px} #scope .t3{top:calc(50% - 12vmin)} #scope .t4{top:calc(50% + 12vmin)}
   #scope .dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b,0 0 2px #fff}
 
+  /* ===== Google 登入 / 雲端存檔 ===== */
+  #acctRow{flex-direction:column;gap:7px;align-items:center;}
+  #gBtn{display:flex;align-items:center;gap:10px;cursor:pointer;
+    background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:8px;
+    font:600 14px "Segoe UI","Microsoft JhengHei",sans-serif;padding:9px 20px;
+    box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  #gBtn:hover{background:#f6f7f8;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  #gBtn svg{width:18px;height:18px;flex:none;}
+  #gBtn.hide,#acctInfo.hide{display:none;}
+  #acctInfo{display:flex;align-items:center;gap:10px;
+    background:rgba(127,224,160,.1);border:1px solid rgba(127,224,160,.35);
+    border-radius:9px;padding:7px 9px 7px 14px;}
+  #acctName{font:700 14px "Segoe UI";color:#7fffb0;letter-spacing:1px;}
+  #acctName::before{content:'👤 ';}
+  #gOut{padding:6px 13px;font-size:12px;letter-spacing:1px;}
+  #acctHint{color:#7f8da6;font-size:11px;letter-spacing:1px;text-align:center;
+    max-width:min(460px,92vw);line-height:1.6;}
+
   /* ===== 烽火地帶 OPERATIONS ===== */
   .r0{--rc:#aab4c4;--rg:linear-gradient(135deg,#9aa5b7,#6d7789);}
   .r1{--rc:#7fe08a;--rg:linear-gradient(135deg,#7fe08a,#3f9c58);}
@@ -544,6 +562,12 @@
   <h1>STRIKE ZONE</h1>
   <div class="tag">烽火地帶 OPERATIONS　搜刮 · 撤離 · 全部皮膚免費</div>
 
+  <div id="acctRow" class="lobbyRow">
+    <button id="gBtn" class="hide"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.8c-.5 2.8-2 5.1-4.4 6.7v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.4z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.2 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.3c-.4-1.3-.7-2.7-.7-4.3s.3-3 .7-4.3v-5.7H4.5A22 22 0 0 0 2 24c0 3.6.9 6.9 2.5 9.9l7.3-5.6z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.8 4.5 13.9l7.3 5.7c1.7-5.2 6.5-8.9 12.2-8.9z"/></svg><span>用 Google 帳號登入</span></button>
+    <div id="acctInfo" class="hide"><span id="acctName"></span><button id="gOut" class="lobBtn">登出</button></div>
+    <div id="acctHint" class="small"></div>
+  </div>
+
   <input id="nameIn" maxlength="10" placeholder="你的名字" autocomplete="off">
 
   <div class="modeRow">
@@ -602,7 +626,7 @@
     對戰：玩家互相射擊，被擊倒 4 秒後重生，比擊殺數。
   </div>
   <div class="small">建議電腦＋滑鼠遊玩；連線用 PeerJS，需連網</div>
-  <div class="small" id="verTag">版本 v25 · 烽火地帶（撤離模式）＋皮膚全免費　<b style="color:#7fe0a0">看到 v25 就是最新版</b></div>
+  <div class="small" id="verTag">版本 v26 · 綁 Google 帳號雲端存檔　<b style="color:#7fe0a0">看到 v26 就是最新版</b></div>
 </div>
 
 <div id="armory" class="hide">
@@ -2263,15 +2287,135 @@ const MEDKITS=[{id:'m0',n:'不帶',cnt:0,price:0},{id:'m1',n:'醫療包 ×2',cnt
   {id:'m2',n:'醫療包 ×4',cnt:4,price:12000},{id:'m3',n:'醫療包 ×6',cnt:6,price:18000}];
 const byId=(arr,id)=>arr.find(o=>o.id===id)||arr[0];
 
-/* ── 存檔：哈夫幣 + 倉庫 + 裝備方案 ── */
-let haff=150000, stash=[], kit={a:'a1',h:'h1',b:'b1',m:'m1'};
-try{ const s=JSON.parse(localStorage.getItem('sz_ops')||'null');
-  if(s){ if(typeof s.haff==='number'&&isFinite(s.haff)) haff=Math.max(0,Math.floor(s.haff));
-    if(Array.isArray(s.stash)) stash=s.stash.filter(o=>o&&lootById(o.id)).map(o=>({id:o.id,q:Math.max(1,o.q|0)}));
-    if(s.kit){ for(const k of ['a','h','b','m']) if(typeof s.kit[k]==='string') kit[k]=s.kit[k]; } }
-}catch(e){}
-function saveOps(){ try{ localStorage.setItem('sz_ops',
-  JSON.stringify({haff:haff,stash:stash,kit:kit})); }catch(e){} }
+/* ══════════════════════════════════════════════════════════════════
+   ☁ 雲端存檔設定（綁 Google 帳號）
+   把 Firebase 主控台給你的四個值貼進來，登入功能就會打開。
+   四個值都空著的話，遊戲照舊用瀏覽器本機存檔，完全不受影響。
+   設定教學看 README.md 的「☁ 雲端存檔」那一節。
+   ══════════════════════════════════════════════════════════════════ */
+const FIREBASE = {
+  apiKey:     "",
+  authDomain: "",
+  projectId:  "",
+  appId:      ""
+};
+
+/* ── 存檔：哈夫幣 + 倉庫 + 裝備方案 ──
+   本機（localStorage）永遠會存一份；有登入 Google 就再同步一份到雲端，
+   換手機、換電腦、清快取都還在。 */
+let haff=150000, stash=[], kit={a:'a1',h:'h1',b:'b1',m:'m1'}, bonusGot=false;
+let lsOK=true;
+try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ lsOK=false; }
+function applySave(s){                       // 把一份存檔（本機或雲端）套進遊戲
+  if(!s) return false;
+  if(typeof s.haff==='number'&&isFinite(s.haff)) haff=Math.max(0,Math.floor(s.haff));
+  if(Array.isArray(s.stash)) stash=s.stash.filter(o=>o&&lootById(o.id))
+    .map(o=>({id:o.id,q:Math.max(1,o.q|0)})).slice(0,400);
+  if(s.kit){ for(const k of ['a','h','b','m']) if(typeof s.kit[k]==='string') kit[k]=s.kit[k]; }
+  if(s.bonus) bonusGot=true;
+  return true;
+}
+try{ applySave(JSON.parse(localStorage.getItem('sz_ops')||'null')); }catch(e){}
+function saveData(){ return {haff:haff,stash:stash,kit:kit,bonus:bonusGot}; }
+function saveLocal(){ try{ localStorage.setItem('sz_ops',JSON.stringify(saveData())); }catch(e){} }
+function saveOps(now){ saveLocal(); cloudSave(now); }
+
+/* ── Google 登入 + Firestore 雲端存檔 ── */
+const CLOUD={ on:false, user:null, loaded:false, t:null, msg:'', auth:null, db:null };
+function cloudSetUp(){ return !!(FIREBASE.apiKey&&FIREBASE.projectId&&FIREBASE.authDomain); }
+function cloudUsable(){ return cloudSetUp() && location.protocol!=='file:'; }
+function acctMsg(t){ CLOUD.msg=t||''; const e=$('acctHint'); if(e) e.textContent=CLOUD.msg; }
+function renderAcct(){
+  const u=CLOUD.user, btn=$('gBtn'), info=$('acctInfo'); if(!btn) return;
+  btn.classList.toggle('hide', !!u || !cloudUsable());
+  info.classList.toggle('hide', !u);
+  if(u) $('acctName').textContent=(u.displayName||u.email||'玩家').substring(0,24);
+  if(!cloudUsable()&&!CLOUD.msg)
+    acctMsg(location.protocol==='file:'
+      ? '☁ 用檔案直接開的時候不能登入（要透過網址開才行）· 進度只存在這台裝置'
+      : '☁ 雲端存檔還沒設定 · 進度只存在這台裝置（設定方法看 README）');
+}
+function loadJS(src){ return new Promise((ok,no)=>{ const s=document.createElement('script');
+  s.src=src; s.async=true; s.onload=ok; s.onerror=()=>no(new Error('載入失敗 '+src));
+  document.head.appendChild(s); }); }
+async function initCloud(){
+  renderAcct();
+  if(!cloudUsable()) return;
+  acctMsg('☁ 連線中…');
+  try{
+    const B='https://www.gstatic.com/firebasejs/10.12.2/';
+    if(typeof firebase==='undefined'){                       // 測試時可以先塞一個假的 firebase
+      await loadJS(B+'firebase-app-compat.js');
+      await Promise.all([loadJS(B+'firebase-auth-compat.js'),loadJS(B+'firebase-firestore-compat.js')]);
+    }
+    firebase.initializeApp(FIREBASE);
+    CLOUD.auth=firebase.auth(); CLOUD.db=firebase.firestore();
+    CLOUD.on=true;
+    CLOUD.auth.onAuthStateChanged(u=>onUser(u));
+    try{ await CLOUD.auth.getRedirectResult(); }catch(e){}   // 手機是用轉頁登入的
+    if(!CLOUD.user) acctMsg('☁ 登入 Google 就能把進度帶到任何一台裝置');
+  }catch(e){
+    CLOUD.on=false; renderAcct();
+    acctMsg('☁ 雲端連不上，這局的進度只會存在這台裝置（'+(e.message||e)+'）');
+  }
+}
+function playerDoc(){ return CLOUD.db.collection('players').doc(CLOUD.user.uid); }
+async function onUser(u){
+  CLOUD.user=u||null; CLOUD.loaded=false; renderAcct();
+  if(!u){ acctMsg(CLOUD.on?'☁ 登入 Google 就能把進度帶到任何一台裝置':''); return; }
+  acctMsg('☁ 讀取雲端存檔…');
+  try{
+    const snap=await playerDoc().get();
+    if(snap.exists){
+      applySave(snap.data());                 // 雲端說了算：帳號裡的錢才是真的
+      saveLocal();
+      acctMsg('☁ 已讀取「'+(u.displayName||'你的帳號')+'」的存檔');
+    }else{
+      CLOUD.loaded=true; await pushCloud();   // 第一次登入：把這台裝置的進度搬上帳號
+      acctMsg('☁ 已把這台裝置的進度綁到「'+(u.displayName||'你的帳號')+'」');
+    }
+    CLOUD.loaded=true;
+    renderOpsPanel();
+    const ni=$('nameIn');
+    if(ni&&!ni.value&&u.displayName) ni.value=u.displayName.substring(0,10);
+  }catch(e){
+    CLOUD.loaded=false;
+    acctMsg('☁ 雲端讀取失敗：'+(e.code||e.message)+'（進度暫時只存在這台裝置）');
+  }
+}
+function pushCloud(){
+  if(!CLOUD.on||!CLOUD.user||!CLOUD.loaded) return Promise.resolve();
+  const d=saveData();
+  d.name=(CLOUD.user.displayName||'').substring(0,24);
+  if(firebase.firestore.FieldValue) d.at=firebase.firestore.FieldValue.serverTimestamp();
+  return playerDoc().set(d,{merge:true});
+}
+function cloudSave(now){
+  if(!CLOUD.on||!CLOUD.user||!CLOUD.loaded) return;
+  clearTimeout(CLOUD.t);
+  if(now){ pushCloud().catch(()=>{}); return; }              // 花錢/結算：立刻寫上去
+  CLOUD.t=setTimeout(()=>pushCloud().catch(()=>{}),800);
+}
+addEventListener('pagehide',()=>{ if(CLOUD.t){ clearTimeout(CLOUD.t); pushCloud().catch(()=>{}); } });
+async function gLogin(){
+  if(!CLOUD.on){ acctMsg('☁ 還沒設定好雲端（看 README 的「☁ 雲端存檔」）'); return; }
+  const p=new firebase.auth.GoogleAuthProvider();
+  p.setCustomParameters({prompt:'select_account'});
+  acctMsg('☁ 開啟 Google 登入視窗…');
+  try{ await CLOUD.auth.signInWithPopup(p); }
+  catch(e){
+    const c=e.code||'';
+    if(c.indexOf('popup')>=0||c.indexOf('cancelled')>=0){    // 手機常擋彈出視窗 → 改用轉頁
+      try{ await CLOUD.auth.signInWithRedirect(p); }
+      catch(e2){ acctMsg('☁ 登入失敗：'+(e2.code||e2.message)); }
+    } else acctMsg('☁ 登入失敗：'+(c||e.message));
+  }
+}
+function gLogout(){
+  if(!CLOUD.auth) return;
+  CLOUD.loaded=false; clearTimeout(CLOUD.t);
+  CLOUD.auth.signOut().then(()=>acctMsg('☁ 已登出 · 這台裝置的進度還在，下次登入會用帳號裡的'));
+}
 function kitCost(){ return byId(ARMORS,kit.a).price+byId(HELMS,kit.h).price
   +byId(PACKS,kit.b).price+byId(MEDKITS,kit.m).price; }
 function stashInto(items){                       // 撤離帶回來的東西進倉庫（同款疊起來）
@@ -2499,7 +2643,7 @@ function startRaid(){
   RAID.bag=[]; RAID.cap=B.cap; RAID.meds=M.cnt; RAID.medMax=M.cnt; RAID.healT=0;
   RAID.exf=null; RAID.exfT=0; RAID.target=null; RAID.srchT=0; RAID.spawnT=2;
   RAID.kitIn=kitCost();
-  haff=Math.max(0,haff-RAID.kitIn); saveOps();
+  haff=Math.max(0,haff-RAID.kitIn); saveOps(true);   // 裝備錢立刻扣掉並上傳，重整也拿不回來
   for(const k in WEAPONS){ ammo[k].mag=WEAPONS[k].mag; ammo[k].res=WEAPONS[k].reserve; }
   for(let i=CONTAINERS.length-1;i>=0;i--){ const c=CONTAINERS[i];
     if(c.type==='body'){ scene.remove(c.grp); CONTAINERS.splice(i,1); }
@@ -2526,7 +2670,7 @@ function endRaid(ok,msg){
   $('bagPanel').classList.add('hide'); bagOpen=false;
   const out=ok?bagValue():0;
   if(ok){ haff+=RAID.kitIn; stashInto(RAID.bag); }   // 裝備原樣拿回、物資進倉庫
-  saveOps();
+  saveOps(true);
   const T=$('stTitle');
   T.className=ok?'win':'lose';
   T.textContent=ok?'撤離成功':'撤離失敗';
@@ -4855,8 +4999,8 @@ let selMode='ops';
 let phaseTxt='';
 function pname(){
   const n=($('nameIn').value.trim()||'玩家').substring(0,10);
-  if(n==='簡宥宇'&&!localStorage.getItem('sz_jyy')){ try{ localStorage.setItem('sz_jyy','1'); }catch(e){}
-    haff+=200000; saveOps(); renderOpsPanel(); try{ addFeed('<b class="lockTag">⭐ 簡宥宇</b> 補給金 +200,000 哈夫幣'); }catch(e){} }
+  if(n==='簡宥宇'&&!bonusGot){ bonusGot=true;      // 一個帳號（或一台裝置）只領一次
+    haff+=200000; saveOps(true); renderOpsPanel(); try{ addFeed('<b class="lockTag">⭐ 簡宥宇</b> 補給金 +200,000 哈夫幣'); }catch(e){} }
   return n;
 }
 function reflectMode(){ $('mOps').classList.toggle('sel',selMode==='ops');
@@ -4867,11 +5011,13 @@ function reflectMode(){ $('mOps').classList.toggle('sel',selMode==='ops');
 $('mOps').onclick=()=>{ selMode='ops'; reflectMode(); };
 $('mCoop').onclick=()=>{ selMode='coop'; reflectMode(); };
 $('mPvp').onclick=()=>{ selMode='pvp'; reflectMode(); };
+$('gBtn').onclick=gLogin;
+$('gOut').onclick=gLogout;
 $('bDeploy').onclick=begin;
 $('stashBtn').onclick=openStash;
 $('stashClose').onclick=closeStash;
-$('sellAll').onclick=()=>{ haff+=stashValue(); stash=[]; saveOps(); renderStash(); renderOpsPanel(); };
-$('stSell').onclick=()=>{ const v=stashValue(); haff+=v; stash=[]; saveOps();
+$('sellAll').onclick=()=>{ haff+=stashValue(); stash=[]; saveOps(true); renderStash(); renderOpsPanel(); };
+$('stSell').onclick=()=>{ const v=stashValue(); haff+=v; stash=[]; saveOps(true);
   $('stSell').disabled=true; $('stSell').textContent='✔ 已賣掉 +'+fmt(v); };
 $('stBack').onclick=()=>location.reload();
 function kitReady(){                        // 哈夫幣不夠就不讓進圖（會晃一下告訴你）
@@ -4916,7 +5062,7 @@ $('bJoin').onclick=()=>{ if(typeof Peer==='undefined'){ setStat('PeerJS 載入�
 $('bStart').onclick=()=>{ if(!kitReady()) return; NET.mode=selMode;
   bcast({t:'start',mode:NET.mode}); doBegin(); };
 
-reflectMode(); renderOpsPanel();
+reflectMode(); renderOpsPanel(); initCloud();
 updHUD(); renderKnifeSel(); renderOpSel(); renderOps();
 requestAnimationFrame(loop);
 
@@ -4948,7 +5094,13 @@ window.__sz = {
   ops:{
     get s(){ return RAID; },
     get bag(){ return RAID.bag; },
-    get haff(){ return haff; }, setHaff(v){ haff=Math.max(0,v|0); saveOps(); renderOpsPanel(); return haff; },
+    get haff(){ return haff; }, setHaff(v){ haff=Math.max(0,v|0); saveOps(true); renderOpsPanel(); return haff; },
+    get cloud(){ return {setUp:cloudSetUp(),usable:cloudUsable(),on:CLOUD.on,loaded:CLOUD.loaded,
+      user:CLOUD.user&&{uid:CLOUD.user.uid,name:CLOUD.user.displayName},msg:CLOUD.msg}; },
+    login(){ return gLogin(); }, logout(){ return gLogout(); },
+    initCloud(){ return initCloud(); }, push(){ return pushCloud(); },
+    setFb(cfg){ Object.assign(FIREBASE,cfg||{}); return cloudSetUp(); },
+    applySave(o){ applySave(o); saveLocal(); renderOpsPanel(); return {haff:haff,stash:stash.length}; },
     get stash(){ return stash; },
     get containers(){ return CONTAINERS; }, get exfils(){ return EXFILS; },
     raid(){ selMode='ops'; if(!NET.started) begin(); else startRaid(); return {t:RAID.t,cap:RAID.cap,meds:RAID.meds}; },
